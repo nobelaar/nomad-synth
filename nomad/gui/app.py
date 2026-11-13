@@ -17,7 +17,6 @@ import tkinter as tk
 
 from nomad.audio.scope import ScopeBuffer
 from nomad.audio.stream import list_output_devices
-from nomad.engine.modmatrix import DESTINATIONS, SOURCES
 from nomad.engine.params import REGISTRY
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
 from nomad.gui.keyboard import Keyboard
@@ -94,6 +93,7 @@ class App:
         self._midi_cb = None
         self._midi_ports: list[str] = []
         self._midi_i = 0
+        self._midi_rescan, self._midi_open = None, False
         self.status = tk.StringVar(value="")
         self._build()
         self._push_snapshot()
@@ -278,18 +278,34 @@ class App:
             self.status.set(str(e)[:80])
         self._set_dev_text()
 
-    def on_midi_port(self, cb, ports=()):
-        """Register ``cb(port_name)`` (called on the Tk thread) and the ports to cycle through."""
+    def on_midi_port(self, cb, ports=(), rescan=None):
+        """Register ``cb(port_name)`` (called on the Tk thread) and the ports to cycle through.
+
+        ``rescan()`` (optional) returns the current port list; the button calls it on every
+        click so a keyboard plugged in after launch is found.
+        """
         self._midi_cb, self._midi_ports, self._midi_i = cb, list(ports), 0
+        self._midi_rescan, self._midi_open = rescan, bool(ports)
         self._set_midi_text()
 
     def _set_midi_text(self):
         p = self._midi_ports
         self.midi_btn.configure(text=f"MIDI: {p[self._midi_i][:24]}" if p else "MIDI: none",
-                                state="normal" if p and self._midi_cb else "disabled")
+                                state="normal" if self._midi_cb and (p or self._midi_rescan) else "disabled")
 
     def _cycle_midi(self):
-        self._midi_i = (self._midi_i + 1) % len(self._midi_ports)
+        cur = self._midi_ports[self._midi_i] if self._midi_ports else None
+        if self._midi_rescan is not None:
+            self._midi_ports = list(self._midi_rescan())
+        if not self._midi_ports:
+            self.status.set("MIDI: no ports found")
+            self._set_midi_text()
+            return
+        if self._midi_open and cur in self._midi_ports:
+            self._midi_i = (self._midi_ports.index(cur) + 1) % len(self._midi_ports)
+        else:  # nothing open yet (or the port vanished): start at the preferred one
+            self._midi_i = 0
+        self._midi_open = True
         self._set_midi_text()
         self._midi_cb(self._midi_ports[self._midi_i])
 
@@ -304,7 +320,7 @@ class App:
                 break
             except (ValueError, OverflowError):
                 pass  # a non-finite value must never stop the poll loop
-        notes = self.engine.vm.active_notes()
+        notes = self.engine.snapshot()["active_notes"]
         self.keyboard.set_active(notes)
         self.voices.set(f"VOICES {len(notes)}")
         self.xruns.set(f"XRUNS {getattr(self.stream, 'xruns', 0)}")

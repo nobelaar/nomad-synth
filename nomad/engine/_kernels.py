@@ -14,7 +14,10 @@ try:
 
     jit = numba.njit(cache=True, fastmath=False)
     HAVE_NUMBA = True
-except ImportError:
+except Exception as _e:  # ImportError, or a numba cache/JIT setup failure
+    if not isinstance(_e, ImportError):
+        import sys
+        print(f"numba disabled: {_e}", file=sys.stderr)
     HAVE_NUMBA = False
 
     def jit(f):

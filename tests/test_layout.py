@@ -130,3 +130,22 @@ def test_poll_survives_non_finite_apply_param():
 def test_bend_range_is_reachable():
     from nomad.gui.app import LAYOUT
     assert "bend_range" in LAYOUT["global"]
+
+
+def test_midi_button_rescans_ports_for_hot_plug():
+    import pytest, tkinter
+    from nomad.engine.engine import Engine
+    try:
+        a = build_app(Engine(48000))
+    except tkinter.TclError:
+        pytest.skip("no display")
+    try:
+        ports, opened = [], []
+        a.on_midi_port(opened.append, [], rescan=lambda: list(ports))
+        assert str(a.midi_btn["state"]) == "normal"      # usable even with no ports yet
+        a._cycle_midi(); assert opened == []              # nothing to open
+        ports.extend(["USB Keyboard 20:0", "Midi Through 14:0"])
+        a._cycle_midi(); assert opened == ["USB Keyboard 20:0"]  # keyboard plugged in later
+        a._cycle_midi(); assert opened[-1] == "Midi Through 14:0"
+    finally:
+        a.close()

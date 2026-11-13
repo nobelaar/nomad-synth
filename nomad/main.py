@@ -78,6 +78,10 @@ class Runtime:
         if r is not None:
             (self.app.apply_param if self.app else self.engine.set_param)(*r)
 
+    def _list_ports(self):
+        # real controllers first: ALSA's 'Midi Through' is a loopback that never sends
+        return sorted(self.midi_in.list_ports(), key=lambda p: "Midi Through" in p)
+
     def _open_midi(self, name=None):
         """Tk thread. Close first so no events arrive while the router resets."""
         self.midi_in.close()
@@ -107,9 +111,8 @@ class Runtime:
             self.stream = app.stream = None  # window stays open, header says AUDIO: none
         app.refresh_audio()  # the label shows the device the stream actually resolved
         app.root.protocol("WM_DELETE_WINDOW", self.close)
-        # real controllers first: ALSA's 'Midi Through' is a loopback that never sends
-        ports = [] if a.no_midi else sorted(self.midi_in.list_ports(), key=lambda p: "Midi Through" in p)
-        app.on_midi_port(self._open_midi, ports)
+        ports = [] if a.no_midi else self._list_ports()
+        app.on_midi_port(self._open_midi, ports, rescan=None if a.no_midi else self._list_ports)
         if ports:
             self._open_midi(ports[0])
         self._demo()

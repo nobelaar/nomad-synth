@@ -11,6 +11,7 @@ python -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
+Hace falta Tkinter del sistema (`tk` en Arch, `python3-tk` en Debian/Ubuntu).
 `python-rtmidi` se compila desde el código fuente (~40 s) y necesita las cabeceras de ALSA/JACK.
 `numba` es **opcional**: compila el filtro y las envolventes y baja el uso de CPU a ~25–30 % con
 8 voces. Sin `numba` todo funciona (con `NOMAD_NO_NUMBA=1` se fuerza ese camino), pero con 8 voces
