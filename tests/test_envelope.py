@@ -47,3 +47,12 @@ def test_retrigger_continues_from_value_and_idle_note_off_noop():
     lvl = e.value; e.note_on()
     b = np.zeros(8); e.process(b)
     assert abs(b[0] - lvl) < 0.01 and b[-1] >= b[0]
+
+
+def test_repeated_identical_set_params_does_not_stall_attack():
+    e = Envelope(SR); e.set_params(0.005, 0.05, 0.5, 0.2); e.note_on()
+    out = np.zeros(256)
+    for _ in range(40):
+        e.set_params(0.005, 0.05, 0.5, 0.2)
+        e.process(out)
+    assert abs(out[-1] - 0.5) < 0.01

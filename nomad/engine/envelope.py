@@ -38,11 +38,20 @@ class Envelope:
         self.set_params(0.01, 0.1, 0.7, 0.2)
 
     def set_params(self, attack_s, decay_s, sustain, release_s) -> None:
+        old = (self._a, self._d, self._s, self._r)
         self._a, self._d, self._r = _time(attack_s), _time(decay_s), _time(release_s)
         s = float(sustain)
         self._s = min(1.0, max(0.0, s)) if math.isfinite(s) else 0.0
-        if self._stage in (_ATTACK, _DECAY, _SUSTAIN, _RELEASE):
-            self._enter(self._stage if self._stage != _SUSTAIN else _DECAY)
+        # Re-enter only when the running stage's own parameter changed: callers
+        # push params every control block and re-entering would restart the
+        # attack timer forever.
+        a, d, sus, r = old
+        if self._stage == _ATTACK and self._a != a:
+            self._enter(_ATTACK)
+        elif self._stage in (_DECAY, _SUSTAIN) and (self._d != d or self._s != sus):
+            self._enter(_DECAY)
+        elif self._stage == _RELEASE and self._r != r:
+            self._enter(_RELEASE)
 
     def _enter(self, stage: int) -> None:
         self._stage = stage
