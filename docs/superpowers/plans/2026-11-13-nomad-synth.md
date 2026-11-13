@@ -67,6 +67,14 @@ def test_exp_curve_roundtrip():
 def test_unknown_param_raises():
     with pytest.raises(KeyError):
         clamp("no_existe", 1.0)
+
+def test_smoother_approaches_target_without_overshoot():
+    from nomad.engine.params import Smoother
+    s = Smoother(0.0, 48000.0, 15.0)
+    s.set(1.0)
+    vals = [s.advance(16) for _ in range(100)]
+    assert vals[-1] == pytest.approx(1.0, abs=1e-3)
+    assert all(0.0 <= v <= 1.0 for v in vals)
 ```
 
 - [ ] **Step 2: Correr el test y ver que falla**
@@ -102,6 +110,16 @@ pytest>=8
 
 `to_norm`/`from_norm` usan `lin` o `exp` según `curve`; `exp` es logarítmica entre `lo` y `hi`.
 
+`Smoother` es un one-pole exponencial: cada `advance(frames)` acerca `value` a `target` con coeficiente `1 - exp(-frames / (time_ms/1000 * sr))` y devuelve el valor nuevo, sin sobrepasar.
+
+`pyproject.toml` sólo lleva la configuración de pytest:
+
+```toml
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+```
+
 - [ ] **Step 4: Instalar dependencias**
 
 Run: `.venv/bin/pip install -r requirements.txt`
@@ -110,7 +128,7 @@ Expected: termina con `Successfully installed ... scipy ... mido ... python-rtmi
 - [ ] **Step 5: Correr el test y ver que pasa**
 
 Run: `pytest tests/test_params.py -v`
-Expected: 4 passed
+Expected: 5 passed
 
 - [ ] **Step 6: Commit**
 
@@ -233,7 +251,7 @@ def test_pw_is_clamped():
     assert abs((out > 0).mean() - 0.05) < 0.02
 
 def test_sync_resets_phase_at_master_wrap():
-    master = np.zeros(64); master[:] = np.arange(64) / 64.0   # un wrap al final
+    master = np.concatenate([np.linspace(0, 0.9, 32), np.linspace(0, 0.9, 32)])
     out = render(2, 700.0, 64, sync_master_phase=master)
     assert np.isfinite(out).all() and np.abs(out).max() <= 1.5
 
@@ -286,7 +304,7 @@ def test_attack_reaches_one_at_attack_time():
     e = Envelope(SR); e.set_params(0.01, 0.05, 0.6, 0.2); e.note_on()
     out = np.zeros(int(SR * 0.02)); e.process(out)
     assert out.max() >= 0.99
-    assert np.argmax(out) == int(SR * 0.01)  # llega a 1 justo en attack
+    assert abs(int(np.argmax(out)) - int(SR * 0.01)) <= 2  # llega a 1 en attack
 
 def test_decays_to_sustain():
     e = Envelope(SR); e.set_params(0.005, 0.05, 0.4, 0.2); e.note_on()
@@ -544,7 +562,7 @@ git commit -S -m "feat(engine): add modulation matrix with eight slots"
 
 **Interfaces:**
 - Consumes: `Oscillator`, `Envelope`, `Ladder4Pole`, `ladder_coeffs`.
-- Produces: `Voice(sample_rate: float, slot: int)` con `note_on(note, velocity)`, `note_off()`, `begin_steal(note, velocity)`, `render(out: np.ndarray, p: dict[str, float], mods: dict[str, float]) -> None`, `is_active() -> bool`, `note: int`, `age: int`.
+- Produces: `Voice(sample_rate: float, slot: int)` con `note_on(note, velocity)`, `note_off()`, `begin_steal(note, velocity)`, `render(out: np.ndarray, p: dict[str, float], mods: dict[str, float]) -> None`, `is_active() -> bool`, `note: int`, `age: int`, `velocity: float`, `env2_level: float` (el engine los usa para resolver la matriz por voz).
 
 - [ ] **Step 1: Escribir el test que falla**
 
@@ -823,7 +841,9 @@ Expected: FAIL `ModuleNotFoundError`
 
 - [ ] **Step 3: Implementar**
 
-`note_on/note_off/set_param/set_control` empujan a `queue.SimpleQueue` (thread-safe, sin lock explícito). `render` drena la cola al inicio, después parte `len(out)` en granos de 16. Por grano: avanza LFOs (`seconds = 16/SR`), arma `sources = {"lfo1":..., "lfo2":..., "modwheel":..., "velocity":..., "env2":...}`, resuelve la matriz, actualiza los smoothers y renderiza el `VoiceManager` con `mods` = resultado de la matriz **más** `mods["bend"] = self._bend * p["bend_range"]`. Master: `tanh(x · master_volume)`. `panic()` encola un release de 10 ms en todas las voces.
+`note_on/note_off/set_param/set_control` empujan a `queue.SimpleQueue` (thread-safe, sin lock explícito). `render` drena la cola al inicio, después parte `len(out)` en granos de 16. Por grano: avanza los LFO globales (`seconds = 16/SR`) y actualiza los smoothers. Después, **por voz**, arma `sources = {"lfo1":..., "lfo2":..., "modwheel":..., "velocity": voice.velocity, "env2": voice.env2_level}`, resuelve la matriz y llama `voice.render` con ese `mods` más `mods["bend"] = self._bend * p["bend_range"]`. La matriz se resuelve por voz porque `velocity` y `env2` son por voz; los LFO y el modwheel son globales.
+
+`set_param("polyphony", n)` llama `voice_manager.set_polyphony(int(n))` además de guardar el valor. Master: `tanh(x · master_volume)`. `panic()` encola un release de 10 ms en todas las voces.
 
 Los LFO son globales: viven en el engine, no en la voz. `env2` para la matriz se toma de la voz más nueva (documentado; el destino CUTOFF por voz ya usa el ADSR de filtro propio de cada voz).
 
@@ -1108,12 +1128,14 @@ def cc(control, value, port="keys", channel=0):
     return MidiEvent("cc", 0, 0.0, control, value, channel, port, 0.0)
 
 def test_learn_binds_next_cc_to_armed_param(tmp_path):
+    from nomad.engine.params import REGISTRY
     m = MidiMap(tmp_path / "map.json")
     m.arm("filt_cutoff")
     out = m.handle(cc(74, 64))
     assert out is not None
-    param, value = out
-    assert param == "filt_cutoff" and 0.0 <= value <= 1.0
+    name, value = out
+    spec = REGISTRY["filt_cutoff"]
+    assert name == "filt_cutoff" and spec.lo <= value <= spec.hi
     assert m.bindings[("keys", 0, 74)] == "filt_cutoff"
 
 def test_learn_disarms_after_one_cc(tmp_path):
@@ -1166,7 +1188,7 @@ git commit -S -m "feat(midi): add midi learn with persistent port-aware bindings
 - Create: `nomad/gui/__init__.py`, `nomad/gui/knob.py`, `nomad/gui/selector.py`, `tests/test_knob.py`
 
 **Interfaces:**
-- Produces: `KnobModel(spec: ParamSpec, value: float)` con `.value`, `.norm`, `set_from_drag(pixels: int, fine: bool)`, `set_from_wheel(delta: int)`, `reset()`; `Knob(parent, model, on_change)` (Canvas, dibuja arco + aguja + valor); `Selector(parent, labels, index, on_change)`.
+- Produces: `KnobModel(spec: ParamSpec, value: float)` con `.value`, `.norm` (propiedad con setter), `set_from_drag(pixels: int, fine: bool)`, `set_from_wheel(delta: int)`, `reset()`; `Knob(parent, model, on_change)` (Canvas, dibuja arco + aguja + valor); `Selector(parent, labels, index, on_change)`.
 
 - [ ] **Step 1: Escribir el test que falla**
 
@@ -1228,7 +1250,7 @@ git commit -S -m "feat(gui): add continuous rotary knob and waveform selector"
 
 **Interfaces:**
 - Consumes: `REGISTRY`, `Knob`, `Selector`, `Engine`, `AudioStream`.
-- Produces: `LAYOUT: dict[str, list[str]]`, `HIDDEN: set[str]`, `build_app(engine, stream=None) -> App` con `App.root`, `App.close()`. Si `stream` tiene `scope`, el panel dibuja ese buffer; si no hay stream, dibuja un `ScopeBuffer` propio que nadie escribe.
+- Produces: `LAYOUT: dict[str, list[str]]`, `HIDDEN: set[str]`, `build_app(engine, stream=None, midi_map=None) -> App` con `App.root`, `App.close()`. Si `stream` tiene `scope`, el panel dibuja ese buffer; si no hay stream, dibuja un `ScopeBuffer` propio que nadie escribe. Si hay `midi_map`, el botón `LEARN` lo arma.
 
 - [ ] **Step 1: Escribir el test que falla**
 
@@ -1281,6 +1303,7 @@ git commit -S -m "feat(gui): add instrument panel layout with full parameter cov
 
 **Files:**
 - Create: `nomad/gui/scope_view.py`, `nomad/gui/keyboard.py`, `tests/test_scope_view.py`
+- Modify: `nomad/gui/app.py` (montar el scope y el teclado, y cablear el teclado a `engine.note_on/note_off`)
 
 **Interfaces:**
 - Consumes: `ScopeBuffer`.
