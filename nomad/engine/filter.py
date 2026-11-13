@@ -12,6 +12,8 @@ import math
 import numpy as np
 from scipy.signal import lfilter
 
+from nomad.engine import _kernels
+
 __all__ = ["Ladder4Pole", "ladder_coeffs"]
 
 MAX_GRAIN = 64
@@ -37,6 +39,8 @@ class Ladder4Pole:
     def __init__(self, sample_rate: float) -> None:
         self.sr = float(sample_rate)
         self._zi = np.zeros(4)
+        self._b = np.zeros(5)
+        self._a = np.zeros(5)
         self._k = 0.0
         self._key = None
         self.set(1000.0, 0.0)
@@ -49,7 +53,11 @@ class Ladder4Pole:
             return
         self._key = (fc, r)
         self._k = r * K_MAX
-        self._b, self._a = ladder_coeffs(fc, self._k, self.sr)
+        if _kernels.HAVE_NUMBA:
+            self._b, self._a = np.empty(5), np.empty(5)  # fresh arrays: identity marks a change
+            _kernels.ladder_coeffs_into(self._b, self._a, fc, self._k, self.sr)
+        else:
+            self._b, self._a = ladder_coeffs(fc, self._k, self.sr)
 
     def reset(self) -> None:
         self._zi[:] = 0.0
@@ -57,6 +65,9 @@ class Ladder4Pole:
     def process(self, buf: np.ndarray) -> None:
         if len(buf) > MAX_GRAIN:
             raise ValueError(f"grain of {len(buf)} samples exceeds {MAX_GRAIN}")
+        if _kernels.HAVE_NUMBA:
+            _kernels.ladder_run(buf, self._b, self._a, self._zi, _ZI_LIMIT if self._k > _K_CLAMP else 0.0)
+            return
         # shortcut: lfilter allocates its output and new zi each call, fine at grain rate
         buf[:], self._zi = lfilter(self._b, self._a, buf, zi=self._zi)
         if self._k > _K_CLAMP:

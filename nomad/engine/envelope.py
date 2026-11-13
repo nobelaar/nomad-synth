@@ -12,6 +12,8 @@ import math
 
 import numpy as np
 
+from nomad.engine import _kernels
+
 __all__ = ["Envelope"]
 
 MIN_TIME = 0.001  # clamp for every stage time, in seconds
@@ -77,23 +79,6 @@ class Envelope:
 
     def process(self, out: np.ndarray) -> None:
         """Fill ``out`` with one envelope sample per frame."""
-        v, c, s, st = self.value, self._coef, self._s, self._stage
-        for i in range(len(out)):
-            if st == _ATTACK:
-                v = _OVERSHOOT + (v - _OVERSHOOT) * c
-                if v >= 1.0:
-                    v = 1.0
-                    st = self._stage = _DECAY
-                    c = self._coef = 1e-3 ** (1.0 / (self._d * self.sr))
-            elif st == _DECAY:
-                v = s + (v - s) * c
-                if abs(v - s) < 1e-5:
-                    v = s
-                    st = self._stage = _SUSTAIN
-            elif st == _RELEASE:
-                v *= c
-                if v < _FLOOR:
-                    v = 0.0
-                    st = self._stage = _IDLE
-            out[i] = v
-        self.value = v
+        self.value, self._coef, self._stage = _kernels.env_run(
+            out, self.value, self._coef, self._s, self._stage, 1e-3 ** (1.0 / (self._d * self.sr))
+        )
