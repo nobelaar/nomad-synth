@@ -21,14 +21,16 @@ _ZI_LIMIT = 0.8
 _MIN_FC = 5.0
 
 
+_BINOM = (1.0, 4.0, 6.0, 4.0, 1.0)  # (1+z^-1)^4 and the binomial weights of p^4
+
+
 def ladder_coeffs(fc_hz: float, k: float, sample_rate: float):
     g = math.tan(math.pi * fc_hz / sample_rate)
-    p = np.array([1.0 + g, -(1.0 - g)])
-    v = np.array([1.0, 1.0])
-    p4 = np.convolve(np.convolve(p, p), np.convolve(p, p))
-    g4v4 = g**4 * np.convolve(np.convolve(v, v), np.convolve(v, v))
-    den = p4 + k * g4v4
-    return g4v4 / den[0], den / den[0]
+    # p^4 with p = [1+g, -(1-g)] expanded in closed form (binomial theorem)
+    pa, pb = 1.0 + g, g - 1.0
+    g4 = g**4
+    den = np.array([c * pa ** (4 - j) * pb**j + k * g4 * c for j, c in enumerate(_BINOM)])
+    return g4 * np.array(_BINOM) / den[0], den / den[0]
 
 
 class Ladder4Pole:
@@ -36,12 +38,16 @@ class Ladder4Pole:
         self.sr = float(sample_rate)
         self._zi = np.zeros(4)
         self._k = 0.0
+        self._key = None
         self.set(1000.0, 0.0)
 
     def set(self, fc_hz: float, resonance: float) -> None:
         fc, r = float(fc_hz), float(resonance)
         fc = 0.45 * self.sr if fc != fc else min(max(fc, _MIN_FC), 0.45 * self.sr)
         r = 0.0 if r != r else min(max(r, 0.0), 1.0)
+        if (fc, r) == self._key:
+            return
+        self._key = (fc, r)
         self._k = r * K_MAX
         self._b, self._a = ladder_coeffs(fc, self._k, self.sr)
 

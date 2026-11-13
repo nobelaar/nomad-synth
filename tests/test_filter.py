@@ -27,7 +27,7 @@ def test_self_oscillation_is_bounded():
     for i in range(0, len(x), 16):
         f.process(x[i:i+16])
     assert np.isfinite(x).all()
-    assert np.abs(x[-24000:]).max() < 10.0
+    assert 0.05 < np.abs(x[-24000:]).max() < 10.0
 
 def test_no_nan_at_extremes():
     for fc in (20.0, 18000.0):
@@ -61,3 +61,21 @@ def test_bad_params_and_reset():
     f.process(np.ones(16)); f.reset()
     z = np.zeros(16); f.process(z)
     assert not z.any()
+
+
+def test_closed_form_coeffs_match_convolve_reference():
+    for fc in (20.0, 440.0, 5000.0, 18000.0):
+        for k in (0.0, 1.3, 3.2, 4.3):
+            g = np.tan(np.pi * fc / SR)
+            p = np.array([1.0 + g, -(1.0 - g)]); v = np.array([1.0, 1.0])
+            p4 = np.convolve(np.convolve(p, p), np.convolve(p, p))
+            g4v4 = g**4 * np.convolve(np.convolve(v, v), np.convolve(v, v))
+            den = p4 + k * g4v4
+            b, a = ladder_coeffs(fc, k, SR)
+            assert np.allclose(b, g4v4 / den[0], rtol=1e-12, atol=1e-15)
+            assert np.allclose(a, den / den[0], rtol=1e-12, atol=1e-15)
+
+def test_set_with_same_values_keeps_coefficients_object():
+    f = Ladder4Pole(SR); f.set(1000.0, 0.5); b = f._b
+    f.set(1000.0, 0.5); assert f._b is b
+    f.set(1001.0, 0.5); assert f._b is not b
