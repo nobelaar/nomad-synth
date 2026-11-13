@@ -7,6 +7,8 @@ import signal
 import sys
 from pathlib import Path
 
+import numpy as np
+
 from nomad.audio.scope import ScopeBuffer
 from nomad.audio.stream import AudioStream
 from nomad.engine.engine import Engine
@@ -45,6 +47,16 @@ def make_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def _warm_up(sr, blocks=16):
+    """Render a throwaway engine so cold paths are paid before the stream starts."""
+    e = Engine(sr)
+    for n in (48, 60, 72):
+        e.note_on(n, 1.0)
+    out = np.zeros(256)
+    for _ in range(blocks):
+        e.render(out)
+
+
 class Runtime:
     def __init__(self, args, engine, stream, midi_map, midi_in, router):
         self.args, self.engine, self.stream = args, engine, stream
@@ -52,6 +64,7 @@ class Runtime:
         self.app = None
         self.last_stats: dict | None = None
         self._closed = False
+        self._stop = False
         self._old_sigs: dict = {}
 
     @property
@@ -83,22 +96,25 @@ class Runtime:
         if a.dry_run:
             self._demo()
             return
-        try:
-            self.stream.start()  # before build_app so the device label is right
-        except RuntimeError as e:
-            print(f"audio: {e}", file=sys.stderr)
-            self.stream = None  # window still opens, header says AUDIO: none
+        _warm_up(self.engine.sr)  # first-use numpy/scipy costs must not land in the audio callback
         from nomad.gui.app import build_app
         self.app = app = build_app(self.engine, self.stream, self.midi_map)
+        app.root.update()  # Tk widget construction holds the GIL: finish it BEFORE the stream starts
+        try:
+            self.stream.start()
+        except RuntimeError as e:
+            print(f"audio: {e}", file=sys.stderr)
+            self.stream = app.stream = None  # window stays open, header says AUDIO: none
+        app.refresh_audio()  # the label shows the device the stream actually resolved
         app.root.protocol("WM_DELETE_WINDOW", self.close)
-        ports = [] if a.no_midi else self.midi_in.list_ports()
+        # real controllers first: ALSA's 'Midi Through' is a loopback that never sends
+        ports = [] if a.no_midi else sorted(self.midi_in.list_ports(), key=lambda p: "Midi Through" in p)
         app.on_midi_port(self._open_midi, ports)
         if ports:
             self._open_midi(ports[0])
         self._demo()
         for s in (signal.SIGINT, signal.SIGTERM):
             self._old_sigs[s] = signal.signal(s, lambda *_: setattr(self, "_stop", True))
-        self._stop = False
         app.root.after(100, self._watch_signal)
 
     def _watch_signal(self):

@@ -206,3 +206,15 @@ def test_render_demos_and_errors(tmp_path):
         render_demo("nope", tmp_path / "x.wav")
     assert main(["--demo", "nope", str(tmp_path / "x.wav")]) == 2
     assert main(["--demo", "poly", str(tmp_path / "p.wav"), "--seconds", "0.5"]) == 0
+
+
+def test_midi_through_is_listed_last():
+    ports = ["Midi Through:Midi Through Port-0 14:0", "USB Keyboard 20:0"]
+    assert sorted(ports, key=lambda p: "Midi Through" in p)[0] == "USB Keyboard 20:0"
+
+
+def test_warm_up_does_not_touch_the_real_engine():
+    from nomad.main import _warm_up
+    rt = build_runtime(["--no-midi", "--dry-run"])
+    _warm_up(48000, blocks=2)
+    assert rt.engine.vm.active_notes() == []

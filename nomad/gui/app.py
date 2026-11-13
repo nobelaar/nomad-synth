@@ -260,6 +260,10 @@ class App:
             text = f"AUDIO: {d[self._dev_i].name[:28]}"
         self.dev_btn.configure(text=text, state="normal" if self.stream is not None and len(d) > 1 else "disabled")
 
+    def refresh_audio(self):
+        """Re-read the stream's resolved device (call after the stream started or failed)."""
+        self._set_dev_text()
+
     def _cycle_device(self):
         s = self.stream
         if s is None:
