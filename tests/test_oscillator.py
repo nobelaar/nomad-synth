@@ -118,6 +118,93 @@ def test_invalid_wave_raises():
             o.render_into(np.zeros(16), 440.0)
 
 
+def test_pulse_width_changes_duty():
+    out = render(3, 200.0, 4800, pw=0.25)
+    assert abs((out > 0).mean() - 0.25) < 0.02
+
+
+def test_pw_is_clamped():
+    out = render(3, 200.0, 4800, pw=0.0)
+    assert abs((out > 0).mean() - 0.05) < 0.02
+
+
+def test_pw_is_ignored_by_every_wave_but_square():
+    # Duty cycle is a property of the square only: a triangle is symmetric by
+    # definition and the sine and saw have no width to modulate. The default
+    # pw must also stay bit-identical to the pre-pw-precision waveform.
+    for wave in (0, 1, 2):
+        narrow = render(wave, 200.0, 1024, pw=0.2)
+        wide = render(wave, 200.0, 1024, pw=0.8)
+        assert np.array_equal(narrow, wide), wave
+
+
+def test_sync_resets_phase_at_master_wrap():
+    master = np.concatenate([np.linspace(0, 0.9, 32), np.linspace(0, 0.9, 32)])
+    out = render(2, 700.0, 64, sync_master_phase=master)
+    assert np.isfinite(out).all() and np.abs(out).max() <= 1.5
+
+
+def test_sync_really_restarts_the_slave_phase():
+    # The master wraps once, between samples 31 and 32, at phase 1.0. Before it
+    # the slave runs free, so both renders agree; after it the slave is back at
+    # the start of its cycle and the saws must diverge (the free run is at phase
+    # 0.467, the synced one near the -1 minimum).
+    master = np.concatenate([np.linspace(0.0, 0.9, 32), np.linspace(0.0, 0.9, 32)])
+    synced = render(2, 700.0, 64, sync_master_phase=master)
+    free = render(2, 700.0, 64)
+    assert np.allclose(synced[:32], free[:32], atol=1e-12)
+    assert np.abs(synced[32:] - free[32:]).max() > 0.5
+    assert synced[32:].min() < -0.95
+    assert np.abs(synced).max() <= 1.5
+
+
+def test_sync_handles_several_wraps_in_one_block():
+    # A master ramp that wraps every ~22 samples, at a different fractional
+    # position each time, resets the slave repeatedly inside one block.
+    master = (np.arange(96) * 0.045) % 1.0
+    wraps = np.flatnonzero(np.diff(master) < 0) + 1
+    assert len(wraps) >= 3
+    synced = render(2, 500.0, 96, sync_master_phase=master)
+    free = render(2, 500.0, 96)
+    assert np.isfinite(synced).all()
+    assert np.abs(synced).max() <= 1.5
+    for i in wraps:
+        assert synced[i] < free[i] - 0.2, i
+
+
+def test_sync_keeps_every_wave_bounded():
+    master = (np.arange(1024) * 0.17) % 1.0
+    for wave in (0, 1, 2, 3):
+        out = render(wave, 300.0, 1024, sync_master_phase=master)
+        assert np.isfinite(out).all(), wave
+        assert np.abs(out).max() <= 1.5, wave
+
+
+def test_sync_master_phase_must_match_the_block():
+    o = Oscillator(SR); o.wave = 2
+    with pytest.raises(ValueError):
+        o.render_into(np.zeros(16), 440.0, sync_master_phase=np.zeros(15))
+
+
+def test_synced_render_reuses_its_block_buffers(monkeypatch):
+    # Hard sync adds a scratch ramp and a wrap list, but it must not build new
+    # block-sized buffers per call either: the engine renders every voice inside
+    # the audio callback.
+    o = Oscillator(SR); o.wave = 2
+    buf = np.zeros(16)
+    master = (np.arange(16) * 0.07) % 1.0
+    calls = {"n": 0}
+    for name in ("empty", "zeros", "ones", "full", "arange", "linspace"):
+        real = getattr(np, name)
+        def counted(*a, __real=real, **k):
+            calls["n"] += 1
+            return __real(*a, **k)
+        monkeypatch.setattr(np, name, counted)
+    for _ in range(20):
+        o.render_into(buf, 440.0, sync_master_phase=master)
+    assert calls["n"] == 0
+
+
 def test_render_into_reuses_its_block_buffers(monkeypatch):
     # The engine requires render() not to build new buffers (Task 10), and a
     # note-on creates oscillators inside the audio callback, so this must hold
