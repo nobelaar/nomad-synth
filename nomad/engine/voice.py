@@ -96,7 +96,10 @@ class Voice:
             return self.note_on(note, velocity)
         self.note = int(note)  # so the manager's note_off lookup finds the new key
         self._pending = (int(note), velocity)
-        self._fade_left = max(1, int(STEAL_FADE_SEC * self.sr))
+        # A second steal during a running fade only retargets the pending note:
+        # restarting the fade would jump the gain back to 1 (click).
+        if self._fade_left == 0:
+            self._fade_left = max(1, int(STEAL_FADE_SEC * self.sr))
 
     def _freq(self, p, m, n: int, mode_key, hz_key, coarse_key, fine_key, mod_key) -> float:
         semis = _f(m[mod_key]) + _f(m["pitch"])

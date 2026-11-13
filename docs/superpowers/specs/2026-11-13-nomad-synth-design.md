@@ -221,8 +221,9 @@ Afinación continua: `coarse` en semitonos (-24..+24) + `fine` en cents
   y cerrando la voz, así que se puede tocar el teclado mientras un oscilador
   queda como drone; el teclado en pantalla funciona igual en los dos modos.
 
-En `free`, `coarse` pasa a leer Hz y `fine` sigue siendo cents. Son los mismos
-dos parámetros con otra curva; no hay parámetros nuevos.
+En `free`, la frecuencia sale de `osc{n}_hz` (20..8000 Hz, exp) + `fine` en cents;
+`coarse`, la tecla y el bend se ignoran (ruling del controlador, Tarea 8: el
+registro ya define `osc{n}_hz`).
 
 ### 9.3 Osciladores
 

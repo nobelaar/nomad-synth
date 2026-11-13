@@ -172,3 +172,16 @@ def test_render_accumulates_into_out():
     out = np.full(256, 0.25)
     v.render(out, params(), mods())
     assert not np.allclose(out, 0.25)
+
+
+def test_double_steal_has_no_click():
+    v = Voice(SR, 0); v.note_on(60, 1.0)
+    p = params(**BASE)
+    render_voice(v, 4096, p)
+    out = np.zeros(2400)
+    for i in range(0, len(out), 16):
+        if i == 480: v.begin_steal(72, 1.0)
+        if i == 640: v.begin_steal(67, 1.0)   # second steal mid-fade
+        v.render(out[i:i+16], p, mods())
+    assert np.abs(np.diff(out)).max() < 0.08
+    assert v.note == 67
