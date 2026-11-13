@@ -35,7 +35,7 @@ class ParamSpec:
     ``curve`` is ``"lin"`` for a linear mapping between ``lo`` and ``hi``
     or ``"exp"`` for a logarithmic one (both bounds must be positive in
     that case). ``unit`` is only used for display; ``smooth_ms`` is the
-    settling time of the per-parameter smoother.
+    one-pole time constant of the per-parameter smoother.
     """
 
     name: str
@@ -112,10 +112,15 @@ REGISTRY: dict[str, ParamSpec] = _build_registry()
 def clamp(name: str, value: float) -> float:
     """Return ``value`` limited to the range of parameter ``name``.
 
-    Raises :class:`KeyError` for unknown parameter names.
+    Raises :class:`KeyError` for unknown parameter names. Non-finite
+    inputs (NaN, infinities) return the parameter default instead of
+    poisoning the smoothing chain.
     """
     spec = REGISTRY[name]
-    return min(max(float(value), spec.lo), spec.hi)
+    v = float(value)
+    if not math.isfinite(v):
+        return spec.default
+    return min(max(v, spec.lo), spec.hi)
 
 
 def to_norm(name: str, value: float) -> float:
@@ -139,10 +144,11 @@ def from_norm(name: str, norm: float) -> float:
 class Smoother:
     """One-pole exponential smoother for a single parameter.
 
-    ``time_ms`` is the time the value takes to settle within 0.1 % of the
-    target. Every :meth:`advance` call moves the value towards
-    :attr:`target` by the one-pole coefficient ``1 - exp(-frames / tau)``,
-    so the target is never overshot.
+    ``time_ms`` is the time constant of the one-pole filter, so the value
+    settles to within 0.1 % of the target after roughly 6.9 times
+    ``time_ms``. Every :meth:`advance` call moves the value towards
+    :attr:`target` with the coefficient ``1 - exp(-frames / tau)``, where
+    ``tau = time_ms/1000 * sample_rate``, so the target is never overshot.
     """
 
     def __init__(self, target: float, sample_rate: float, time_ms: float) -> None:
@@ -150,12 +156,11 @@ class Smoother:
         self.value = float(target)
         self.sample_rate = float(sample_rate)
         self.time_ms = float(time_ms)
-        # Time constant in samples; ln(1000) turns time_ms into a 99.9 %
-        # settling time.
-        self._tau = max(
-            self.time_ms / 1000.0 * self.sample_rate / math.log(1000.0),
-            1e-9,
-        )
+
+    @property
+    def _tau(self) -> float:
+        """Time constant in samples, derived from the current settings."""
+        return max(self.time_ms / 1000.0 * self.sample_rate, 1e-9)
 
     def set(self, target: float) -> None:
         """Move the target; :attr:`value` follows on the next advances."""
