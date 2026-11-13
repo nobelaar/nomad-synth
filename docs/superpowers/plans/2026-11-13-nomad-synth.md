@@ -72,7 +72,7 @@ def test_smoother_approaches_target_without_overshoot():
     from nomad.engine.params import Smoother
     s = Smoother(0.0, 48000.0, 15.0)
     s.set(1.0)
-    vals = [s.advance(16) for _ in range(100)]
+    vals = [s.advance(16) for _ in range(400)]   # 133 ms = 8.9 tau
     assert vals[-1] == pytest.approx(1.0, abs=1e-3)
     assert all(0.0 <= v <= 1.0 for v in vals)
 ```
