@@ -188,15 +188,21 @@ están preasignados en `__init__`).
 - 48 kHz, mono interno, estéreo en el stream (misma señal; el ancho llega con
   el chorus futuro).
 - El bloque de callback es de 256 muestras, pero **no se asume**: el engine
-  parte cada llamada en *granos* de 16 muestras (el último puede ser más
-  corto) y lleva su propio estado entre llamadas. Así un quantum de 128, 512
-  o 1024 no rompe ni el suavizado ni el LFO ni el filtro.
-- Los coeficientes del filtro y los valores de parámetros se actualizan por
-  grano; el envelope y la mezcla se calculan por bloque dentro de cada grano.
-- Peor caso medido con un prototipo (8 voces, 2 osc saw PolyBLEP, filtro
-  4 polos cada 64 muestras): **1.25 ms por bloque de 256 = 23%**. Con granos
-  de 16 el costo del filtro se duplica pero el presupuesto sigue sobrando
-  (ver §17).
+  parte cada llamada en *bloques de control* de `min(256, frames_restantes)` y
+  lleva su propio estado entre llamadas. Un quantum de 128, 512 o 1024 no
+  rompe nada.
+- En cada bloque de control avanzan los LFOs, la matriz, los smoothers, los
+  envelopes y **los dos osciladores**. El filtro es la excepción: se subdivide
+  en granos de 16 muestras cuando `k > 3.2` (calidad de autoscilación) y de 64
+  en el resto, porque es lo único que necesita coeficientes de alta cadencia.
+- Por qué: medido, renderizar los osciladores en granos de 16 cuesta 250 % de
+  CPU en triangle (8 voces × 2 osc) por el overhead de numpy en arrays
+  chicos; en bloques de 256 cuesta 20 % (§17). La modulación queda a 187 Hz,
+  suficiente para LFOs de hasta ~10 Hz; si un LFO rápido suena escalonado, la
+  solución es modulación de fase dentro del oscilador, no volver a granos de
+  16.
+- Peor caso medido: **≈2 ms por bloque de 256** (osciladores 1.06 ms con
+  triangle + filtro ~0.9 ms con granos de 16), 38 % del presupuesto de 5.33 ms.
 
 ### 9.2 Parámetros
 

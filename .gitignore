@@ -5,3 +5,6 @@ __pycache__/
 .idea/
 .vscode/
 *.wav
+.venv
+.venv/
+.pytest_cache/
