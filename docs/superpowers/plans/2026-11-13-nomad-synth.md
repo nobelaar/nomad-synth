@@ -625,7 +625,7 @@ Expected: FAIL `ModuleNotFoundError`
 
 - [ ] **Step 3: Implementar**
 
-`render` por grano: calcular pitch de cada osc (track: nota MIDI + coarse + fine + mods; free: `osc_hz` + fine), envolver con `mods`, renderizar ambos osciladores con `level`, sumar, filtrar con cutoff = `filt_cutoff · 2^(filt_env_amt · 5 · env2 + mods.cutoff · 2)` recortado a 20..18000, aplicar `amp_env` y `mods.amp`, sumar en `out`.
+`render` se llama **una vez por bloque de control** (≤256 frames). Por llamada: calcular pitch de cada osc (track: nota MIDI + coarse + fine + mods; free: `osc_hz` + fine), renderizar ambos osciladores con `level`, sumar, y después pasar la señal por el filtro **subdividida en granos** de 16 muestras si `k > 3.2` y de 64 si no, con cutoff = `filt_cutoff · 2^(filt_env_amt · 5 · env2 + mods.cutoff · 2)` recortado a 20..18000 y recalculado por grano. Finalmente aplicar `amp_env` y `mods.amp` sobre el bloque completo y sumar en `out`.
 
 - [ ] **Step 4: Correr y ver que pasa**
 
@@ -757,15 +757,24 @@ from nomad.engine.engine import Engine
 SR = 48000.0
 
 def test_quantum_agnostic_render():
-    a = Engine(SR); b = Engine(SR)
-    for e in (a, b):
+    def render(e, sizes):
+        out = np.zeros(sum(sizes)); i = 0
+        for n in sizes:
+            e.render(out[i:i+n]); i += n
+        return out
+    def make():
+        e = Engine(SR)
         e.set_param("amp_attack", 1.0); e.set_param("filt_cutoff", 3000.0)
         e.note_on(60, 1.0)
-    out_a = np.zeros(2048); a.render(out_a)
-    out_b = np.zeros(2048)
-    for i in range(0, 2048, 128):
-        b.render(out_b[i:i+128])
-    assert np.allclose(out_a, out_b, atol=1e-6)
+        return e
+    # el engine trabaja en bloques de control de 256: 2048 de una vez == 8×256
+    a = render(make(), [2048])
+    b = render(make(), [256] * 8)
+    assert np.allclose(a, b, atol=1e-6)
+    # tamaños arbitrarios: finitos y sin discontinuidad en los bordes
+    c = render(make(), [37, 1, 128, 500, 88, 1294])
+    assert np.isfinite(c).all()
+    assert np.abs(np.diff(c)).max() < 0.2
 
 def test_render_does_not_allocate(monkeypatch):
     e = Engine(SR); e.note_on(60, 1.0)
