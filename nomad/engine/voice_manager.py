@@ -99,6 +99,14 @@ class VoiceManager:
     def active_notes(self) -> list[int]:
         return [self.voices[i].note for i in self._held_slots()]
 
+    def panic(self) -> None:
+        """Release everything: each active voice fades to silence over the 5 ms steal fade."""
+        for i, v in enumerate(self.voices):
+            if v.is_active():
+                v.begin_steal(v.note, 0.0)
+                v.note_off()  # cancels the retrigger; the fade ends in silence
+            self._held[i] = False
+
     def render(self, out, p, mods, resolve=None) -> None:
         for v in self.voices:
             if v.is_active():
