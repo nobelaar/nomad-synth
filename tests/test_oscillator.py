@@ -221,3 +221,16 @@ def test_render_into_reuses_its_block_buffers(monkeypatch):
     for _ in range(20):
         o.render_into(buf, 440.0)
     assert calls["n"] == 0
+
+
+def test_sync_wrap_on_block_boundary_is_not_missed():
+    # Master wraps exactly between block 1 and block 2: 0.9 -> 0.05.
+    m = np.concatenate([np.linspace(0.5, 0.9, 32), np.linspace(0.05, 0.45, 32)])
+    whole = render(2, 700.0, 64, sync_master_phase=m)
+    o = Oscillator(SR); o.wave = 2
+    a = np.zeros(32); b = np.zeros(32)
+    o.render_into(a, 700.0, sync_master_phase=m[:32])
+    o.render_into(b, 700.0, sync_master_phase=m[32:])
+    free = render(2, 700.0, 64)
+    assert np.abs(b - free[32:]).max() > 0.3  # reset happened at sample 32
+    assert np.abs(b[3:] - whole[35:]).max() < 1e-9

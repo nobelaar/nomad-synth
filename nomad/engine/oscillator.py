@@ -112,12 +112,17 @@ class Oscillator:
         # Scratch for the reset positions of the hard-sync ramp, sized like the
         # ramp so the sync path never regrows a buffer in the audio callback.
         self._sync_rst = np.empty(MAX_BLOCK, dtype=np.float64)
+        # Master phase buffer with the previous block's last sample in front, so
+        # a wrap that lands exactly on a block boundary is still seen.
+        self._master_ext = np.empty(MAX_BLOCK + 1, dtype=np.float64)
+        self._last_master: float | None = None
 
     def _phase_ramp(self, n: int) -> np.ndarray:
         """Return the first ``n`` sample offsets, growing the caches if needed."""
         if n > self._ramp.shape[0]:
             self._ramp = np.arange(n, dtype=np.float64)
             self._sync_rst = np.empty(n, dtype=np.float64)
+            self._master_ext = np.empty(n + 1, dtype=np.float64)
         return self._ramp[:n]
 
     def _synced_ramp(
@@ -136,10 +141,10 @@ class Oscillator:
         indices of the samples that follow a reset and, for each of them, the
         fractional position of the reset inside the preceding interval.
 
-        The block is all this method sees, so a wrap that falls exactly between
-        two calls is not visible: callers must keep the master phase contiguous
-        from one block to the next, and a wrap that lands on the boundary of a
-        block goes undetected. A master that jitters (e.g. phase-modulated) is
+        The last master sample of the previous synced block is remembered, so a
+        wrap that lands exactly on a block boundary is detected too (index 0);
+        callers must keep the master phase contiguous from one block to the
+        next. A master that jitters (e.g. phase-modulated) is
         treated as wrapping wherever it goes backwards.
         """
         mp = np.asarray(master, dtype=np.float64)
@@ -149,16 +154,19 @@ class Oscillator:
             )
         # Grow both caches before slicing the scratch buffer.
         ramp = self._phase_ramp(n)
-        prev = mp[:-1]
-        idx = np.flatnonzero(mp[1:] < prev) + 1
+        ext = self._master_ext[: n + 1]
+        ext[0] = mp[0] if self._last_master is None else self._last_master
+        ext[1:] = mp
+        self._last_master = float(mp[n - 1])
+        idx = np.flatnonzero(mp < ext[:n])
         if idx.size == 0:
             # The common case is a block without a wrap: the synced ramp is
             # then exactly the free-running one, with no reset bookkeeping.
             t = ramp * inc
             t += phase
             t %= 1.0
-            return t, idx, prev[:0]
-        a = prev[idx - 1]
+            return t, idx, mp[:0]
+        a = ext[idx]
         b = mp[idx]
         # The master ran from ``a`` to ``1 + b``; it crossed 1.0 a fraction
         # ``(1 - a) / (1 + b - a)`` of the way into the interval.
@@ -222,16 +230,19 @@ class Oscillator:
         """
         for i, f in zip(idx.tolist(), frac.tolist()):
             t_new = float(t[i])
-            t_old = float(t[i - 1])
+            # Sample -1 belongs to the previous block: its phase is one step
+            # behind the start phase, and it has already been emitted.
+            t_old = float(t[i - 1]) if i else (self.phase - inc) % 1.0
             jump = 0.5 * (
                 self._value_at(t_new, wave, pw)
                 - self._value_at(t_old, wave, pw)
             )
             out[i] += -jump * f * f - self._edge_at(t_new, inc, wave)
-            out[i - 1] += (
-                jump * (1.0 - f) * (1.0 - f)
-                - self._edge_at(t_old, inc, wave)
-            )
+            if i:
+                out[i - 1] += (
+                    jump * (1.0 - f) * (1.0 - f)
+                    - self._edge_at(t_old, inc, wave)
+                )
 
     def render_into(
         self,
@@ -279,6 +290,7 @@ class Oscillator:
             t += phase
             t %= 1.0
             reset_idx = None
+            self._last_master = None
         else:
             t, reset_idx, reset_frac = self._synced_ramp(
                 n, inc, phase, sync_master_phase
