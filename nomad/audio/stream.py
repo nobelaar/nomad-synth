@@ -72,6 +72,7 @@ class AudioStream:
         self._ref = None
         self._done = 0
         self._stream = None
+        self.active_device = None
 
     def callback(self, outdata, frames, time_info, status):
         self.callbacks += 1
@@ -113,6 +114,7 @@ class AudioStream:
         idx = self.device_index
         if idx is None:
             idx = pick_device(list_output_devices(), _default_output_index())
+        self.active_device = idx  # resolved index, so the GUI label never lies about auto-pick
         try:
             self._stream = sd.OutputStream(samplerate=self.samplerate, blocksize=self.blocksize,
                                            device=idx, channels=2, dtype="float32",

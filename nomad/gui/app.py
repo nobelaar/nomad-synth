@@ -33,9 +33,9 @@ LAYOUT: dict[str, list[str]] = {
     "lfo1": ["lfo1_wave", "lfo1_rate", "lfo1_depth", "lfo1_phase"],
     "lfo2": ["lfo2_wave", "lfo2_rate", "lfo2_depth", "lfo2_phase"],
     "matrix": _P,
-    "global": ["master_volume", "polyphony"],
+    "global": ["master_volume", "polyphony", "bend_range"],
 }
-HIDDEN = {"bend_range", "osc1_sync"}  # osc1_sync: engine only reads osc2_sync (dead param)
+HIDDEN = {"osc1_sync"}  # osc1_sync: engine only reads osc2_sync (dead param)
 
 _SEL_SUFFIX = ("_wave", "_mode", "_sync", "_src", "_dst")
 _LABELS = {  # abbreviations keep the 8-button destination row narrow
@@ -121,7 +121,7 @@ class App:
         devs = list_output_devices()
         self._devs = devs
         cur = getattr(self.stream, "device_index", None)
-        self._dev_i = next((i for i, d in enumerate(devs) if d.index == cur), 0)
+        self._dev_i = next((i for i, d in enumerate(devs) if d.index == cur), None)  # None: auto/unknown
         self.dev_btn = self._btn(h, self._cycle_device)
         self._set_dev_text()
         self.dev_btn.pack(side="left", padx=6)
@@ -201,7 +201,8 @@ class App:
     def apply_param(self, name, value):
         """Thread-safe: engine now, widget refresh on the next Tk poll."""
         self.engine.set_param(name, value)
-        self._pending.put((name, value))
+        if not self._closed:
+            self._pending.put((name, value))
 
     # ---- LEARN -------------------------------------------------------------
     def _context(self, name):
@@ -242,21 +243,29 @@ class App:
     # ---- header choosers -----------------------------------------------------
     def _set_dev_text(self):
         d = self._devs
-        self.dev_btn.configure(text=f"AUDIO: {d[self._dev_i].name[:28]}" if d else "AUDIO: none",
-                               state="normal" if len(d) > 1 else "disabled")
+        if self.stream is None or not d:
+            text = "AUDIO: none"
+        elif self._dev_i is None:
+            act = getattr(self.stream, "active_device", None)
+            name = next((x.name for x in d if x.index == act), None)
+            text = f"AUDIO: {name[:28]}" if name else "AUDIO: auto"
+        else:
+            text = f"AUDIO: {d[self._dev_i].name[:28]}"
+        self.dev_btn.configure(text=text, state="normal" if self.stream is not None and len(d) > 1 else "disabled")
 
     def _cycle_device(self):
-        self._dev_i = (self._dev_i + 1) % len(self._devs)
-        self._set_dev_text()
         s = self.stream
         if s is None:
             return
+        old = self._dev_i
+        self._dev_i = ((old if old is not None else -1) + 1) % len(self._devs)
         s.close()  # restartable: start() reopens on the new device
         s.device_index = self._devs[self._dev_i].index
         try:
             s.start()
         except RuntimeError as e:
             self.status.set(str(e)[:80])
+        self._set_dev_text()
 
     def on_midi_port(self, cb, ports=()):
         """Register ``cb(port_name)`` (called on the Tk thread) and the ports to cycle through."""
@@ -282,6 +291,8 @@ class App:
                 self._show(*self._pending.get_nowait())
             except queue.Empty:
                 break
+            except (ValueError, OverflowError):
+                pass  # a non-finite value must never stop the poll loop
         self.voices.set(f"VOICES {len(self.engine.vm.active_notes())}")
         self.xruns.set(f"XRUNS {getattr(self.stream, 'xruns', 0)}")
         if self._armed_by_us and self.midi_map.learning is None:

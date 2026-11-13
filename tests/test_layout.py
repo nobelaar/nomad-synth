@@ -107,3 +107,26 @@ def test_learn_arms_last_touched_and_requires_map(app):
 def test_close_is_idempotent(app):
     app.close()
     app.close()
+
+
+def test_poll_survives_non_finite_apply_param():
+    import pytest, tkinter
+    from nomad.engine.engine import Engine
+    try:
+        a = build_app(Engine(48000))
+    except tkinter.TclError:
+        pytest.skip("no display")
+    try:
+        a.apply_param("polyphony", float("nan"))
+        a.apply_param("filt_cutoff", float("inf"))
+        a.apply_param("filt_reso", 0.5)
+        a.root.update()
+        a._poll()
+        assert a._pending.empty() and a.widgets["filt_reso"].model.value == 0.5
+    finally:
+        a.close()
+
+
+def test_bend_range_is_reachable():
+    from nomad.gui.app import LAYOUT
+    assert "bend_range" in LAYOUT["global"]
