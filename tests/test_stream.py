@@ -97,8 +97,15 @@ def test_real_stream_runs_silently():
     from nomad.engine.engine import Engine
     e = Engine(); e.set_param("master_volume", 0.0); e.note_on(60, 0.8)
     s = AudioStream(e)
-    s.start(); s.start()
-    time.sleep(0.3)
-    s.stop(); s.close()
+    try:
+        s.start(); s.start()
+        time.sleep(0.3)
+        s.stop()
+        n = s.callbacks
+        s.start()  # restart after stop must produce audio again
+        time.sleep(0.3)
+        assert s.callbacks > n
+    finally:
+        s.close()
     print(f"callbacks={s.callbacks} xruns={s.xruns} errors={s.errors} max_late_ms={s.max_late_ms:.2f}")
     assert s.callbacks > 0 and s.errors == 0 and s.xruns <= 1

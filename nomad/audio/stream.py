@@ -78,6 +78,9 @@ class AudioStream:
         try:
             if status is not None and getattr(status, "output_underflow", False):
                 self.xruns += 1
+            # shortcut: lateness heuristic assumes the host delivers bursts of <=2 blocks
+            # (JACK period <= 2*blocksize); deeper bursts can yield one false xrun each.
+            # The underflow flag above is the authoritative signal.
             t = getattr(time_info, "currentTime", None)
             if t is not None:
                 nominal = frames / self.samplerate
@@ -102,6 +105,9 @@ class AudioStream:
 
     def start(self):
         if self._stream is not None:
+            if not self._stream.active:  # restart after stop()
+                self._ref, self._done = None, 0
+                self._stream.start()
             return
         self._ref, self._done = None, 0
         idx = self.device_index
@@ -112,8 +118,8 @@ class AudioStream:
                                            device=idx, channels=2, dtype="float32",
                                            latency="low", callback=self.callback)
             self._stream.start()
-        except sd.PortAudioError as e:
-            self._stream = None
+        except (sd.PortAudioError, ValueError) as e:
+            self.close()  # don't leak the PortAudio handle if start() failed
             raise RuntimeError(f"Could not open audio device {idx}: {e}") from None
 
     def stop(self):
