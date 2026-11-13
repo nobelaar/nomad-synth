@@ -2,7 +2,8 @@
 
 Ownership: App owns only its Tk window and polls. It does NOT own the engine,
 stream, MIDI input or MIDI map; whoever built them (Task 18) stops/closes them.
-Task 17 fills ``App.scope_frame`` / ``App.keyboard_frame`` (placeholders here).
+``App.scope`` (ScopeView) and ``App.keyboard`` (Keyboard, talks to the engine directly) live in
+``scope_frame`` / ``keyboard_frame``.
 
 Threading: only the Tk thread may touch widgets. ``apply_param`` is safe from
 any thread (e.g. rtmidi's): it calls engine.set_param (a lock-free queue) and
@@ -19,6 +20,8 @@ from nomad.audio.stream import list_output_devices
 from nomad.engine.modmatrix import DESTINATIONS, SOURCES
 from nomad.engine.params import REGISTRY
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
+from nomad.gui.keyboard import Keyboard
+from nomad.gui.scope_view import ScopeView
 from nomad.gui.selector import Selector
 
 POLL_MS = 100
@@ -108,13 +111,17 @@ class App:
                           ("amp_env", 1, 0), ("filt_env", 1, 1), ("lfo1", 1, 2), ("lfo2", 1, 3)):
             self._section(left, sec).grid(row=r, column=c, sticky="nw", padx=2, pady=2)
         self._section(left, "matrix").grid(row=2, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
-        self.scope_frame = tk.Frame(right, bg=BG, width=250, height=150)  # Task 17 fills
+        self.scope_frame = tk.Frame(right, bg=BG, width=250, height=150)
         self.scope_frame.pack_propagate(False)
         self.scope_frame.pack(anchor="nw", pady=2)
+        self.scope = ScopeView(self.scope_frame, self.scope_buffer, 250, 150, sr=self.engine.sr)
+        self.scope.pack()
         self._section(right, "global").pack(anchor="nw", pady=2)
-        self.keyboard_frame = tk.Frame(root, bg=BG, width=1350, height=84)  # Task 17 fills
+        self.keyboard_frame = tk.Frame(root, bg=BG, width=1350, height=84)
         self.keyboard_frame.pack_propagate(False)
         self.keyboard_frame.grid(row=2, column=0, columnspan=2, padx=6, pady=4)
+        self.keyboard = Keyboard(self.keyboard_frame, self.engine.note_on, self.engine.note_off, octaves=6)
+        self.keyboard.pack()
 
     def _build_header(self, h):
         tk.Label(h, text="NOMAD SYNTH", bg=BG, fg=GREEN, font=("TkDefaultFont", 14, "bold")).pack(side="left", padx=8)
@@ -293,7 +300,9 @@ class App:
                 break
             except (ValueError, OverflowError):
                 pass  # a non-finite value must never stop the poll loop
-        self.voices.set(f"VOICES {len(self.engine.vm.active_notes())}")
+        notes = self.engine.vm.active_notes()
+        self.keyboard.set_active(notes)
+        self.voices.set(f"VOICES {len(notes)}")
         self.xruns.set(f"XRUNS {getattr(self.stream, 'xruns', 0)}")
         if self._armed_by_us and self.midi_map.learning is None:
             self._learn_finished()
@@ -304,6 +313,7 @@ class App:
         if self._closed:
             return
         self._closed = True
+        self.scope.stop()
         try:
             if self._after:
                 self.root.after_cancel(self._after)
