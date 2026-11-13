@@ -71,6 +71,7 @@ def test_panel_fits_with_scope_and_keyboard():
     try:
         a.root.update()
         assert a.root.winfo_reqwidth() <= 1366 and a.root.winfo_reqheight() <= 768
-        assert a.scope.winfo_ismapped() and a.keyboard.winfo_ismapped()
+        if a.root.winfo_ismapped():  # not mapped when the screensaver/lock owns the display
+            assert a.scope.winfo_ismapped() and a.keyboard.winfo_ismapped()
     finally:
         a.close()
