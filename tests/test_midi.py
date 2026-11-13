@@ -209,3 +209,14 @@ def test_virtual_port_roundtrip():
     finally:
         m.close(); out.close()
     assert not m.is_open
+
+def test_reset_releases_held_and_pending_and_clears_pedal():
+    e, r = setup()
+    r.handle(ev("note_on", note=60))
+    r.handle(ev("cc", cc=64, value=127))
+    r.handle(ev("note_on", note=61)); r.handle(ev("note_off", note=61))
+    r.reset()
+    assert sorted(e.notes_off) == [60, 61]
+    r.handle(ev("note_on", note=62)); r.handle(ev("note_off", note=62))
+    assert 62 in e.notes_off  # pedal no longer latched
+    r.reset(); r.reset()  # idempotent

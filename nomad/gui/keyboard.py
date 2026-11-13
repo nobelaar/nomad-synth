@@ -81,6 +81,9 @@ class Keyboard(tk.Canvas):
 
     def _paint(self):
         lit = self._active | ({self._held} if self._held is not None else set())
-        for n, item in self._keys.items():
-            black = (n - self.base) % 12 in (1, 3, 6, 8, 10)
-            self.itemconfigure(item, fill=GREEN if n in lit else ("#1c1c1c" if black else "#d8d8d8"))
+        try:
+            for n, item in self._keys.items():
+                black = (n - self.base) % 12 in (1, 3, 6, 8, 10)
+                self.itemconfigure(item, fill=GREEN if n in lit else ("#1c1c1c" if black else "#d8d8d8"))
+        except tk.TclError:
+            pass  # widget already gone (<Destroy> while a key is held)

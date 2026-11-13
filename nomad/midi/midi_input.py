@@ -107,6 +107,17 @@ class MidiRouter:
         self._held: set[int] = set()     # keys physically down
         self._pending: set[int] = set()  # released while pedal down
 
+    def reset(self) -> None:
+        """Release every note this router is holding (keys + pedal) and clear the pedal.
+
+        Call after the MIDI port changes/closes so nothing hangs. Same thread as handle().
+        """
+        for n in sorted(self._held | self._pending):
+            self._engine.note_off(n)
+        self._held.clear()
+        self._pending.clear()
+        self._sustain = False
+
     def handle(self, e: MidiEvent) -> None:
         eng = self._engine
         if e.kind == "note_on":

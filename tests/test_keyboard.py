@@ -41,3 +41,15 @@ def test_press_glissando_release(tkroot):
     assert ev[-1] == ("off", 50) and len(ev) == 4
     k.set_active([48]); k.set_active([48])
     assert tkroot.tk.call(k._w, "itemcget", k._keys[48], "-fill") == "#55e69a"
+
+def test_destroy_while_key_held_does_not_raise(tkroot):
+    ev = []
+    errs = []
+    tkroot.report_callback_exception = lambda *a: errs.append(a)  # Tk swallows <Destroy> errors
+    top = tk.Toplevel(tkroot)
+    k = Keyboard(top, lambda n, v: ev.append(("on", n)), lambda n: ev.append(("off", n)), 2, W, H, 48)
+    k.pack()
+    k._press(type("E", (), {"x": 5, "y": 90})())
+    top.destroy()  # <Destroy> -> _release -> _paint on a dead widget
+    tkroot.update()
+    assert ev == [("on", 48), ("off", 48)] and errs == []
