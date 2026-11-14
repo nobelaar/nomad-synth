@@ -39,6 +39,7 @@ La primera vez se compilan los kernels de `numba` (unos 2 s); después quedan en
 | Doble click | Vuelve al valor por defecto |
 | Click derecho / central en una perilla o selector | Menú: **Valor por defecto**, **MIDI learn** (después mové un CC del controlador; si ya está armado, **Cancelar learn**) y **Quitar MIDI** si el parámetro tiene un CC asignado |
 | Botón `LEARN` | Arma el último control tocado |
+| Botón `?` / `F1` | **Modo ayuda**: cursor de pregunta; al pasar el mouse por un control se abre una ventanita que explica qué es, cómo suena y con qué interactúa. Los controles no responden mientras está prendido. Se sale con `?`, `F1` o `Escape` |
 | Teclado en pantalla | Click/arrastre toca notas (glissando); se ilumina con las notas MIDI |
 
 Las ondas, modos, fuentes y destinos de modulación son selectores segmentados. El osciloscopio

@@ -19,6 +19,7 @@ from nomad.audio.scope import ScopeBuffer
 from nomad.audio.stream import list_output_devices
 from nomad.engine.params import REGISTRY
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
+from nomad.gui.help import help_for
 from nomad.gui.keyboard import Keyboard
 from nomad.gui.scope_view import ScopeView
 from nomad.gui.selector import Selector
@@ -46,6 +47,9 @@ _LABELS = {  # abbreviations keep the 8-button destination row narrow
     "_dst": ["-", "PIT", "P1", "P2", "AMP", "CUT", "PW1", "PW2"],
 }
 _FONT = ("TkDefaultFont", 8)
+HELP_TAG = "NomadHelp"   # bindtag put first on every widget while help mode is on
+HELP_DELAY_MS = 150
+HELP_WRAP = 330
 
 
 def widget_kind(name: str) -> str:
@@ -95,11 +99,17 @@ class App:
         self._midi_i = 0
         self._midi_rescan, self._midi_open = None, False
         self.status = tk.StringVar(value="")
+        self.help_on = False
+        self._help_keys: dict[str, str] = {}   # widget path -> help key
+        self._help_cursors: dict[tk.Misc, str] = {}
+        self._help_after = None
+        self._help_shown: str | None = None
         self._menu = tk.Menu(root, tearoff=0, bg=TROUGH, fg=GREY, activebackground=GREEN,
                              activeforeground=BG, disabledforeground="#555555", font=_FONT)
         root.bind_all("<ButtonPress-1>", self._close_menu, add="+")
         root.bind_all("<Escape>", self._close_menu, add="+")
         self._build()
+        self._build_help()
         self._push_snapshot()
         self._after = root.after(POLL_MS, self._poll)
 
@@ -126,6 +136,8 @@ class App:
         self.keyboard_frame.grid(row=2, column=0, columnspan=2, padx=6, pady=4)
         self.keyboard = Keyboard(self.keyboard_frame, self.engine.note_on, self.engine.note_off, octaves=6)
         self.keyboard.pack()
+        self._help_register(self.keyboard, "keyboard")
+        self._help_register(self.scope, "scope")
 
     def _build_header(self, h):
         tk.Label(h, text="NOMAD SYNTH", bg=BG, fg=GREEN, font=("TkDefaultFont", 14, "bold")).pack(side="left", padx=8)
@@ -142,12 +154,19 @@ class App:
         self.voices = tk.StringVar(value="VOICES 0")
         self.xruns = tk.StringVar(value="XRUNS 0")
         for v in (self.voices, self.xruns):
-            tk.Label(h, textvariable=v, bg=BG, fg=GREY, font=_FONT, width=10).pack(side="left", padx=6)
+            lbl = tk.Label(h, textvariable=v, bg=BG, fg=GREY, font=_FONT, width=10)
+            lbl.pack(side="left", padx=6)
+            self._help_register(lbl, "voices" if v is self.voices else "xruns")
         self.learn_btn = self._btn(h, self._toggle_learn, "LEARN")
         if self.midi_map is None:
             self.learn_btn.configure(state="disabled")
             self.status.set("LEARN unavailable: no MIDI map")
         self.learn_btn.pack(side="left", padx=6)
+        self.help_btn = self._btn(h, self.toggle_help, "?")
+        self.help_btn.pack(side="left", padx=6)
+        for w, key in ((self.learn_btn, "learn"), (self.dev_btn, "audio"), (self.midi_btn, "midi"),
+                       (self.help_btn, "help")):
+            self._help_register(w, key)
         tk.Label(h, textvariable=self.status, bg=BG, fg=GREEN, font=_FONT).pack(side="left", padx=6)
         return h
 
@@ -191,7 +210,100 @@ class App:
             w = Knob(parent, KnobModel(spec, spec.default), lambda v, n=name: self._user(n, v),
                      label=_short(name), on_context=lambda e, n=name: self._context(n, e))
         self.widgets[name] = w
+        self._help_register(w, name)
         return w
+
+    # ---- help mode -----------------------------------------------------------
+    def _help_register(self, widget, key):
+        self._help_keys[str(widget)] = key
+
+    def _build_help(self):
+        r = self.root
+        for ev in ("<ButtonPress>", "<ButtonRelease>", "<Motion>", "<MouseWheel>"):
+            r.bind_class(HELP_TAG, ev, lambda e: "break")  # controls paused
+        r.bind_class(HELP_TAG, "<Enter>", self._help_enter)
+        r.bind_all("<F1>", lambda e: self.toggle_help(), add="+")
+        r.bind_all("<Escape>", lambda e: self.toggle_help() if self.help_on else None, add="+")
+        win = self._help_win = tk.Toplevel(r, bg=GREEN)
+        win.withdraw()
+        win.overrideredirect(True)
+        box = tk.Frame(win, bg=BG, padx=10, pady=8)
+        box.pack(padx=1, pady=1)
+        self._help_title = tk.Label(box, bg=BG, fg=GREEN, font=("TkDefaultFont", 10, "bold"),
+                                    justify="left", anchor="w")
+        self._help_title.pack(anchor="w")
+        self._help_body = tk.Label(box, bg=BG, fg="#dddddd", font=("TkDefaultFont", 9),
+                                   justify="left", anchor="w", wraplength=HELP_WRAP)
+        self._help_body.pack(anchor="w", pady=(4, 0))
+
+    def _walk(self, w):
+        yield w
+        for c in w.winfo_children():
+            if c is not self._help_win:
+                yield from self._walk(c)
+
+    def toggle_help(self):
+        """Help mode: question-mark cursor, hovering explains, controls don't respond."""
+        self.help_on = on = not self.help_on
+        self._menu.unpost()
+        for w in self._walk(self.root):
+            if w is self.help_btn:
+                continue
+            tags = tuple(t for t in w.bindtags() if t != HELP_TAG)
+            w.bindtags(((HELP_TAG,) + tags) if on else tags)
+            if on:
+                self._help_cursors[w] = w.cget("cursor")
+                w.configure(cursor="question_arrow")
+            elif w in self._help_cursors:
+                w.configure(cursor=self._help_cursors.pop(w))
+        self.help_btn.configure(bg=GREEN if on else TROUGH, fg=BG if on else GREY)
+        self.status.set("AYUDA: pasá el mouse por un control (F1 / Esc para salir)" if on else "")
+        if not on:
+            if self._help_after:
+                self.root.after_cancel(self._help_after)
+                self._help_after = None
+            self._help_win.withdraw()
+            self._help_shown = None
+
+    def _help_key_for(self, w):
+        while w is not None:
+            key = self._help_keys.get(str(w))
+            if key:
+                return key
+            w = w.master
+        return None
+
+    def _help_enter(self, e):
+        key = self._help_key_for(e.widget)
+        if key is None or key == self._help_shown:
+            return
+        target = e.widget
+        while str(target) not in self._help_keys:
+            target = target.master
+        if self._help_after:
+            self.root.after_cancel(self._help_after)
+        self._help_after = self.root.after(HELP_DELAY_MS, lambda: self._help_show(key, target))
+
+    def _help_show(self, key, widget):
+        """Fill and place the explanation window next to ``widget``; it stays until another hover."""
+        self._help_after = None
+        if not self.help_on:
+            return
+        title, body = help_for(key)
+        self._help_title.configure(text=title)
+        self._help_body.configure(text=body)
+        win = self._help_win
+        win.update_idletasks()
+        w, h = win.winfo_reqwidth(), win.winfo_reqheight()
+        sw, sh = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        x = widget.winfo_rootx() + widget.winfo_width() + 8
+        if x + w > sw:
+            x = widget.winfo_rootx() - w - 8
+        y = min(widget.winfo_rooty(), sh - h - 4)
+        win.geometry(f"+{max(0, x)}+{max(0, y)}")
+        win.deiconify()
+        win.lift()
+        self._help_shown = key
 
     # ---- engine <-> widgets -----------------------------------------------
     def _user(self, name, value):
