@@ -221,6 +221,22 @@ _ELEMENTS = {
                        "PLAY/STOP arranca o para el patrón (STOP vuelve al paso 1).\n"
                        "BPM y SWING cambian el groove en vivo; CLEAR borra todos los pasos."),
 }
+_ELEMENTS.update({
+    "seq_toggle": ("SEQ: secuenciador del synth",
+                   "Prende o apaga el secuenciador de este synth. Toca sus notas con el mismo "
+                   "motor que el teclado, así que podés tocar encima a la vez.\n"
+                   "Al apagarlo se sueltan sus notas."),
+    "seq_transport": ("PLAY / STOP",
+                      "Arranca o para el transporte global: la secuencia y la batería "
+                      "salen juntas y sincronizadas al mismo BPM."),
+    "seq_steps": ("Pasos de la secuencia",
+                  "Click prende o apaga el paso; shift+click lo marca como acento.\n"
+                  "La rueda del mouse cambia la nota (shift: una octava). "
+                  "El paso iluminado es el que suena."),
+    "seq_gate": ("GATE: duración de las notas",
+                 "Cuánto dura cada nota respecto de su paso: poco es staccato, "
+                 "al máximo las notas se pegan (legato)."),
+})
 for _track in INSTRUMENTS:
     _ELEMENTS[f"drum_{_track}"] = (
         f"{_track.upper()}: audición",

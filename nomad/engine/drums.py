@@ -20,6 +20,7 @@ import numpy as np
 from scipy.signal import butter, lfilter
 
 from nomad.engine.params import ParamSpec
+from nomad.engine.transport import STEPS, Transport
 
 __all__ = [
     "DRUM_REGISTRY",
@@ -30,7 +31,6 @@ __all__ = [
 ]
 
 INSTRUMENTS: tuple[str, ...] = ("kick", "snare", "clap", "tom", "chat", "ohat")
-STEPS = 16
 
 _SEED = {"kick": 1, "snare": 2, "clap": 3, "tom": 4, "chat": 5, "ohat": 6}
 _LEVEL = {"kick": 0.6, "snare": 0.5, "clap": 0.45, "tom": 0.5, "chat": 0.35, "ohat": 0.3}
@@ -187,20 +187,18 @@ class DrumMachine:
     ``render`` is the audio thread: it never allocates and never raises.
     """
 
-    def __init__(self, sample_rate: float = 48000.0) -> None:
+    def __init__(self, sample_rate: float = 48000.0, transport: Transport | None = None) -> None:
         self.sr = float(sample_rate)
+        self.transport = transport if transport is not None else Transport(self.sr)
         self.values: dict[str, float] = {n: s.default for n, s in DRUM_REGISTRY.items()}
+        self.transport.bpm, self.transport.swing = self.values["bpm"], self.values["swing"]
         self.steps = np.zeros((len(INSTRUMENTS), STEPS), dtype=np.uint8)
-        self.playing = False
-        self.position = 0
         self.errors = 0
         self._bank: list[np.ndarray] = [
             render_one_shot(t, self.sr, self.values[f"{t}_tune"], self.values[f"{t}_decay"])
             for t in INSTRUMENTS
         ]
         self._active: list[list] = [[None, 0, 0.0] for _ in INSTRUMENTS]
-        self._phase = 0.0
-        self._pending_start = False
         self._fade_len = max(1, int(FADE_MS / 1000.0 * self.sr))
         self._fade_left = 0
         self._dirty: set[int] = set()
@@ -235,6 +233,9 @@ class DrumMachine:
         spec = DRUM_REGISTRY[name]
         v = _clamp(spec, value)
         self.values[name] = v
+        if name in ("bpm", "swing"):
+            setattr(self.transport, name, v)
+            return
         track, _, field = name.partition("_")
         if field in ("tune", "decay"):
             i = INSTRUMENTS.index(track)
@@ -269,34 +270,29 @@ class DrumMachine:
         state[1] = 0
         state[2] = min(max(v, 0.0), 1.0) * self.values[f"{track}_level"]
 
+    @property
+    def playing(self) -> bool:
+        return self.transport.playing
+
+    @property
+    def position(self) -> int:
+        return self.transport.position
+
     def start(self) -> None:
-        if self.playing:
-            return
-        self.playing = True
-        self.position = 0
-        self._phase = 0.0
-        self._pending_start = True
+        self.transport.start()
 
     def stop(self) -> None:
-        self.playing = False
-        self.position = 0
-        self._phase = 0.0
-        self._pending_start = False
+        self.transport.stop()
 
     def toggle(self) -> None:
-        self.stop() if self.playing else self.start()
+        self.transport.toggle()
 
     def stop_all(self) -> None:
-        self.stop()
+        self.transport.stop()
         self._fade_left = self._fade_len
 
     # ---- audio thread ------------------------------------------------------
-    def _duration(self, step: int) -> float:
-        base = self.sr * 60.0 / self.values["bpm"] / 4.0
-        swing = self.values["swing"]
-        return base * (1.0 + swing) if step % 2 == 0 else base * (1.0 - swing)
-
-    def _fire(self, step: int) -> None:
+    def on_step(self, step: int) -> None:
         for i, track in enumerate(INSTRUMENTS):
             level = int(self.steps[i, step])
             if level:
@@ -310,7 +306,7 @@ class DrumMachine:
         self._gain = np.zeros(n)
         self._ramp = np.arange(n, dtype=np.float64)
 
-    def _render_chunk(self, out: np.ndarray, start: int, chunk: int) -> None:
+    def render_chunk(self, out: np.ndarray, start: int, chunk: int) -> None:
         mix = self._mix[:chunk]
         mix[:] = 0.0
         for state in self._active:
@@ -343,7 +339,11 @@ class DrumMachine:
             state[1] = 0
             state[2] = 0.0
 
+    def frames_to_event(self) -> int:
+        return self._fade_left if self._fade_left > 0 else 1 << 30
+
     def render(self, out: np.ndarray, n: int) -> None:
+        """Standalone driver: runs the (own or shared) transport over ``n`` frames."""
         n = min(int(n), out.shape[0])
         if n <= 0:
             return
@@ -351,24 +351,4 @@ class DrumMachine:
             if all(s[0] is None or s[1] >= s[0].shape[0] for s in self._active):
                 return
         self._ensure(n)
-        i = 0
-        while i < n:
-            if self._pending_start:
-                self._pending_start = False
-                self._fire(0)
-            if self.playing:
-                dur = self._duration(self.position)
-                remain = (1.0 - self._phase) * dur
-                chunk = min(n - i, max(1, int(math.ceil(remain))))
-            else:
-                chunk = n - i
-                if self._fade_left > 0:
-                    chunk = min(chunk, self._fade_left)
-            self._render_chunk(out, i, chunk)
-            i += chunk
-            if self.playing:
-                self._phase += chunk / dur
-                if self._phase >= 1.0 - 1e-9:
-                    self._phase = max(0.0, self._phase - 1.0)
-                    self.position = (self.position + 1) % STEPS
-                    self._fire(self.position)
+        self.transport.run(n, lambda i, c: self.render_chunk(out, i, c), self.on_step, self.frames_to_event)
