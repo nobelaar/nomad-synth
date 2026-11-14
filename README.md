@@ -33,6 +33,7 @@ La primera vez se compilan los kernels de `numba` (unos 2 s); después quedan en
 
 | Gesto | Efecto |
 |---|---|
+| Botones `SYNTH` / `DRUMS` del encabezado | Cambian la vista: panel del sintetizador o drum machine. La batería sigue sonando al volver a SYNTH |
 | Arrastrar una perilla (vertical) | Cambia el valor continuamente (200 px = recorrido completo) |
 | Shift + arrastrar | Ajuste fino (10x) |
 | Rueda del mouse | Pasos |
@@ -41,6 +42,27 @@ La primera vez se compilan los kernels de `numba` (unos 2 s); después quedan en
 | Botón `LEARN` | Arma el último control tocado |
 | Botón `?` / `F1` | **Modo ayuda**: cursor de pregunta; al pasar el mouse por un control se abre una ventanita que explica qué es, cómo suena y con qué interactúa. Los controles no responden mientras está prendido. Se sale con `?`, `F1` o `Escape` |
 | Teclado en pantalla | Click/arrastre toca notas (glissando); se ilumina con las notas MIDI |
+
+En la vista DRUMS:
+
+| Gesto | Efecto |
+|---|---|
+| Click en un paso de la grilla | Prende o apaga ese paso del patrón |
+| Shift + click en un paso | Marca el paso como acento (suena más fuerte) |
+| Click en el nombre del instrumento | Audiciona ese tambor suelto |
+| `PLAY/STOP` | Arranca o para el patrón; STOP vuelve al paso 1 |
+| Perillas `BPM` / `SWING` | Tempo (60–180) y shuffle (0–60 %), en vivo |
+| `CLEAR` | Borra todos los pasos |
+| Perillas `tune` / `decay` / `level` | Afinación, largo y volumen de cada instrumento |
+
+## Drum machine
+
+Seis instrumentos sintetizados (bombo, caja, clap, tom, hi-hat cerrado y abierto) en un patrón de
+16 pasos (un compás de 4/4). No usa samples ni archivos: cada golpe se genera con osciladores y
+ruido y se pre-renderiza al arrancar; mover `tune` o `decay` lo regenera al instante.
+El patrón vive en memoria (no se guarda en disco) y arranca con un ritmo básico de bombo, caja y
+hats. La batería se suma a las voces del sintetizador antes del master, así que comparten volumen,
+limitador y osciloscopio.
 
 Las ondas, modos, fuentes y destinos de modulación son selectores segmentados. El osciloscopio
 muestra la señal real de salida con trigger; los botones de 5/10/20/50 ms cambian la escala.
