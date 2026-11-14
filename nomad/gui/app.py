@@ -95,6 +95,10 @@ class App:
         self._midi_i = 0
         self._midi_rescan, self._midi_open = None, False
         self.status = tk.StringVar(value="")
+        self._menu = tk.Menu(root, tearoff=0, bg=TROUGH, fg=GREY, activebackground=GREEN,
+                             activeforeground=BG, disabledforeground="#555555", font=_FONT)
+        root.bind_all("<ButtonPress-1>", self._close_menu, add="+")
+        root.bind_all("<Escape>", self._close_menu, add="+")
         self._build()
         self._push_snapshot()
         self._after = root.after(POLL_MS, self._poll)
@@ -229,16 +233,19 @@ class App:
 
     def _context(self, name, event):
         self._last = name
-        menu = tk.Menu(self.root, tearoff=0, bg=TROUGH, fg=GREY, activebackground=GREEN,
-                       activeforeground=BG, disabledforeground="#555555", font=_FONT)
+        menu = self._menu
+        menu.delete(0, "end")
         for label, cb in self._menu_items(name):
             menu.add_command(label=label, command=cb or (lambda: None),
                              state="normal" if cb else "disabled")
         if event is not None:
-            try:
-                menu.tk_popup(event.x_root, event.y_root)
-            finally:
-                menu.grab_release()
+            # No grab_release(): on X11 it drops the menu's grab and the menu
+            # then stays open after a click elsewhere.
+            menu.tk_popup(event.x_root, event.y_root)
+
+    def _close_menu(self, event=None):
+        if event is None or event.widget is not self._menu:
+            self._menu.unpost()
 
     def _reset(self, name):
         value = REGISTRY[name].default

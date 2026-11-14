@@ -202,3 +202,18 @@ def test_context_menu_learn_cancel_and_unbind():
         a._context("filt_reso", None)  # no event: must not raise
     finally:
         a.close()
+
+
+def test_context_menu_closes_on_click_elsewhere(app):
+    from types import SimpleNamespace
+    app.root.update()
+    app._context("filt_cutoff", None)
+    app._menu.post(10, 10)
+    app.root.update()
+    assert app._menu.winfo_ismapped()
+    app._close_menu(SimpleNamespace(widget=app._menu))  # a click on the menu itself keeps it
+    app.root.update()
+    assert app._menu.winfo_ismapped()
+    app._close_menu(SimpleNamespace(widget=app.widgets["filt_reso"]))
+    app.root.update()
+    assert not app._menu.winfo_ismapped()
