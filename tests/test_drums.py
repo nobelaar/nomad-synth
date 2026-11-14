@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from nomad.engine.drums import DRUM_REGISTRY, INSTRUMENTS, STEPS, render_one_shot
+from nomad.engine.drums import DRUM_REGISTRY, INSTRUMENTS, STEPS, DrumMachine, render_one_shot
 
 SR = 48000.0
 
@@ -43,3 +43,137 @@ def test_registry_has_the_twenty_drum_params():
     assert DRUM_REGISTRY["kick_level"].default == pytest.approx(0.6)
     assert DRUM_REGISTRY["ohat_level"].default == pytest.approx(0.3)
     assert STEPS == 16
+
+
+def make_dm(bpm=120.0):
+    dm = DrumMachine(SR)
+    dm.clear_pattern()
+    dm.set_value("bpm", bpm)
+    dm.set_step("chat", 0, 1)
+    return dm
+
+
+def render(dm, sizes):
+    chunks = []
+    for n in sizes:
+        b = np.zeros(n)
+        dm.render(b, n)
+        chunks.append(b)
+    return np.concatenate(chunks)
+
+
+def test_default_pattern_makes_sound_when_playing():
+    dm = DrumMachine(SR)
+    assert dm.steps[0, 0] == 2 and dm.steps[0, 4] == 1 and dm.steps[1, 4] == 1
+    dm.start()
+    out = render(dm, [256] * 8)
+    assert np.abs(out).max() > 0.01
+
+
+def test_position_advances_exactly_at_the_step_boundary():
+    dm = make_dm(120.0)          # 16th a 120 BPM = 6000 frames
+    dm.start()
+    render(dm, [5999])
+    assert dm.position == 0
+    render(dm, [1])
+    assert dm.position == 1
+
+
+def test_block_size_does_not_change_the_groove():
+    a = render(make_dm(), [16384])
+    b = render(make_dm(), [256] * 64)
+    c = render(make_dm(), [37, 1, 500, 128, 1000, 3000, 2000, 9718])
+    assert np.allclose(a, b, atol=1e-9)
+    assert np.allclose(a, c, atol=1e-9)
+
+
+def test_accent_is_louder_than_a_normal_step():
+    quiet, loud = make_dm(), make_dm()
+    quiet.set_step("chat", 0, 1)
+    loud.set_step("chat", 0, 2)
+    for dm in (quiet, loud):
+        dm.start()
+    assert np.abs(render(loud, [4000])).max() > 1.4 * np.abs(render(quiet, [4000])).max()
+
+
+def test_retrigger_restarts_the_hit():
+    dm = make_dm()
+    dm.trigger("kick")
+    render(dm, [15000])          # deja decaer el golpe anterior
+    tail = np.abs(render(dm, [4000])).max()
+    dm.trigger("kick")
+    assert np.abs(render(dm, [4000])).max() > 2 * tail
+
+
+def test_tone_change_while_the_hit_is_playing_is_safe():
+    dm = DrumMachine(SR)
+    dm.trigger("kick")
+    render(dm, [256])
+    dm.set_value("kick_decay", 0.1)
+    dm.set_value("kick_decay", 0.9)   # array nuevo, offset viejo más grande
+    out = render(dm, [4096])
+    assert np.isfinite(out).all()
+
+
+def test_start_is_not_retriggered_and_stop_returns_to_step_zero():
+    dm = make_dm()
+    dm.start()
+    dm.start()
+    render(dm, [6000])
+    assert dm.position == 1
+    dm.stop()
+    assert dm.position == 0 and not dm.playing
+    dm.start()
+    assert dm.position == 0
+
+
+def test_panic_cuts_everything_within_five_ms():
+    dm = DrumMachine(SR)
+    dm.set_step("ohat", 0, 2)
+    dm.start()
+    render(dm, [480])
+    dm.stop_all()
+    tail = render(dm, [480])
+    assert not dm.playing and dm.position == 0
+    assert np.abs(tail[240:]).max() < 1e-3
+
+
+def test_bpm_and_swing_apply_without_retriggering():
+    dm = make_dm(120.0)
+    dm.start()
+    render(dm, [3000])
+    dm.set_value("bpm", 180.0)
+    render(dm, [3000])            # el paso 0 no se repite
+    assert dm.position == 1
+    dm.set_value("swing", 0.6)
+    render(dm, [2000])
+    assert dm.position == 2       # 180 BPM = 4000 frames por paso, swing par = 6400
+
+
+def test_values_are_clamped_and_unknown_names_raise():
+    dm = DrumMachine(SR)
+    dm.set_value("bpm", 9999.0)
+    dm.set_value("swing", float("nan"))
+    assert dm.values["bpm"] == 180.0
+    assert dm.values["swing"] == 0.0
+    with pytest.raises(KeyError):
+        dm.set_value("cowbell_level", 1.0)
+    with pytest.raises(IndexError):
+        dm.set_step("kick", 16, 1)
+
+
+def test_render_does_not_allocate(monkeypatch):
+    dm = DrumMachine(SR)
+    dm.start()
+    out = np.zeros(256)
+    dm.render(out, 256)
+    calls = {"n": 0}
+    for name in ("empty", "zeros", "ones", "full", "arange", "linspace"):
+        real = getattr(np, name)
+        def counted(*a, __real=real, **k):
+            calls["n"] += 1
+            return __real(*a, **k)
+        monkeypatch.setattr(np, name, counted)
+    for _ in range(40):
+        dm.render(out, 256)
+    assert calls["n"] == 0

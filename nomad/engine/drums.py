@@ -123,9 +123,7 @@ def render_one_shot(kind: str, sr: float = 48000.0, tune: float = 0.0,
     decay = _clamp(DRUM_REGISTRY[f"{kind}_decay"], decay)
     rng = np.random.default_rng(_SEED[kind])
 
-    tau = {"kick": 0.08 + 0.30 * decay, "snare": 0.05 + 0.18 * decay,
-           "clap": 0.04 + 0.12 * decay, "tom": 0.12 + 0.30 * decay,
-           "chat": 0.02 + 0.05 * decay, "ohat": 0.12 + 0.20 * decay}[kind]
+    tau = _TAU[kind](decay)
     n = _length(tau, sr)
     t = np.arange(n) / sr
 
@@ -148,3 +146,192 @@ def render_one_shot(kind: str, sr: float = 48000.0, tune: float = 0.0,
     if peak > 0.0:
         y *= _PEAK / peak
     return y.astype(np.float32)
+
+
+_TAU = {
+    "kick": lambda decay: 0.08 + 0.30 * decay,
+    "snare": lambda decay: 0.05 + 0.18 * decay,
+    "clap": lambda decay: 0.04 + 0.12 * decay,
+    "tom": lambda decay: 0.12 + 0.30 * decay,
+    "chat": lambda decay: 0.02 + 0.05 * decay,
+    "ohat": lambda decay: 0.12 + 0.20 * decay,
+}
+
+ACCENT_GAIN = 1.0
+NORMAL_GAIN = 0.6
+FADE_MS = 5.0
+_HARD_LEVEL = (0, 1, 2)
+
+
+class DrumMachine:
+    """Six synthesized drums, a 16-step sequencer and an allocation-free mix.
+
+    Threading: the GUI writes ``values``/``steps`` and swaps ``_bank`` entries;
+    all of them are single atomic stores under the GIL, so the audio thread may
+    read them without a lock (worst case: one control block of latency).
+    ``render`` is the audio thread: it never allocates and never raises.
+    """
+
+    def __init__(self, sample_rate: float = 48000.0) -> None:
+        self.sr = float(sample_rate)
+        self.values: dict[str, float] = {n: s.default for n, s in DRUM_REGISTRY.items()}
+        self.steps = np.zeros((len(INSTRUMENTS), STEPS), dtype=np.uint8)
+        self.playing = False
+        self.position = 0
+        self.errors = 0
+        self._bank: list[np.ndarray] = [
+            render_one_shot(t, self.sr, self.values[f"{t}_tune"], self.values[f"{t}_decay"])
+            for t in INSTRUMENTS
+        ]
+        self._active: list[list] = [[None, 0, 0.0] for _ in INSTRUMENTS]
+        self._elapsed = 0.0
+        self._pending_start = False
+        self._fade_len = max(1, int(FADE_MS / 1000.0 * self.sr))
+        self._fade_left = 0
+        cap = 2048
+        self._mix = np.zeros(cap)
+        self._tmp = np.zeros(cap)
+        self._gain = np.zeros(cap)
+        self._ramp = np.arange(cap, dtype=np.float64)
+        self._default_pattern()
+
+    # ---- caller thread -----------------------------------------------------
+    def _default_pattern(self) -> None:
+        self.clear_pattern()
+        for step in (0, 4, 8, 12):
+            self.steps[0, step] = 1
+        self.steps[0, 0] = 2
+        for step in (4, 12):
+            self.steps[1, step] = 1
+        for step in range(0, STEPS, 2):
+            self.steps[4, step] = 1
+
+    def clear_pattern(self) -> None:
+        self.steps.fill(0)
+
+    def set_step(self, track: str, step: int, level: int) -> None:
+        i = INSTRUMENTS.index(track)
+        level = min(max(int(level), 0), 2)
+        self.steps[i, step] = level
+
+    def set_value(self, name: str, value: float) -> None:
+        spec = DRUM_REGISTRY[name]
+        v = _clamp(spec, value)
+        self.values[name] = v
+        track, _, field = name.partition("_")
+        if field in ("tune", "decay"):
+            i = INSTRUMENTS.index(track)
+            self._bank[i] = render_one_shot(track, self.sr, self.values[f"{track}_tune"],
+                                            self.values[f"{track}_decay"])
+
+    def trigger(self, track: str, velocity: float = 1.0) -> None:
+        i = INSTRUMENTS.index(track)
+        v = float(velocity)
+        v = v if math.isfinite(v) else 1.0
+        state = self._active[i]
+        state[0] = self._bank[i]
+        state[1] = 0
+        state[2] = min(max(v, 0.0), 1.0) * self.values[f"{track}_level"]
+
+    def start(self) -> None:
+        if self.playing:
+            return
+        self.playing = True
+        self.position = 0
+        self._elapsed = 0.0
+        self._pending_start = True
+
+    def stop(self) -> None:
+        self.playing = False
+        self.position = 0
+        self._elapsed = 0.0
+        self._pending_start = False
+
+    def toggle(self) -> None:
+        self.stop() if self.playing else self.start()
+
+    def stop_all(self) -> None:
+        self.stop()
+        self._fade_left = self._fade_len
+
+    # ---- audio thread ------------------------------------------------------
+    def _duration(self, step: int) -> float:
+        base = self.sr * 60.0 / self.values["bpm"] / 4.0
+        swing = self.values["swing"]
+        return base * (1.0 + swing) if step % 2 == 0 else base * (1.0 - swing)
+
+    def _fire(self, step: int) -> None:
+        for i, track in enumerate(INSTRUMENTS):
+            level = int(self.steps[i, step])
+            if level:
+                self.trigger(track, ACCENT_GAIN if level == _HARD_LEVEL[2] else NORMAL_GAIN)
+
+    def _ensure(self, n: int) -> None:
+        if n <= self._mix.shape[0]:
+            return
+        self._mix = np.zeros(n)
+        self._tmp = np.zeros(n)
+        self._gain = np.zeros(n)
+        self._ramp = np.arange(n, dtype=np.float64)
+
+    def _render_chunk(self, out: np.ndarray, start: int, chunk: int) -> None:
+        mix = self._mix[:chunk]
+        mix[:] = 0.0
+        for state in self._active:
+            arr, off, gain = state
+            if arr is None or off >= arr.shape[0] or gain == 0.0:
+                continue
+            seg = min(chunk, arr.shape[0] - off)
+            tmp = self._tmp[:seg]
+            np.multiply(arr[off:off + seg], gain, out=tmp)
+            mix[:seg] += tmp
+            state[1] = off + seg
+
+        if self._fade_left > 0:
+            g0 = min(1.0, self._fade_left / self._fade_len)
+            left = max(0, self._fade_left - chunk)
+            g1 = left / self._fade_len
+            g = self._gain[:chunk]
+            np.multiply(self._ramp[:chunk], (g1 - g0) / chunk, out=g)
+            g += g0
+            np.multiply(mix, g, out=mix)
+            self._fade_left = left
+            if left == 0:
+                self._clear_active()
+
+        np.add(out[start:start + chunk], mix, out=out[start:start + chunk])
+
+    def _clear_active(self) -> None:
+        for state in self._active:
+            state[0] = None
+            state[1] = 0
+            state[2] = 0.0
+
+    def render(self, out: np.ndarray, n: int) -> None:
+        n = min(int(n), out.shape[0])
+        if n <= 0:
+            return
+        if not self.playing and self._fade_left == 0:
+            if all(s[0] is None or s[1] >= s[0].shape[0] for s in self._active):
+                return
+        self._ensure(n)
+        i = 0
+        while i < n:
+            if self._pending_start:
+                self._pending_start = False
+                self._fire(0)
+            if self.playing:
+                remain = self._duration(self.position) - self._elapsed
+                chunk = min(n - i, max(1, int(math.ceil(remain))))
+            else:
+                chunk = n - i
+                if self._fade_left > 0:
+                    chunk = min(chunk, self._fade_left)
+            self._render_chunk(out, i, chunk)
+            i += chunk
+            if self.playing:
+                self._elapsed += chunk
+                while self._elapsed >= self._duration(self.position):
+                    self._elapsed -= self._duration(self.position)
+                    self.position = (self.position + 1) % STEPS
+                    self._fire(self.position)
