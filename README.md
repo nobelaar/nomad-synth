@@ -78,3 +78,4 @@ nomad/main.py   entrypoint y cierre limpio   nomad/render.py   render offline
 El motor no importa GUI ni MIDI: se maneja con `note_on/note_off`, `set_param`, `set_control` y
 `render(out)`, por una cola sin locks, así que puede reemplazarse por una extensión en C sin tocar el resto.
 `oscillator.py` en la raíz es el prototipo original y no forma parte del producto.
+# nomad-synth
