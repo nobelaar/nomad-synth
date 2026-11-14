@@ -177,3 +177,39 @@ def test_render_does_not_allocate(monkeypatch):
     for _ in range(40):
         dm.render(out, 256)
     assert calls["n"] == 0
+
+
+def render_engine(engine, blocks):
+    chunks = []
+    for _ in range(blocks):
+        b = np.zeros(256)
+        engine.render(b)
+        chunks.append(b)
+    return np.concatenate(chunks)
+
+
+def test_drums_stopped_leaves_engine_output_identical():
+    from nomad.engine.engine import Engine
+    a, b = Engine(SR), Engine(SR)
+    for e in (a, b):
+        e.note_on(60, 0.8)
+    assert np.array_equal(render_engine(a, 8), render_engine(b, 8))
+
+
+def test_drums_are_audible_without_any_note():
+    from nomad.engine.engine import Engine
+    e = Engine(SR)
+    e.drums.start()
+    out = render_engine(e, 16)
+    assert np.abs(out).max() > 0.01
+
+
+def test_panic_silences_the_drums():
+    from nomad.engine.engine import Engine
+    e = Engine(SR)
+    e.drums.start()
+    render_engine(e, 4)
+    e.panic()
+    tail = render_engine(e, 4)
+    assert np.abs(tail[240:]).max() < 1e-3
+    assert not e.drums.playing

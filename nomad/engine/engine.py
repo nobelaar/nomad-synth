@@ -39,6 +39,7 @@ import queue
 
 import numpy as np
 
+from nomad.engine.drums import DrumMachine
 from nomad.engine.lfo import LFO
 from nomad.engine.modmatrix import NUM_SLOTS, ModMatrix
 from nomad.engine.params import REGISTRY, Smoother, clamp, from_norm, to_norm
@@ -62,6 +63,7 @@ class Engine:
     def __init__(self, sample_rate: float = 48000, max_voices: int = 8) -> None:
         self.sr = float(sample_rate)
         self.vm = VoiceManager(self.sr, max_voices)
+        self.drums = DrumMachine(self.sr)
         self.matrix = ModMatrix()
         self.lfos = (LFO(self.sr, seed=1), LFO(self.sr, seed=2))
         self._values = {n: s.default for n, s in REGISTRY.items()}  # caller-side targets (snapshot)
@@ -135,6 +137,7 @@ class Engine:
             self._csm[a].set(b)
         else:
             self.vm.panic()
+            self.drums.stop_all()
 
     def _drain(self) -> None:
         q = self._q
@@ -181,6 +184,7 @@ class Engine:
             b = buf[:n]
             b[:] = 0.0
             self.vm.render(b, p, self._mods, self._resolve)
+            self.drums.render(b, n)
             g0, g1 = self._master, p["master_volume"]
             g = self._gain[:n]
             np.multiply(self._ramp[:n], (g1 - g0) / n, out=g)
