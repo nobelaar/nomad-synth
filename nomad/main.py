@@ -109,6 +109,7 @@ class Runtime:
         except RuntimeError as e:
             print(f"audio: {e}", file=sys.stderr)
             self.stream = app.stream = None  # window stays open, header says AUDIO: none
+        app.on_target_change = self.router.reset  # release MIDI-held notes when the target Synth changes
         app.refresh_audio()  # the label shows the device the stream actually resolved
         app.root.protocol("WM_DELETE_WINDOW", self.close)
         ports = [] if a.no_midi else self._list_ports()

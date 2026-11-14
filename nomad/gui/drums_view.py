@@ -22,17 +22,37 @@ _SHORT = {"tune": "tune", "decay": "decay", "level": "level", "bpm": "BPM", "swi
 
 
 class DrumView(tk.Frame):
-    def __init__(self, parent, drums: DrumMachine, register_help=None, on_context=None):
+    def __init__(self, parent, drums: DrumMachine, register_help=None, on_context=None, eager=True):
         super().__init__(parent, bg=BG)
         self.drums = drums
         self.knobs: dict[str, Knob] = {}
         self._steps: list[list[tk.Button]] = []
         self._help = register_help
         self._context = on_context
-        self._build()
+        self._locked = False
+        # one step per row: a panel created while audio runs is assembled over several ``after`` ticks
+        self._pending = [self._build_top] + [lambda t=t: self._build_row(t) for t in INSTRUMENTS]
+        if eager:
+            self.build_all()
 
     # ---- construction ------------------------------------------------------
-    def _build(self):
+    @property
+    def ready(self) -> bool:
+        return not self._pending
+
+    def build_next(self) -> bool:
+        """Build one piece; True while more remain."""
+        if self._pending:
+            self._pending.pop(0)()
+            if not self._pending:
+                self.refresh()
+        return bool(self._pending)
+
+    def build_all(self) -> None:
+        while self.build_next():
+            pass
+
+    def _build_top(self):
         top = tk.Frame(self, bg=BG)
         top.pack(anchor="w", padx=2, pady=2)
         self.play_btn = tk.Button(top, text="PLAY", command=self.toggle_transport, **_BTN)
@@ -44,28 +64,27 @@ class DrumView(tk.Frame):
         self._register(self, "drums_view")
         self._register(top, "drum_transport")
 
-        for track in INSTRUMENTS:
-            row = tk.Frame(self, bg=BG)
-            row.pack(anchor="w", pady=1)
-            name = tk.Button(row, text=track.upper(), width=6, **_BTN,
-                             command=lambda t=track: self.drums.trigger(t))
-            name.pack(side="left", padx=(2, 4))
-            self._register(name, f"drum_{track}")
-            for field in ("tune", "decay", "level"):
-                self._knob(row, f"{track}_{field}").pack(side="left", padx=1)
+    def _build_row(self, track: str):
+        row = tk.Frame(self, bg=BG)
+        row.pack(anchor="w", pady=1)
+        name = tk.Button(row, text=track.upper(), width=6, **_BTN,
+                         command=lambda t=track: self.drums.trigger(t))
+        name.pack(side="left", padx=(2, 4))
+        self._register(name, f"drum_{track}")
+        for field in ("tune", "decay", "level"):
+            self._knob(row, f"{track}_{field}").pack(side="left", padx=1)
 
-            grid = tk.Frame(row, bg=BG)
-            grid.pack(side="left", padx=6)
-            row_steps = []
-            for step in range(STEPS):
-                b = tk.Button(grid, text="", width=2, **_BTN)
-                b.pack(side="left", padx=1)
-                b.bind("<Button-1>", lambda e, t=track, s=step: self.toggle_step(t, s, bool(e.state & 1)))
-                self._register(b, "drum_steps")
-                row_steps.append(b)
-            self._steps.append(row_steps)
-            self._paint_row(len(self._steps) - 1)
-        self.refresh()
+        grid = tk.Frame(row, bg=BG)
+        grid.pack(side="left", padx=6)
+        row_steps = []
+        for step in range(STEPS):
+            b = tk.Button(grid, text="", width=2, **_BTN)
+            b.pack(side="left", padx=1)
+            b.bind("<Button-1>", lambda e, t=track, s=step: self.toggle_step(t, s, bool(e.state & 1)))
+            self._register(b, "drum_steps")
+            row_steps.append(b)
+        self._steps.append(row_steps)
+        self._paint_row(len(self._steps) - 1)
 
     def _knob(self, parent, name: str) -> Knob:
         spec = DRUM_REGISTRY[name]
@@ -100,13 +119,21 @@ class DrumView(tk.Frame):
     def reset(self, name: str) -> None:
         self.set_value(name, DRUM_REGISTRY[name].default)
 
+    def set_transport_locked(self, locked: bool) -> None:
+        self._locked = locked
+        self.play_btn.configure(state="disabled" if locked else "normal")
+        self.knobs["bpm"].locked = locked
+
+    def show_bpm(self, bpm: float) -> None:
+        self.knobs["bpm"].set_value(bpm)
+
     def toggle_transport(self) -> None:
         self.drums.toggle()
         self.refresh()
 
     def clear(self) -> None:
         self.drums.clear_pattern()
-        for i in range(len(INSTRUMENTS)):
+        for i in range(len(self._steps)):
             self._paint_row(i)
 
     # ---- drawing -----------------------------------------------------------
@@ -122,13 +149,17 @@ class DrumView(tk.Frame):
             self._paint(track, step)
 
     def refresh(self) -> None:
+        if not hasattr(self, "play_btn"):
+            return  # still being assembled
         self.drums.flush()
         for name, knob in self.knobs.items():
+            if name == "bpm" and self._locked:
+                continue  # a follower shows its source's tempo (see set_transport_locked / show_bpm)
             value = self.drums.values[name]
             if abs(knob.model.value - value) > 1e-9:
                 knob.set_value(value)
         position = self.drums.position if self.drums.playing else -1
-        for track in range(len(INSTRUMENTS)):
+        for track in range(len(self._steps)):
             for step in range(STEPS):
                 self._paint(track, step, current=(step == position))
         playing = self.drums.playing

@@ -101,6 +101,7 @@ class Knob(tk.Canvas):
         self.label = label if label is not None else model.spec.name
         self._y = 0
         self._hl = False
+        self.locked = False  # a locked knob shows its value but ignores the user (e.g. BPM of a follower)
         self.bind("<ButtonPress-1>", self._press)
         self.bind("<B1-Motion>", self._drag)
         self.bind("<Double-Button-1>", self._reset)
@@ -138,18 +139,24 @@ class Knob(tk.Canvas):
         self._y = e.y
 
     def _drag(self, e):
+        if self.locked:
+            return
         before = self.model.norm
         self.model.set_from_drag(self._y - e.y, bool(e.state & 1))
         self._y = e.y
         self._fire(before)
 
     def _wheel(self, e):
+        if self.locked:
+            return
         d = 1 if (e.num == 4 or e.delta > 0) else -1
         before = self.model.norm
         self.model.set_from_wheel(d, bool(e.state & 1))
         self._fire(before)
 
     def _reset(self, e):
+        if self.locked:
+            return
         before = self.model.norm
         self.model.reset()
         self._draw()

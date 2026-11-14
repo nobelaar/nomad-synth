@@ -72,8 +72,38 @@ muestra la señal real de salida con trigger; los botones de 5/10/20/50 ms cambi
 En la vista SYNTH, debajo de la matriz, `SEQ` activa un secuenciador de 16 pasos que toca notas con
 el mismo motor (voces, envolventes, filtro) que el teclado, así que podés tocar encima a la vez por
 MIDI. Click prende un paso, shift+click lo acentúa, la rueda del mouse cambia la nota (shift: una
-octava) y `GATE` fija la duración. `PLAY` es el transporte global: la secuencia y la batería
-comparten reloj y BPM (la perilla BPM está en la vista DRUMS). El patrón no se guarda en disco.
+octava) y `GATE` fija la duración. `PLAY` arranca solo la secuencia; la batería tiene su propio
+PLAY y las dos comparten el BPM (la perilla está en la vista DRUMS). Si las arrancás en momentos
+distintos no quedan alineadas entre sí. El patrón no se guarda en disco.
+
+## Pestañas, instancias y reloj compartido
+
+Cada pestaña del encabezado es una **instancia real** de un instrumento (Synth o Machine Drum), con sus
+propios parámetros, patrón y estado. `+` crea otra (menú con los tipos disponibles) y `×` cierra la
+pestaña. Cambiar de pestaña solo cambia qué instrumento editás: **todos siguen sonando** y se mezclan en
+el master. El teclado en pantalla y el MIDI van al Synth seleccionado; al cambiar de pestaña se sueltan las
+notas que quedaban sostenidas en el anterior. Los CC mapeados con LEARN también actúan sobre el Synth
+seleccionado.
+
+* **Volumen:** `MASTER` (columna derecha) es el volumen de toda la mezcla, como siempre. `LEVEL`, de cada
+  instrumento, es su volumen individual (0–100 %, por defecto 100 %). `MUTE` silencia con un fade corto sin
+  detener el instrumento.
+* **Reloj:** `CLOCK:` elige la fuente. `Internal` = tempo propio. Elegir otro instrumento en Internal lo
+  hace *seguidor*: hereda BPM, posición y PLAY/STOP, y su BPM y PLAY quedan bloqueados. Una fuente puede
+  tener varios seguidores; no hay cadenas (un seguidor no puede ser fuente). La pestaña de la fuente
+  muestra `●` y la del seguidor `⇄ nombre`.
+* **Cambio de fuente:** es inmediato, sin cuantizar. Puede saltarse o repetirse un paso en el instante del
+  cambio; los patrones no se reinician. Si la fuente se cierra, sus seguidores pasan a Internal conservando
+  BPM y posición y siguen desde ahí; si la fuente se detiene, los seguidores también.
+* El reloj no comparte patrones: cada instrumento mantiene su secuencia, longitud y subdivisión.
+
+### Límites conocidos (medidos con `tools/stream_stress.py` en esta máquina)
+* **CPU:** un Synth con 8 voces ya ocupa ~3.4 ms de los 10.7 ms que dura un bloque de 512 frames (máx. 10.5).
+  Cinco instrumentos con secuencias y batería suenan sin xruns, pero sumar 8 voces sostenidas encima genera
+  xruns (63 en 10 s en la medición). Con 4 voces sostenidas, 5.
+* **Crear / cambiar pestañas** con el audio sonando puede causar un xrun ocasional (3 en 12 creaciones): mostrar
+  un panel por primera vez cuesta 40–90 ms del hilo de Tk. Los paneles se arman por secciones para repartir
+  el costo, pero no se eliminó.
 
 ## Audio y MIDI
 

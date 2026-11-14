@@ -145,9 +145,11 @@ def test_bpm_and_swing_apply_without_retriggering():
     dm.set_value("bpm", 180.0)
     render(dm, [3000])            # el paso 0 no se repite
     assert dm.position == 1
-    dm.set_value("swing", 0.6)
+    dm.set_value("swing", 0.6)    # la grilla se mueve: el paso 1 ahora va de 0.4 a 0.5 beats
     render(dm, [2000])
-    assert dm.position == 2       # 180 BPM = 4000 frames por paso, swing par = 6400
+    assert dm.position == 1       # no se adelanta ningún paso
+    render(dm, [1000])
+    assert dm.position == 2       # 0.5 beats: 1000 frames más a 180 BPM
 
 
 def test_values_are_clamped_and_unknown_names_raise():
@@ -251,9 +253,11 @@ def test_swing_jump_mid_step_does_not_skip_steps():
     dm = make_dm(120.0)              # paso par de 6000 frames
     dm.start()
     render(dm, [5000])
-    dm.set_value("swing", 0.6)       # el paso par pasa a 9600 frames
+    dm.set_value("swing", 0.6)       # el paso par pasa a 9600 frames (la grilla manda)
     render(dm, [1800])
-    assert dm.position == 1
+    assert dm.position == 0          # el paso no termina antes de tiempo
+    render(dm, [2800])
+    assert dm.position == 1          # 5000 + 1800 + 2800 = 9600
 
 
 def test_tune_changes_the_noise_instruments():

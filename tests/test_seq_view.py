@@ -1,5 +1,6 @@
 import tkinter as tk
 
+import numpy as np
 import pytest
 
 from nomad.engine.engine import Engine
@@ -16,7 +17,7 @@ def view():
             raise
         pytest.skip("no display")
     e = Engine(48000)
-    v = SeqView(root, e.synth.sequencer, e.transport)
+    v = SeqView(root, e.synth)
     root.update()
     yield v, e
     root.destroy()
@@ -61,7 +62,9 @@ def test_seq_button_toggles_enabled(view):
 def test_play_button_toggles_shared_transport(view):
     v, e = view
     v.toggle_transport()
-    assert e.transport.playing and e.drums.playing
+    e.render(np.zeros(64))
+    assert e.seq_clock.running and not e.drums.playing
+    v.refresh()
     assert v.play_btn["text"] == "STOP"
 
 
@@ -70,7 +73,7 @@ def test_refresh_highlights_playhead_only_while_playing(view):
     v.refresh()
     assert all(int(str(b["highlightthickness"])) == 2 for b in v.steps)
     assert all(str(b["highlightbackground"]) != "#ffffff" for b in v.steps)
-    e.transport.start()
+    e.seq_clock.start()
     v.refresh()
     assert str(v.steps[0]["highlightbackground"]) == "#ffffff"
 
