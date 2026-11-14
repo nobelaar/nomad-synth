@@ -75,3 +75,12 @@ def test_hover_shows_the_explanation_window(app):
     app.toggle_help()
     app.root.update()
     assert not app._help_win.winfo_ismapped()
+
+
+def test_every_drum_control_has_help():
+    from nomad.engine.drums import DRUM_REGISTRY
+    for name in DRUM_REGISTRY:
+        title, body = help_for(name)
+        assert title and len(body) > 40, name
+    for key in ("drums_view", "drum_steps", "drum_transport", "synth_view"):
+        assert help_for(key)[0]

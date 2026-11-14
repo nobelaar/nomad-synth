@@ -7,6 +7,8 @@ test_help.py fails if a visible parameter has no text.
 
 from __future__ import annotations
 
+from nomad.engine.drums import INSTRUMENTS
+
 _OSC = {
     "wave": ("Forma de onda",
              "La forma básica del sonido del oscilador.\n"
@@ -147,6 +149,32 @@ _FIXED = {
                    "Cuántos semitonos mueve la rueda de pitch bend del controlador al "
                    "extremo, de 1 a 12. 2 es lo habitual; 12 = una octava.\n"
                    "No actúa sobre un oscilador en modo FREE."),
+    "bpm": ("Tempo de la batería",
+            "Velocidad del secuenciador en negras por minuto, de 60 a 180. Cada paso es "
+            "una semicorchea: los 16 pasos del patrón son un compás de 4/4.\n"
+            "Cambiarlo mientras suena re-temporiza el resto del paso en curso, sin "
+            "repetir el golpe."),
+    "swing": ("Swing de la batería",
+              "Retrasa los pasos impares y acorta los pares, de 0 % (recto) a 60 % "
+              "(muy shuffle).\n"
+              "El golpe fuerte sigue en el pulso; el débil se corre hacia atrás como en "
+              "el jazz o el funk."),
+}
+
+_DRUMS = {
+    "tune": ("Afinación del tambor",
+             "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\n"
+             "En bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el "
+             "carácter, de más opaco a más filoso."),
+    "decay": ("Duración del golpe",
+              "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola "
+              "larga).\n"
+              "En el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el "
+              "patrón; es parte del sonido."),
+    "level": ("Nivel del tambor",
+              "Volumen de este instrumento en la mezcla, de 0 a 100 %.\n"
+              "La batería se suma a las voces del sintetizador y pasa por el mismo master "
+              "y limitador: si un patrón lleno satura, bajá el bombo o la caja."),
 }
 
 _ELEMENTS = {
@@ -176,7 +204,29 @@ _ELEMENTS = {
     "scope": ("Osciloscopio",
               "La forma de onda real que sale del synth, ya filtrada. Se dispara en un "
               "cruce por cero para que la imagen quede quieta."),
+    "synth_view": ("Vista del sintetizador",
+                   "Vuelve al panel de perillas del synth: osciladores, filtro, "
+                   "envolventes, LFOs y matriz.\n"
+                   "La batería sigue sonando si estaba en PLAY."),
+    "drums_view": ("Vista de la batería",
+                   "Cambia a la drum machine: seis instrumentos, patrón de 16 pasos, "
+                   "tempo y swing.\n"
+                   "El scope y la sección global de la derecha no cambian; el teclado en "
+                   "pantalla se esconde."),
+    "drum_steps": ("Pasos del secuenciador",
+                   "Click prende o apaga el paso; shift+click lo marca como acento (suena "
+                   "más fuerte).\n"
+                   "La columna iluminada es el paso que está sonando."),
+    "drum_transport": ("Transporte de la batería",
+                       "PLAY/STOP arranca o para el patrón (STOP vuelve al paso 1).\n"
+                       "BPM y SWING cambian el groove en vivo; CLEAR borra todos los pasos."),
 }
+for _track in INSTRUMENTS:
+    _ELEMENTS[f"drum_{_track}"] = (
+        f"{_track.upper()}: audición",
+        "Click para escuchar este instrumento suelto, con el nivel y la afinación que "
+        "tiene ahora.\n"
+        "Sirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso.")
 
 
 def help_for(key: str) -> tuple[str, str]:
@@ -198,6 +248,9 @@ def help_for(key: str) -> tuple[str, str]:
                  "FILT ENV: la envolvente que mueve el cutoff (según ENV AMT) y que la "
                  "matrix usa como ENV2.")
         return f"{t} — {head.upper()} ENV", f"{which}\n{b}"
+    if head in INSTRUMENTS and rest in _DRUMS:
+        t, b = _DRUMS[rest]
+        return f"{t} — {head.upper()}", b
     if head.startswith("mod") and head[3:].isdigit():
         slot = int(head[3:]) + 1
         t, b = {"src": _SRC, "dst": _DST, "amt": _AMT}[rest]

@@ -18,6 +18,7 @@ import tkinter as tk
 from nomad.audio.scope import ScopeBuffer
 from nomad.audio.stream import list_output_devices
 from nomad.engine.params import REGISTRY
+from nomad.gui.drums_view import DrumView
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
 from nomad.gui.help import help_for
 from nomad.gui.keyboard import Keyboard
@@ -121,10 +122,17 @@ class App:
         left.grid(row=1, column=0, sticky="nw", padx=6)
         right = tk.Frame(root, bg=BG)
         right.grid(row=1, column=1, sticky="nw", padx=6)
+        self.synth_view = tk.Frame(left, bg=BG)
+        self.synth_view.grid(row=0, column=0, sticky="nw")
         for sec, r, c in (("osc1", 0, 0), ("osc2", 0, 1), ("filter", 0, 2), ("mixer", 0, 3),
                           ("amp_env", 1, 0), ("filt_env", 1, 1), ("lfo1", 1, 2), ("lfo2", 1, 3)):
-            self._section(left, sec).grid(row=r, column=c, sticky="nw", padx=2, pady=2)
-        self._section(left, "matrix").grid(row=2, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
+            self._section(self.synth_view, sec).grid(row=r, column=c, sticky="nw", padx=2, pady=2)
+        self._section(self.synth_view, "matrix").grid(row=2, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
+        self.drums_view = DrumView(left, self.engine.drums, register_help=self._help_register,
+                                   on_context=self._drum_context)
+        self.drums_view.grid(row=0, column=0, sticky="nw", padx=2, pady=2)
+        self.drums_view.grid_remove()
+        self.view = "synth"
         self.scope_frame = tk.Frame(right, bg=BG, width=250, height=150)
         self.scope_frame.pack_propagate(False)
         self.scope_frame.pack(anchor="nw", pady=2)
@@ -138,9 +146,41 @@ class App:
         self.keyboard.pack()
         self._help_register(self.keyboard, "keyboard")
         self._help_register(self.scope, "scope")
+        self.show_view("synth")
+
+    def show_view(self, name):
+        """Swap the left column between the synth panel and the drum machine."""
+        if name not in ("synth", "drums"):
+            raise ValueError(name)
+        self.view = name
+        synth = name == "synth"
+        if synth:
+            self.drums_view.grid_remove()
+            self.synth_view.grid()
+            self.keyboard_frame.grid()
+        else:
+            self.synth_view.grid_remove()
+            self.drums_view.grid()
+            self.keyboard_frame.grid_remove()
+        for btn, active in ((self.synth_btn, synth), (self.drums_btn, not synth)):
+            btn.configure(bg=GREEN if active else TROUGH, fg=BG if active else GREY)
+        self.status.set("" if synth else "DRUMS: PLAY para arrancar, shift+click acentúa")
+
+    def _drum_context(self, name, event):
+        """Right-click on a drum knob: only "default value" (no MIDI learn yet)."""
+        self._menu.delete(0, "end")
+        self._menu.add_command(label="Valor por defecto", command=lambda: self.drums_view.reset(name))
+        if event is not None:
+            self._menu.tk_popup(event.x_root, event.y_root)
 
     def _build_header(self, h):
         tk.Label(h, text="NOMAD SYNTH", bg=BG, fg=GREEN, font=("TkDefaultFont", 14, "bold")).pack(side="left", padx=8)
+        self.synth_btn = self._btn(h, lambda: self.show_view("synth"), "SYNTH")
+        self.synth_btn.pack(side="left", padx=(4, 1))
+        self.drums_btn = self._btn(h, lambda: self.show_view("drums"), "DRUMS")
+        self.drums_btn.pack(side="left", padx=(1, 6))
+        self._help_register(self.synth_btn, "synth_view")
+        self._help_register(self.drums_btn, "drums_view")
         devs = list_output_devices()
         self._devs = devs
         cur = getattr(self.stream, "device_index", None)
@@ -477,6 +517,7 @@ class App:
                 pass  # a non-finite value must never stop the poll loop
         notes = self.engine.snapshot()["active_notes"]
         self.keyboard.set_active(notes)
+        self.drums_view.refresh()
         self.voices.set(f"VOICES {len(notes)}")
         self.xruns.set(f"XRUNS {getattr(self.stream, 'xruns', 0)}")
         if self._armed_by_us and self.midi_map.learning is None:

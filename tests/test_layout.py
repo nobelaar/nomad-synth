@@ -217,3 +217,20 @@ def test_context_menu_closes_on_click_elsewhere(app):
     app._close_menu(SimpleNamespace(widget=app.widgets["filt_reso"]))
     app.root.update()
     assert not app._menu.winfo_ismapped()
+
+
+def test_drums_tab_switches_views_and_hides_keyboard(app):
+    app.root.update()
+    assert app.view == "synth" and app.keyboard_frame.winfo_ismapped()
+    app.show_view("drums")
+    app.root.update()
+    assert app.view == "drums"
+    assert not app.keyboard_frame.winfo_ismapped()
+    assert app.drums_view.winfo_ismapped()
+    app.show_view("synth")
+    app.root.update()
+    assert app.keyboard_frame.winfo_ismapped()
+
+
+def test_drums_tab_is_reachable_from_the_header(app):
+    assert app.synth_btn.cget("text") == "SYNTH" and app.drums_btn.cget("text") == "DRUMS"
