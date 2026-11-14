@@ -4,3 +4,5 @@ sounddevice>=0.5
 mido>=1.3
 python-rtmidi>=1.5
 pytest>=8
+# optional accelerator (JIT)
+numba>=0.60

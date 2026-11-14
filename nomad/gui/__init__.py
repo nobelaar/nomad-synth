@@ -1,0 +1,1 @@
+"""NOMAD SYNTH Tkinter widgets."""
