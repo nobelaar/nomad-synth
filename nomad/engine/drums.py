@@ -17,6 +17,7 @@ import math
 import time
 
 import numpy as np
+from scipy.signal import butter, lfilter
 
 from nomad.engine.params import ParamSpec
 
@@ -68,9 +69,22 @@ def _env(t: np.ndarray, tau: float) -> np.ndarray:
     return np.exp(-t / max(tau, 1e-4))
 
 
-def _noise(rng: np.random.Generator, n: int) -> np.ndarray:
-    """High-passed white noise: the first difference is a 6 dB/oct HP."""
-    return np.diff(rng.standard_normal(n), prepend=0.0)
+def _noise(rng: np.random.Generator, n: int, sr: float, cutoff: float) -> np.ndarray:
+    """White noise through a first-order high-pass at ``cutoff`` Hz."""
+    x = rng.standard_normal(n)
+    a = 1.0 / (1.0 + 2.0 * np.pi * min(max(cutoff, 100.0), 0.45 * sr) / sr)
+    return lfilter([a, -a], [1.0, -a], x)
+
+
+def _band_noise(rng: np.random.Generator, n: int, sr: float, centre: float,
+                octaves: float = 1.5) -> np.ndarray:
+    """White noise through a wide band-pass centred on ``centre`` Hz."""
+    low = max(centre * 2.0 ** -octaves, 30.0)
+    high = min(centre * 2.0 ** octaves, 0.45 * sr)
+    if high <= low:
+        return np.zeros(n)
+    b, a = butter(1, [low / (sr / 2.0), high / (sr / 2.0)], btype="bandpass")
+    return lfilter(b, a, rng.standard_normal(n))
 
 
 def _tone(freq: np.ndarray, sr: float) -> np.ndarray:
@@ -81,7 +95,7 @@ def _kick(t: np.ndarray, sr: float, tune: float, decay: float, rng) -> np.ndarra
     base = 55.0 * 2.0 ** (tune * 0.5)
     freq = base * (1.0 + 1.6 * np.exp(-t / 0.030))
     body = _tone(freq, sr) * _env(t, 0.08 + 0.30 * decay)
-    click = _noise(rng, len(t)) * _env(t, 0.002) * 0.3
+    click = _noise(rng, len(t), sr, 2000.0) * _env(t, 0.002) * 0.3
     return body + click
 
 
@@ -89,7 +103,7 @@ def _snare(t: np.ndarray, sr: float, tune: float, decay: float, rng) -> np.ndarr
     shift = 2.0 ** (tune * 0.3)
     tone = _tone(np.full(len(t), 180.0 * shift), sr) + 0.7 * _tone(np.full(len(t), 330.0 * shift), sr)
     body = tone * _env(t, 0.05 + 0.10 * decay)
-    noise = _noise(rng, len(t)) * _env(t, 0.05 + 0.18 * decay)
+    noise = _noise(rng, len(t), sr, 1200.0 * 2.0 ** (tune * 1.5)) * _env(t, 0.05 + 0.18 * decay)
     return 0.8 * body + noise
 
 
@@ -100,7 +114,7 @@ def _clap(t: np.ndarray, sr: float, tune: float, decay: float, rng) -> np.ndarra
         centre = i * 0.010 / spread
         bursts += np.exp(-(((t - centre) / 0.0035) ** 2))
     tail = 0.6 * _env(t, 0.04 + 0.12 * decay)
-    return _noise(rng, len(t)) * (bursts + tail)
+    return _band_noise(rng, len(t), sr, 1000.0 * 2.0 ** (tune * 1.5)) * (bursts + tail)
 
 
 def _tom(t: np.ndarray, sr: float, tune: float, decay: float, rng) -> np.ndarray:
@@ -110,8 +124,7 @@ def _tom(t: np.ndarray, sr: float, tune: float, decay: float, rng) -> np.ndarray
 
 
 def _hat(t: np.ndarray, sr: float, tune: float, decay: float, rng, tau: float) -> np.ndarray:
-    y = _noise(rng, len(t)) * _env(t, tau)
-    return y + 0.15 * _tone(np.full(len(t), 7000.0 * 2.0 ** (tune * 0.5)), sr) * _env(t, tau)
+    return _band_noise(rng, len(t), sr, 6500.0 * 2.0 ** (tune * 1.5)) * _env(t, tau)
 
 
 def render_one_shot(kind: str, sr: float = 48000.0, tune: float = 0.0,
@@ -186,7 +199,7 @@ class DrumMachine:
             for t in INSTRUMENTS
         ]
         self._active: list[list] = [[None, 0, 0.0] for _ in INSTRUMENTS]
-        self._elapsed = 0.0
+        self._phase = 0.0
         self._pending_start = False
         self._fade_len = max(1, int(FADE_MS / 1000.0 * self.sr))
         self._fade_left = 0
@@ -261,13 +274,13 @@ class DrumMachine:
             return
         self.playing = True
         self.position = 0
-        self._elapsed = 0.0
+        self._phase = 0.0
         self._pending_start = True
 
     def stop(self) -> None:
         self.playing = False
         self.position = 0
-        self._elapsed = 0.0
+        self._phase = 0.0
         self._pending_start = False
 
     def toggle(self) -> None:
@@ -344,7 +357,8 @@ class DrumMachine:
                 self._pending_start = False
                 self._fire(0)
             if self.playing:
-                remain = self._duration(self.position) - self._elapsed
+                dur = self._duration(self.position)
+                remain = (1.0 - self._phase) * dur
                 chunk = min(n - i, max(1, int(math.ceil(remain))))
             else:
                 chunk = n - i
@@ -353,8 +367,8 @@ class DrumMachine:
             self._render_chunk(out, i, chunk)
             i += chunk
             if self.playing:
-                self._elapsed += chunk
-                while self._elapsed >= self._duration(self.position):
-                    self._elapsed -= self._duration(self.position)
+                self._phase += chunk / dur
+                if self._phase >= 1.0 - 1e-9:
+                    self._phase = max(0.0, self._phase - 1.0)
                     self.position = (self.position + 1) % STEPS
                     self._fire(self.position)

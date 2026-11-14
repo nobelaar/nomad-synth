@@ -66,6 +66,10 @@ class FakeMap:
 def test_window_fits_1366x768(app):
     app.root.update_idletasks()
     assert app.root.winfo_reqwidth() <= 1366 and app.root.winfo_reqheight() <= 768
+    app.show_view("drums")
+    app.root.update_idletasks()
+    assert app.root.winfo_reqwidth() <= 1366 and app.root.winfo_reqheight() <= 768
+    app.show_view("synth")
 
 
 def test_widgets_reflect_engine_and_drive_it(app):

@@ -235,3 +235,33 @@ def test_rapid_tone_changes_regenerate_at_most_once(monkeypatch):
     dm.flush()
     assert len(calls) <= 2
     assert dm.values["kick_decay"] == pytest.approx(0.7)
+
+
+def test_bpm_jump_mid_step_does_not_skip_steps():
+    dm = make_dm(60.0)               # paso de 12000 frames
+    dm.start()
+    render(dm, [11040])              # 92 % del paso 0
+    assert dm.position == 0
+    dm.set_value("bpm", 180.0)       # paso de 4000 frames
+    render(dm, [384])                # 320 frames eran el resto del paso
+    assert dm.position == 1
+
+
+def test_swing_jump_mid_step_does_not_skip_steps():
+    dm = make_dm(120.0)              # paso par de 6000 frames
+    dm.start()
+    render(dm, [5000])
+    dm.set_value("swing", 0.6)       # el paso par pasa a 9600 frames
+    render(dm, [1800])
+    assert dm.position == 1
+
+
+def test_tune_changes_the_noise_instruments():
+    def centroid(y):
+        spec = np.abs(np.fft.rfft(y))
+        return float((spec * np.arange(len(spec))).sum() / spec.sum())
+
+    for kind in ("chat", "ohat", "clap"):
+        lo = render_one_shot(kind, SR, tune=-1.0)
+        hi = render_one_shot(kind, SR, tune=1.0)
+        assert centroid(hi) > centroid(lo) * 1.1, kind
