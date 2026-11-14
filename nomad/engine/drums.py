@@ -14,6 +14,7 @@ audio callback allocation-free.
 from __future__ import annotations
 
 import math
+import time
 
 import numpy as np
 
@@ -160,6 +161,7 @@ _TAU = {
 ACCENT_GAIN = 1.0
 NORMAL_GAIN = 0.6
 FADE_MS = 5.0
+REGEN_COOLDOWN_S = 0.06
 _HARD_LEVEL = (0, 1, 2)
 
 
@@ -188,6 +190,8 @@ class DrumMachine:
         self._pending_start = False
         self._fade_len = max(1, int(FADE_MS / 1000.0 * self.sr))
         self._fade_left = 0
+        self._dirty: set[int] = set()
+        self._last_regen = 0.0
         cap = 2048
         self._mix = np.zeros(cap)
         self._tmp = np.zeros(cap)
@@ -221,8 +225,27 @@ class DrumMachine:
         track, _, field = name.partition("_")
         if field in ("tune", "decay"):
             i = INSTRUMENTS.index(track)
-            self._bank[i] = render_one_shot(track, self.sr, self.values[f"{track}_tune"],
-                                            self.values[f"{track}_decay"])
+            now = time.perf_counter()
+            if now - self._last_regen < REGEN_COOLDOWN_S:
+                self._dirty.add(i)
+                return
+            self._regen(i)
+            self._last_regen = now
+
+    def _regen(self, i: int) -> None:
+        track = INSTRUMENTS[i]
+        self._bank[i] = render_one_shot(track, self.sr, self.values[f"{track}_tune"],
+                                        self.values[f"{track}_decay"])
+
+    def flush(self) -> bool:
+        """Apply tone changes deferred by the throttle. Caller thread (GUI poll)."""
+        if not self._dirty:
+            return False
+        for i in sorted(self._dirty):
+            self._regen(i)
+        self._dirty.clear()
+        self._last_regen = time.perf_counter()
+        return True
 
     def trigger(self, track: str, velocity: float = 1.0) -> None:
         i = INSTRUMENTS.index(track)

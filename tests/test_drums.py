@@ -213,3 +213,25 @@ def test_panic_silences_the_drums():
     tail = render_engine(e, 4)
     assert np.abs(tail[240:]).max() < 1e-3
     assert not e.drums.playing
+
+
+def test_rapid_tone_changes_regenerate_at_most_once(monkeypatch):
+    import nomad.engine.drums as mod
+    calls = []
+    real = mod.render_one_shot
+
+    def counting(*a, **k):
+        calls.append(a[0])
+        return real(*a, **k)
+
+    monkeypatch.setattr(mod, "render_one_shot", counting)
+    dm = DrumMachine(SR)
+    calls.clear()
+    dm.set_value("kick_decay", 0.9)
+    dm.set_value("kick_decay", 0.8)
+    dm.set_value("kick_decay", 0.7)
+    assert len(calls) <= 1
+    dm.flush()
+    dm.flush()
+    assert len(calls) <= 2
+    assert dm.values["kick_decay"] == pytest.approx(0.7)

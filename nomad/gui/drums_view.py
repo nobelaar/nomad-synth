@@ -122,6 +122,7 @@ class DrumView(tk.Frame):
             self._paint(track, step)
 
     def refresh(self) -> None:
+        self.drums.flush()
         for name, knob in self.knobs.items():
             value = self.drums.values[name]
             if abs(knob.model.value - value) > 1e-9:
