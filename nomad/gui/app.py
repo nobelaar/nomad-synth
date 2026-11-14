@@ -181,10 +181,11 @@ class App:
         spec = REGISTRY[name]
         if widget_kind(name) == "selector":
             off = 1 if name == "polyphony" else 0
-            w = Selector(parent, _labels(name), 0, lambda i, n=name, o=off: self._user(n, i + o))
+            w = Selector(parent, _labels(name), 0, lambda i, n=name, o=off: self._user(n, i + o),
+                         on_context=lambda e, n=name: self._context(n, e))
         else:
             w = Knob(parent, KnobModel(spec, spec.default), lambda v, n=name: self._user(n, v),
-                     label=_short(name), on_context=lambda e, n=name: self._context(n))
+                     label=_short(name), on_context=lambda e, n=name: self._context(n, e))
         self.widgets[name] = w
         return w
 
@@ -211,11 +212,46 @@ class App:
         if not self._closed:
             self._pending.put((name, value))
 
-    # ---- LEARN -------------------------------------------------------------
-    def _context(self, name):
+    # ---- right-click menu / LEARN -------------------------------------------
+    def _menu_items(self, name):
+        """(label, callback) for the right-click menu; callback None = disabled."""
+        items = [("Valor por defecto", lambda: self._reset(name))]
+        m = self.midi_map
+        if m is None:
+            items.append(("MIDI learn", None))
+        elif self._armed_by_us == name:
+            items.append(("Cancelar learn", lambda: self._arm(None)))
+        else:
+            items.append(("MIDI learn", lambda: self._arm(name)))
+        if m is not None and name in m.bindings.values():
+            items.append(("Quitar MIDI", lambda: self._unbind(name)))
+        return items
+
+    def _context(self, name, event):
         self._last = name
-        if self.midi_map is not None:
-            self._arm(name)
+        menu = tk.Menu(self.root, tearoff=0, bg=TROUGH, fg=GREY, activebackground=GREEN,
+                       activeforeground=BG, disabledforeground="#555555", font=_FONT)
+        for label, cb in self._menu_items(name):
+            menu.add_command(label=label, command=cb or (lambda: None),
+                             state="normal" if cb else "disabled")
+        if event is not None:
+            try:
+                menu.tk_popup(event.x_root, event.y_root)
+            finally:
+                menu.grab_release()
+
+    def _reset(self, name):
+        value = REGISTRY[name].default
+        self._show(name, value)
+        self._user(name, value)
+
+    def _unbind(self, name):
+        self.midi_map.unbind(name)
+        try:
+            self.midi_map.save()
+            self.status.set(f"MIDI: {name} desvinculado")
+        except OSError as e:
+            self.status.set(f"MIDI: could not save map ({e.strerror or e})")
 
     def _toggle_learn(self):
         if self.midi_map is None:

@@ -57,6 +57,11 @@ class FakeMap:
     def save(self):
         pass
 
+    bindings: dict = {}
+
+    def unbind(self, p):
+        self.bindings = {k: v for k, v in self.bindings.items() if v != p}
+
 
 def test_window_fits_1366x768(app):
     app.root.update_idletasks()
@@ -147,5 +152,53 @@ def test_midi_button_rescans_ports_for_hot_plug():
         ports.extend(["USB Keyboard 20:0", "Midi Through 14:0"])
         a._cycle_midi(); assert opened == ["USB Keyboard 20:0"]  # keyboard plugged in later
         a._cycle_midi(); assert opened[-1] == "Midi Through 14:0"
+    finally:
+        a.close()
+
+
+def _items(app, name):
+    return {label: cb for label, cb in app._menu_items(name)}
+
+
+def test_context_menu_resets_knobs_and_selectors_to_default(app):
+    sent = []
+    real = app.engine.set_param
+    app.engine.set_param = lambda n, v: (sent.append((n, v)), real(n, v))
+    app.widgets["filt_cutoff"].set_value(5000.0)
+    app.widgets["osc1_wave"].set_index(3)
+    _items(app, "filt_cutoff")["Valor por defecto"]()
+    _items(app, "osc1_wave")["Valor por defecto"]()
+    assert app.widgets["filt_cutoff"].model.value == pytest.approx(REGISTRY["filt_cutoff"].default)
+    assert app.widgets["osc1_wave"].index == REGISTRY["osc1_wave"].default
+    assert sent == [("filt_cutoff", REGISTRY["filt_cutoff"].default),
+                    ("osc1_wave", REGISTRY["osc1_wave"].default)]
+    p = REGISTRY["polyphony"]
+    _items(app, "polyphony")["Valor por defecto"]()
+    assert app.widgets["polyphony"].index == p.default - 1
+
+
+def test_context_menu_learn_needs_a_map(app):
+    assert _items(app, "filt_cutoff")["MIDI learn"] is None
+
+
+def test_context_menu_learn_cancel_and_unbind():
+    m = FakeMap()
+    try:
+        a = build_app(Engine(48000), midi_map=m)
+    except tk.TclError as e:
+        if "display" not in str(e):
+            raise
+        pytest.skip("no display")
+    try:
+        _items(a, "osc1_wave")["MIDI learn"]()
+        assert m.armed == ["osc1_wave"] and "osc1_wave" in a.status.get()
+        assert "MIDI learn" not in _items(a, "osc1_wave")
+        _items(a, "osc1_wave")["Cancelar learn"]()
+        assert m.armed[-1] is None
+        assert "Quitar MIDI" not in _items(a, "filt_reso")
+        m.bindings = {("p", 0, 7): "filt_reso"}
+        _items(a, "filt_reso")["Quitar MIDI"]()
+        assert m.bindings == {} and "filt_reso" in a.status.get()
+        a._context("filt_reso", None)  # no event: must not raise
     finally:
         a.close()

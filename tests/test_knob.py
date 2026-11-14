@@ -143,3 +143,13 @@ def test_selector(root):
     s.select(99); assert s.index == 2 and got == [2, 2]
     s.select(-5); assert s.index == 0
     s.set_index(1); assert s.index == 1 and got[-1] == 0
+
+
+def test_selector_context(root):
+    from nomad.gui.selector import Selector
+    seen = []
+    s = Selector(root, ["A", "B"], 0, lambda i: None, on_context=seen.append)
+    s.pack(); root.update()
+    e = ev(); s._context(e)
+    assert seen == [e]
+    assert s._btns[0].bind("<Button-3>") and s.bind("<Button-3>")

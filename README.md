@@ -37,7 +37,7 @@ La primera vez se compilan los kernels de `numba` (unos 2 s); después quedan en
 | Shift + arrastrar | Ajuste fino (10x) |
 | Rueda del mouse | Pasos |
 | Doble click | Vuelve al valor por defecto |
-| Click derecho / central en una perilla | Arma **MIDI learn** para ese parámetro; mové un CC del controlador |
+| Click derecho / central en una perilla o selector | Menú: **Valor por defecto**, **MIDI learn** (después mové un CC del controlador; si ya está armado, **Cancelar learn**) y **Quitar MIDI** si el parámetro tiene un CC asignado |
 | Botón `LEARN` | Arma el último control tocado |
 | Teclado en pantalla | Click/arrastre toca notas (glissando); se ilumina con las notas MIDI |
 
