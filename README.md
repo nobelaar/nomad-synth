@@ -67,6 +67,14 @@ limitador y osciloscopio.
 Las ondas, modos, fuentes y destinos de modulación son selectores segmentados. El osciloscopio
 muestra la señal real de salida con trigger; los botones de 5/10/20/50 ms cambian la escala.
 
+## Secuenciador del synth
+
+En la vista SYNTH, debajo de la matriz, `SEQ` activa un secuenciador de 16 pasos que toca notas con
+el mismo motor (voces, envolventes, filtro) que el teclado, así que podés tocar encima a la vez por
+MIDI. Click prende un paso, shift+click lo acentúa, la rueda del mouse cambia la nota (shift: una
+octava) y `GATE` fija la duración. `PLAY` es el transporte global: la secuencia y la batería
+comparten reloj y BPM (la perilla BPM está en la vista DRUMS). El patrón no se guarda en disco.
+
 ## Audio y MIDI
 
 * **Dispositivo de audio:** el botón `AUDIO:` del encabezado cicla las salidas. Por defecto se usa

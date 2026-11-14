@@ -23,6 +23,7 @@ from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
 from nomad.gui.help import help_for
 from nomad.gui.keyboard import Keyboard
 from nomad.gui.scope_view import ScopeView
+from nomad.gui.seq_view import SeqView
 from nomad.gui.selector import Selector
 
 POLL_MS = 100
@@ -128,6 +129,9 @@ class App:
                           ("amp_env", 1, 0), ("filt_env", 1, 1), ("lfo1", 1, 2), ("lfo2", 1, 3)):
             self._section(self.synth_view, sec).grid(row=r, column=c, sticky="nw", padx=2, pady=2)
         self._section(self.synth_view, "matrix").grid(row=2, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
+        self.seq_view = SeqView(self.synth_view, self.engine.synth.sequencer, self.engine.transport,
+                                register_help=self._help_register)
+        self.seq_view.grid(row=3, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
         self.drums_view = DrumView(left, self.engine.drums, register_help=self._help_register,
                                    on_context=self._drum_context)
         self.drums_view.grid(row=0, column=0, sticky="nw", padx=2, pady=2)
@@ -518,6 +522,7 @@ class App:
         notes = self.engine.snapshot()["active_notes"]
         self.keyboard.set_active(notes)
         self.drums_view.refresh()
+        self.seq_view.refresh()
         self.voices.set(f"VOICES {len(notes)}")
         self.xruns.set(f"XRUNS {getattr(self.stream, 'xruns', 0)}")
         if self._armed_by_us and self.midi_map.learning is None:

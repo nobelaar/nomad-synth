@@ -34,158 +34,98 @@ sync path; none go through the np.empty/zeros/... constructors.
 
 from __future__ import annotations
 
-import math
-import queue
-
 import numpy as np
 
 from nomad.engine.drums import DrumMachine
-from nomad.engine.lfo import LFO
-from nomad.engine.modmatrix import NUM_SLOTS, ModMatrix
-from nomad.engine.params import REGISTRY, Smoother, clamp, from_norm, to_norm
-from nomad.engine.voice_manager import VoiceManager
+from nomad.engine.instrument import CONTROL_BLOCK, PITCH_SEMITONES, SynthInstrument
+from nomad.engine.transport import Transport
 
 __all__ = ["Engine", "CONTROL_BLOCK", "PITCH_SEMITONES"]
 
-CONTROL_BLOCK = 256  # frames; see R6 in the ledger
-PITCH_SEMITONES = 12.0  # semitones per unit of matrix pitch modulation
-_CTRL_SMOOTH_MS = 10.0
-
-_IMMEDIATE_SUFFIX = ("_wave", "_mode", "_sync", "_phase", "_src", "_dst", "_attack", "_decay", "_sustain", "_release")
-_SMOOTHED = tuple(
-    n for n in REGISTRY
-    if n != "polyphony" and not n.endswith(_IMMEDIATE_SUFFIX) and not (n.startswith("mod") and n.endswith("_amt"))
-)
-_CONTROLS = ("bend", "modwheel")
-
 
 class Engine:
+    """Host: sums instruments and the drum machine, applies the master limiter.
+
+    The caller-thread API delegates to the default synth (``self.synth``); the
+    synth-specific docs (threading, control block, smoothing) live in
+    ``nomad.engine.instrument``.
+    """
+
     def __init__(self, sample_rate: float = 48000, max_voices: int = 8) -> None:
         self.sr = float(sample_rate)
-        self.vm = VoiceManager(self.sr, max_voices)
-        self.drums = DrumMachine(self.sr)
-        self.matrix = ModMatrix()
-        self.lfos = (LFO(self.sr, seed=1), LFO(self.sr, seed=2))
-        self._values = {n: s.default for n, s in REGISTRY.items()}  # caller-side targets (snapshot)
-        self._ctl = {"bend": 0.0, "modwheel": 0.0}
-        self._p = dict(self._values)  # what voices read (smoothed)
-        self._smoothers = {n: Smoother(to_norm(n, REGISTRY[n].default), self.sr, REGISTRY[n].smooth_ms) for n in _SMOOTHED}
-        self._csm = {c: Smoother(0.0, self.sr, _CTRL_SMOOTH_MS) for c in _CONTROLS}
-        self._slots = [[0, 0, 0.0] for _ in range(NUM_SLOTS)]
-        self._q: queue.SimpleQueue = queue.SimpleQueue()
-        self._src = {"lfo1": 0.0, "lfo2": 0.0, "modwheel": 0.0, "velocity": 0.0, "env2": 0.0}
-        self._mods = dict.fromkeys(("pitch", "pitch1", "pitch2", "amp", "cutoff", "pw1", "pw2", "bend"), 0.0)
+        self.transport = Transport(self.sr)
+        self.synth = SynthInstrument(self.sr, max_voices, transport=self.transport)
+        self.instruments = [self.synth]
+        self.drums = DrumMachine(self.sr, transport=self.transport)
+        self._was_playing = False
+        self._out = None
         self._buf = np.zeros(CONTROL_BLOCK)
         self._gain = np.zeros(CONTROL_BLOCK)
         self._ramp = np.arange(1, CONTROL_BLOCK + 1, dtype=np.float64)
-        self._master = self._p["master_volume"]
-        self.errors = 0  # events dropped by the audio-thread handler (diagnostics)
+        self._master = self.synth._p["master_volume"]
+
+    # aliases kept for callers/tests that reach into the default synth
+    vm = property(lambda self: self.synth.vm)
+    matrix = property(lambda self: self.synth.matrix)
+    lfos = property(lambda self: self.synth.lfos)
+    errors = property(lambda self: self.synth.errors)
+    _p = property(lambda self: self.synth._p)
+    _mods = property(lambda self: self.synth._mods)
+    _resolve = property(lambda self: self.synth._resolve)
 
     # ---- caller-thread API -------------------------------------------------
     def note_on(self, note, velocity) -> None:
-        self._q.put((0, note, velocity))
+        self.synth.note_on(note, velocity)
 
     def note_off(self, note) -> None:
-        self._q.put((1, note, None))
+        self.synth.note_off(note)
 
     def set_param(self, name: str, value: float) -> None:
-        v = clamp(name, value)  # KeyError for unknown names, NaN -> default
-        self._values[name] = v
-        self._q.put((2, name, v))
+        self.synth.set_param(name, value)
 
     def set_control(self, name: str, value: float) -> None:
-        if name not in _CONTROLS:
-            raise KeyError(name)
-        v = float(value)
-        v = min(max(v, -1.0), 1.0) if math.isfinite(v) else 0.0
-        self._ctl[name] = v
-        self._q.put((3, name, v))
+        self.synth.set_control(name, value)
 
     def panic(self) -> None:
-        self._q.put((4, None, None))
+        self.synth.panic()
+        self.drums.stop_all()
+
+    def play(self) -> None:
+        self.transport.start()
+
+    def stop_transport(self) -> None:
+        self.transport.stop()
+
+    def toggle_transport(self) -> None:
+        self.transport.toggle()
 
     def snapshot(self) -> dict:
-        """Copy of all param targets + ``bend``/``modwheel`` + ``active_notes`` (held keys).
-
-        Params/controls reflect calls immediately; active_notes is audio-thread
-        state read without a lock (benign race, may lag one render).
-        """
-        s = dict(self._values)
-        s.update(self._ctl)
-        s["active_notes"] = self.vm.active_notes()
-        return s
+        return self.synth.snapshot()
 
     # ---- audio thread ------------------------------------------------------
-    def _handle(self, kind, a, b) -> None:
-        if kind == 0:
-            self.vm.note_on(a, b)
-        elif kind == 1:
-            self.vm.note_off(a)
-        elif kind == 2:
-            if a in self._smoothers:
-                self._smoothers[a].set(to_norm(a, b))
-            else:
-                self._p[a] = b
-            if a == "polyphony":
-                self.vm.set_polyphony(int(b))
-            elif a.startswith("mod"):
-                i, field = int(a[3 : a.index("_")]), a[a.index("_") + 1 :]
-                slot = self._slots[i]
-                slot[("src", "dst", "amt").index(field)] = b if field == "amt" else int(round(b))
-                self.matrix.set_slot(i, slot[0], slot[1], slot[2])
-        elif kind == 3:
-            self._csm[a].set(b)
-        else:
-            self.vm.panic()
-            self.drums.stop_all()
+    def _limit(self) -> int:
+        n = self.drums.frames_to_event()
+        for inst in self.instruments:
+            n = min(n, inst.frames_to_event())
+        return n
 
-    def _drain(self) -> None:
-        q = self._q
-        while True:
-            try:
-                ev = q.get_nowait()
-            except queue.Empty:
-                return
-            try:
-                self._handle(*ev)
-            except Exception:  # a bad event must never kill the audio callback
-                self.errors += 1
+    def _on_step(self, pos: int) -> None:
+        self.drums.on_step(pos)
+        for inst in self.instruments:
+            inst.on_step(pos)
 
-    def _resolve(self, voice, _mods) -> dict:
-        src = self._src
-        src["velocity"], src["env2"] = voice.velocity, voice.env2_level
-        r = self.matrix.resolve(src)
-        m = self._mods
-        m["pitch"] = r["pitch"] * PITCH_SEMITONES
-        m["pitch1"] = r["pitch1"] * PITCH_SEMITONES
-        m["pitch2"] = r["pitch2"] * PITCH_SEMITONES
-        m["amp"], m["cutoff"], m["pw1"], m["pw2"] = r["amp"], r["cutoff"], r["pw1"], r["pw2"]
-        return m  # bend is set once per block, not per voice
-
-    def render(self, out: np.ndarray) -> None:
-        self._drain()
-        total = out.shape[0]
-        p, buf = self._p, self._buf
-        for s in range(0, total, CONTROL_BLOCK):
-            n = min(CONTROL_BLOCK, total - s)
-            for name, sm in self._smoothers.items():
-                if sm.value != sm.target:
-                    p[name] = from_norm(name, sm.advance(n))
-            for sm in self._csm.values():
-                if sm.value != sm.target:
-                    sm.advance(n)
-            sec = n / self.sr
-            for k, lfo in enumerate(self.lfos, 1):
-                lfo.set(p[f"lfo{k}_rate"], p[f"lfo{k}_wave"], p[f"lfo{k}_depth"], p[f"lfo{k}_phase"])
-                self._src[f"lfo{k}"] = lfo.advance(sec)
-            self._src["modwheel"] = self._csm["modwheel"].value
-            self._mods["bend"] = self._csm["bend"].value * p["bend_range"]
-
+    def _span(self, start: int, chunk: int) -> None:
+        """Render ``chunk`` frames (no step boundary inside) in control-block slices."""
+        buf, out = self._buf, self._out
+        end = start + chunk
+        for s in range(start, end, CONTROL_BLOCK):
+            n = min(CONTROL_BLOCK, end - s)
             b = buf[:n]
             b[:] = 0.0
-            self.vm.render(b, p, self._mods, self._resolve)
-            self.drums.render(b, n)
-            g0, g1 = self._master, p["master_volume"]
+            for inst in self.instruments:
+                inst.render_block(b, n)
+            self.drums.render_chunk(b, 0, n)
+            g0, g1 = self._master, self.synth._p["master_volume"]
             g = self._gain[:n]
             np.multiply(self._ramp[:n], (g1 - g0) / n, out=g)
             g += g0
@@ -193,3 +133,16 @@ class Engine:
             np.tanh(b, out=b)
             out[s : s + n] = b
             self._master = g1
+        for inst in self.instruments:
+            inst.advance(chunk)
+
+    def render(self, out: np.ndarray) -> None:
+        for inst in self.instruments:
+            inst.drain()
+        if self._was_playing and not self.transport.playing:
+            for inst in self.instruments:
+                inst.on_stop()
+        self._was_playing = self.transport.playing
+        self.drums._ensure(out.shape[0])
+        self._out = out
+        self.transport.run(out.shape[0], self._span, self._on_step, self._limit)
