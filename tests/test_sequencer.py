@@ -5,13 +5,13 @@ import pytest
 
 from nomad.engine.engine import Engine
 from nomad.engine.sequencer import StepSequencer
-from nomad.engine.transport import Transport
+from nomad.engine.clock import Clock
 
 
 def make(notes=(64,), gate=0.5):
     e = Engine(48000)
     e.drums.clear_pattern()
-    e.transport.bpm = 120.0  # 6000 frames per step
+    e.seq_clock.bpm = 120.0  # 6000 frames per step (the Synth owns its tempo now)
     sq = e.synth.sequencer
     sq.enabled, sq.gate = True, gate
     for i, n in enumerate(notes):
@@ -30,7 +30,7 @@ def render(e, *sizes):
 
 def test_note_on_at_exact_frame():
     e, _ = make((64, 65))
-    e.play()
+    e.seq_clock.start()
     render(e, 1)
     assert e.vm.active_notes() == [64]
     render(e, 37, 5961)  # 5999 frames: step 1 not reached
@@ -41,7 +41,7 @@ def test_note_on_at_exact_frame():
 
 def test_gate_off_after_gate_fraction():
     e, _ = make()
-    e.play()
+    e.seq_clock.start()
     render(e, 2999)
     assert e.vm.active_notes() == [64]
     render(e, 1)
@@ -50,7 +50,7 @@ def test_gate_off_after_gate_fraction():
 
 def test_two_steps_retrigger_legato_gate_1():
     e, _ = make((60, 62), gate=1.0)
-    e.play()
+    e.seq_clock.start()
     render(e, 6000)
     assert e.vm.active_notes() == [62]
 
@@ -58,14 +58,14 @@ def test_two_steps_retrigger_legato_gate_1():
 def test_empty_pattern_is_silent():
     e, sq = make()
     sq.clear()
-    e.play()
+    e.seq_clock.start()
     y = render(e, 6000, 100)
     assert not y.any() and e.vm.active_notes() == []
 
 
 def test_disabled_sequencer_is_silent_and_releases():
     e, sq = make()
-    e.play()
+    e.seq_clock.start()
     render(e, 100)
     assert e.vm.active_notes() == [64]
     sq.enabled = False
@@ -77,16 +77,16 @@ def test_disabled_sequencer_is_silent_and_releases():
 
 def test_stop_releases_note():
     e, _ = make()
-    e.play()
+    e.seq_clock.start()
     render(e, 100)
-    e.stop_transport()
+    e.seq_clock.stop()
     render(e, 10)
     assert e.vm.active_notes() == []
 
 
 def test_panic_releases_note():
     e, _ = make()
-    e.play()
+    e.seq_clock.start()
     render(e, 100)
     e.panic()
     render(e, 10)
@@ -96,7 +96,7 @@ def test_panic_releases_note():
 def test_live_key_not_cut_by_gate_off():
     e, _ = make((64,))
     e.note_on(64, 1.0)
-    e.play()
+    e.seq_clock.start()
     render(e, 3500)
     assert 64 in e.vm.active_notes()
 
@@ -104,20 +104,20 @@ def test_live_key_not_cut_by_gate_off():
 def test_midi_and_sequence_play_together():
     e, _ = make((64,))
     e.note_on(48, 1.0)
-    e.play()
+    e.seq_clock.start()
     render(e, 100)
     assert sorted(e.vm.active_notes()) == [48, 64]
 
 
 def test_bpm_jump_mid_step_no_skipped_or_double_note():
     e, sq = make((60, 62, 64, 65))
-    e.transport.bpm = 60.0
+    e.seq_clock.bpm = 60.0
     calls = []
     real = e.vm.note_on
     e.vm.note_on = lambda n, v: (calls.append(n), real(n, v))[1]
-    e.play()
+    e.seq_clock.start()
     render(e, 11040)
-    e.transport.bpm = 180.0
+    e.seq_clock.bpm = 180.0
     render(e, 384)
     assert calls == [60, 62]
     render(e, 4000)
@@ -130,7 +130,7 @@ def test_out_of_range_inputs():
     sq.set_step(0, True, note=300, vel=0)
     sq.gate = float("nan")
     assert sq.note[0] == 127 and sq.vel[0] == 1 and sq.gate == 0.5
-    e.play()
+    e.seq_clock.start()
     render(e, 100)
 
 
@@ -142,8 +142,9 @@ def test_no_allocation_in_step_path():
     class Synth:
         vm = VM()
         _live = bytearray(128)
+        eclock = Clock(48000)
 
-    sq = StepSequencer(Synth(), 48000, Transport(48000))
+    sq = StepSequencer(Synth(), 48000)
     sq.enabled = True
     sq.set_step(0, True)
     for _ in range(50):
@@ -164,8 +165,8 @@ def test_no_allocation_in_step_path():
 def test_live_key_survives_stop_and_seq_off(how):
     e, sq = make((64,))
     e.note_on(64, 1.0)
-    e.play()
+    e.seq_clock.start()
     render(e, 100)
-    e.stop_transport() if how == "stop" else setattr(sq, "enabled", False)
+    e.seq_clock.stop() if how == "stop" else setattr(sq, "enabled", False)
     render(e, 10)
     assert 64 in e.vm.active_notes()

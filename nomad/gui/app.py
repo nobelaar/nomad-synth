@@ -23,68 +23,32 @@ from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
 from nomad.gui.help import help_for
 from nomad.gui.keyboard import Keyboard
 from nomad.gui.scope_view import ScopeView
-from nomad.gui.seq_view import SeqView
 from nomad.gui.selector import Selector
+from nomad.engine.manager import InstrumentManager
+from nomad.engine.registry import INSTRUMENT_TYPES
+from nomad.gui.strip import InstanceStrip
+from nomad.gui.tabbar import TabBar
+from nomad.gui.synth_panel import (HIDDEN, LAYOUT, SynthPanel, _FONT, _labels, _short, _text,  # noqa: F401
+                                   make_control, widget_kind)
 
 POLL_MS = 100
-_P = [f"mod{i}_{k}" for i in range(8) for k in ("src", "dst", "amt")]
-LAYOUT: dict[str, list[str]] = {
-    "osc1": ["osc1_wave", "osc1_mode", "osc1_coarse", "osc1_hz", "osc1_fine", "osc1_pw"],
-    "osc2": ["osc2_wave", "osc2_mode", "osc2_sync", "osc2_coarse", "osc2_hz", "osc2_fine", "osc2_pw"],
-    "mixer": ["osc1_level", "osc2_level"],
-    "filter": ["filt_cutoff", "filt_reso", "filt_env_amt"],
-    "amp_env": ["amp_attack", "amp_decay", "amp_sustain", "amp_release"],
-    "filt_env": ["filt_attack", "filt_decay", "filt_sustain", "filt_release"],
-    "lfo1": ["lfo1_wave", "lfo1_rate", "lfo1_depth", "lfo1_phase"],
-    "lfo2": ["lfo2_wave", "lfo2_rate", "lfo2_depth", "lfo2_phase"],
-    "matrix": _P,
-    "global": ["master_volume", "polyphony", "bend_range"],
-}
-HIDDEN = {"osc1_sync"}  # osc1_sync: engine only reads osc2_sync (dead param)
 
-_SEL_SUFFIX = ("_wave", "_mode", "_sync", "_src", "_dst")
-_LABELS = {  # abbreviations keep the 8-button destination row narrow
-    "_mode": ["KEY", "FREE"], "_sync": ["OFF", "SYNC"],
-    "_src": ["-", "LFO1", "LFO2", "MW", "VEL", "ENV2"],
-    "_dst": ["-", "PIT", "P1", "P2", "AMP", "CUT", "PW1", "PW2"],
-}
-_FONT = ("TkDefaultFont", 8)
+
+def panel_ready(panel) -> bool:
+    return getattr(panel, "ready", True)
 HELP_TAG = "NomadHelp"   # bindtag put first on every widget while help mode is on
 HELP_DELAY_MS = 150
 HELP_WRAP = 330
 
 
-def widget_kind(name: str) -> str:
-    """'selector' for discrete params (must never be a knob), else 'knob'."""
-    return "selector" if name == "polyphony" or name.endswith(_SEL_SUFFIX) else "knob"
-
-
-def _labels(name: str) -> list[str]:
-    if name == "polyphony":
-        return [str(i) for i in range(1, 9)]
-    if name.endswith("_wave"):
-        return ["SIN", "TRI", "SAW", "SQR"] + (["S&H"] if name.startswith("lfo") else [])
-    return _LABELS[name[name.rindex("_"):]]
-
-
-def _short(name: str) -> str:
-    if name == "master_volume":
-        return "volume"
-    if name.endswith("_level"):
-        return name[:4]  # mixer: osc1 / osc2
-    if name.startswith("mod"):
-        return f"amt {int(name[3]) + 1}"
-    return name.split("_", 1)[1] if name.split("_")[0] in ("osc1", "osc2", "lfo1", "lfo2", "amp", "filt") else name
-
-
-def _text(parent, **kw):
-    return tk.Label(parent, bg=BG, font=_FONT, **kw)
-
-
 class App:
     def __init__(self, engine, stream=None, midi_map=None):
         self.engine, self.stream, self.midi_map = engine, stream, midi_map
-        self.widgets: dict[str, Knob | Selector] = {}
+        self._global_widgets: dict[str, Knob | Selector] = {}  # app-level controls (master volume)
+        self.strips: dict[int, InstanceStrip] = {}
+        self.panels: dict[int, tk.Misc] = {}   # instance id -> persistent panel (Synth/Drum view)
+        self.selected = None                   # the instance being edited (NOT the only one running)
+        self.on_target_change = None           # set by the runtime: release MIDI-held notes before retargeting
         self.scope_buffer = (getattr(stream, "scope", None) if stream else None) or ScopeBuffer(engine.sr)
         self.root = root = tk.Tk()
         root.title("NOMAD SYNTH")
@@ -110,6 +74,7 @@ class App:
                              activeforeground=BG, disabledforeground="#555555", font=_FONT)
         root.bind_all("<ButtonPress-1>", self._close_menu, add="+")
         root.bind_all("<Escape>", self._close_menu, add="+")
+        self.manager = InstrumentManager(engine, schedule=root.after)
         self._build()
         self._build_help()
         self._push_snapshot()
@@ -123,26 +88,20 @@ class App:
         left.grid(row=1, column=0, sticky="nw", padx=6)
         right = tk.Frame(root, bg=BG)
         right.grid(row=1, column=1, sticky="nw", padx=6)
-        self.synth_view = tk.Frame(left, bg=BG)
-        self.synth_view.grid(row=0, column=0, sticky="nw")
-        for sec, r, c in (("osc1", 0, 0), ("osc2", 0, 1), ("filter", 0, 2), ("mixer", 0, 3),
-                          ("amp_env", 1, 0), ("filt_env", 1, 1), ("lfo1", 1, 2), ("lfo2", 1, 3)):
-            self._section(self.synth_view, sec).grid(row=r, column=c, sticky="nw", padx=2, pady=2)
-        self._section(self.synth_view, "matrix").grid(row=2, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
-        self.seq_view = SeqView(self.synth_view, self.engine.synth.sequencer, self.engine.transport,
-                                register_help=self._help_register)
-        self.seq_view.grid(row=3, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
-        self.drums_view = DrumView(left, self.engine.drums, register_help=self._help_register,
-                                   on_context=self._drum_context)
-        self.drums_view.grid(row=0, column=0, sticky="nw", padx=2, pady=2)
-        self.drums_view.grid_remove()
-        self.view = "synth"
+        self.left = left
+        self.side = tk.Frame(right, bg=BG)  # per-instance VOICE sections live here (below scope + master)
         self.scope_frame = tk.Frame(right, bg=BG, width=250, height=150)
         self.scope_frame.pack_propagate(False)
         self.scope_frame.pack(anchor="nw", pady=2)
         self.scope = ScopeView(self.scope_frame, self.scope_buffer, 250, 150, sr=self.engine.sr)
         self.scope.pack()
-        self._section(right, "global").pack(anchor="nw", pady=2)
+        master = tk.Frame(right, bg=BG, highlightbackground=TROUGH, highlightthickness=1)
+        _text(master, text="MASTER", fg=GREEN).pack(anchor="w", padx=4)
+        self._global_widgets["master_volume"] = make_control(master, "master_volume", self._user, self._context,
+                                                              self._help_register)
+        self._global_widgets["master_volume"].pack(anchor="w", padx=2)
+        master.pack(anchor="nw", pady=2)
+        self.side.pack(anchor="nw", pady=2)
         self.keyboard_frame = tk.Frame(root, bg=BG, width=1350, height=84)
         self.keyboard_frame.pack_propagate(False)
         self.keyboard_frame.grid(row=2, column=0, columnspan=2, padx=6, pady=4)
@@ -150,41 +109,154 @@ class App:
         self.keyboard.pack()
         self._help_register(self.keyboard, "keyboard")
         self._help_register(self.scope, "scope")
-        self.show_view("synth")
+        for inst in self.manager.instances:
+            self.panels[inst.id] = self._make_panel(inst, eager=True)
+        self.select(self.engine.synth)
 
-    def show_view(self, name):
-        """Swap the left column between the synth panel and the drum machine."""
-        if name not in ("synth", "drums"):
-            raise ValueError(name)
-        self.view = name
-        synth = name == "synth"
-        if synth:
-            self.drums_view.grid_remove()
-            self.synth_view.grid()
-            self.keyboard_frame.grid()
+    # ---- instruments and tabs ----------------------------------------------------
+    @property
+    def synth_view(self):
+        """Panel of the synth that receives MIDI / the on-screen keyboard (the last selected Synth)."""
+        return self.panels.get(self.engine.synth.id)
+
+    @property
+    def drums_view(self):
+        return self.panels.get(self.engine.drums.id)
+
+    def _make_panel(self, inst, eager=True):
+        if inst.kind == "synth":
+            panel = SynthPanel(self.left, self, inst, side=self.side, eager=eager)
         else:
-            self.synth_view.grid_remove()
-            self.drums_view.grid()
-            self.keyboard_frame.grid_remove()
-        for btn, active in ((self.synth_btn, synth), (self.drums_btn, not synth)):
-            btn.configure(bg=GREEN if active else TROUGH, fg=BG if active else GREY)
-        self.status.set("" if synth else "DRUMS: PLAY para arrancar, shift+click acentúa")
+            panel = DrumView(self.left, inst, register_help=self._help_register,
+                             on_context=lambda n, e, i=inst: self._drum_context(i, n, e), eager=eager)
+        panel.grid(row=0, column=0, sticky="nw", padx=2, pady=2)
+        if not hasattr(panel, "side_frame"):  # Machine Drum: its strip lives in the right column too
+            panel.side_frame = tk.Frame(self.side, bg=BG)
+            panel.side_frame.grid(row=0, column=0, sticky="nw")
+        strip = InstanceStrip(panel.side_frame, self, inst, panel, with_bpm=inst.kind == "synth",
+                              register_help=self._help_register)
+        strip.pack(anchor="nw", pady=2, before=next(iter(panel.side_frame.pack_slaves()), None))
+        self.strips[inst.id] = strip
+        self._set_visible(panel, False)
+        return panel
 
-    def _drum_context(self, name, event):
+    @staticmethod
+    def _set_visible(panel, on):
+        if hasattr(panel, "set_visible"):
+            panel.set_visible(on)
+        else:
+            for f in (panel, panel.side_frame):
+                f.grid() if on else f.grid_remove()
+
+    def add_instrument(self, kind, defer=True):
+        """Create an instance (audible at once) and its panel; the panel is assembled in small ``after`` steps
+        (``defer=False`` builds it synchronously, for tests) and selected when complete."""
+        inst = self.manager.add(kind)
+        panel = self._make_panel(inst, eager=not defer)
+        if not defer or panel_ready(panel):
+            self._panel_ready(inst, panel)
+        else:
+            self.refresh_tabs()
+            self.root.after(1, lambda: self._build_step(inst, panel))
+        return inst
+
+    def _build_step(self, inst, panel):
+        if self._closed or inst not in self.manager.instances:
+            return
+        if panel.build_next():
+            self.root.after(1, lambda: self._build_step(inst, panel))
+        else:
+            self._panel_ready(inst, panel)
+
+    def _panel_ready(self, inst, panel):
+        self.panels[inst.id] = panel
+        if self.selected is inst:  # it was selected while still being built: show it now
+            self.selected = None
+        self.select(inst)
+
+    def select_id(self, iid):
+        inst = next((i for i in self.manager.instances if i.id == iid), None)
+        if inst is not None and iid in self.panels:  # a panel still being built cannot be selected yet
+            self.select(inst)
+
+    def select(self, inst):
+        """Choose the instrument being edited. Never touches what is playing."""
+        if inst is self.selected and inst is not None:
+            self.refresh_tabs()
+            return
+        if inst is not None and inst.kind == "synth" and inst is not self.engine.synth:
+            self._retarget(inst)
+        for iid, panel in self.panels.items():
+            self._set_visible(panel, inst is not None and iid == inst.id)
+        self.selected = inst
+        synth = inst is not None and inst.kind == "synth"
+        self.keyboard_frame.grid() if synth else self.keyboard_frame.grid_remove()
+        if inst is not None and inst.id in self.panels:
+            self.panels[inst.id].refresh()
+        self.status.set("" if synth or inst is None else "DRUMS: PLAY para arrancar, shift+click acentúa")
+        self.refresh_tabs()
+
+    def _retarget(self, inst):
+        """MIDI and the on-screen keyboard follow the selected Synth: release what is held on the old one first."""
+        old = self.engine.synth
+        if self.on_target_change is not None:
+            self.on_target_change()  # router.reset() releases via engine.note_off -> still the old target
+        for note, held in enumerate(old._live):
+            if held:
+                old.note_off(note)
+        self.engine.synth = inst  # each panel keeps its own widget state: nothing to re-push
+
+    def close_instance(self, inst):
+        instances = list(self.manager.instances)
+        if inst not in instances:
+            return
+        idx = instances.index(inst)
+        was_selected = inst is self.selected
+        if inst is self.engine.synth and self.on_target_change is not None:
+            self.on_target_change()
+        self.manager.remove(inst)
+        panel = self.panels.pop(inst.id, None)
+        self.strips.pop(inst.id, None)
+        if panel is not None:
+            if hasattr(panel, "side_frame"):
+                panel.side_frame.destroy()
+            panel.destroy()
+        rest = list(self.manager.instances)
+        if inst is self.engine.synth:  # keep MIDI / keyboard pointing at a live Synth if one remains
+            alt = next((i for i in rest if i.kind == "synth" and i.id in self.panels), None)
+            if alt is not None:
+                self.engine.synth = alt
+        if was_selected:
+            self.selected = None
+            ready = [i for i in rest if i.id in self.panels]  # never fall back to a panel still being built
+            self.select(min(ready, key=lambda i: abs(instances.index(i) - idx)) if ready else None)
+        else:
+            self.refresh_tabs()
+
+    def refresh_tabs(self):
+        items = []
+        for inst in self.manager.instances:
+            text = inst.name
+            if self.manager.followers(inst):
+                text += " ●"
+            if inst.source is not None:
+                text += f" ⇄ {inst.source.name}"
+            items.append((inst.id, text, inst is self.selected))
+        self.tabbar.refresh(items)
+
+    def _drum_context(self, inst, name, event):
         """Right-click on a drum knob: only "default value" (no MIDI learn yet)."""
         self._menu.delete(0, "end")
-        self._menu.add_command(label="Valor por defecto", command=lambda: self.drums_view.reset(name))
+        self._menu.add_command(label="Valor por defecto", command=lambda: self.panels[inst.id].reset(name))
         if event is not None:
             self._menu.tk_popup(event.x_root, event.y_root)
 
     def _build_header(self, h):
         tk.Label(h, text="NOMAD SYNTH", bg=BG, fg=GREEN, font=("TkDefaultFont", 14, "bold")).pack(side="left", padx=8)
-        self.synth_btn = self._btn(h, lambda: self.show_view("synth"), "SYNTH")
-        self.synth_btn.pack(side="left", padx=(4, 1))
-        self.drums_btn = self._btn(h, lambda: self.show_view("drums"), "DRUMS")
-        self.drums_btn.pack(side="left", padx=(1, 6))
-        self._help_register(self.synth_btn, "synth_view")
-        self._help_register(self.drums_btn, "drums_view")
+        self.tabbar = TabBar(h, INSTRUMENT_TYPES, self.select_id,
+                             lambda iid: self.close_instance(next(i for i in self.manager.instances if i.id == iid)),
+                             self.add_instrument, register_help=self._help_register)
+        self.tabbar.pack(side="left", padx=(4, 6))
         devs = list_output_devices()
         self._devs = devs
         cur = getattr(self.stream, "device_index", None)
@@ -220,42 +292,11 @@ class App:
                          activeforeground=BG, relief="flat", bd=0, padx=8, pady=3, font=_FONT, takefocus=0,
                          disabledforeground="#555555")
 
-    def _section(self, parent, sec):
-        f = tk.Frame(parent, bg=BG, highlightbackground=TROUGH, highlightthickness=1)
-        _text(f, text=sec.upper().replace("_", " "), fg=GREEN).pack(anchor="w", padx=4)
-        names = LAYOUT[sec]
-        if sec == "matrix":
-            grid = tk.Frame(f, bg=BG)
-            grid.pack(anchor="w")
-            for i in range(8):
-                slot = tk.Frame(grid, bg=BG)
-                slot.grid(row=i // 3, column=i % 3, padx=4, pady=1, sticky="w")
-                sels = tk.Frame(slot, bg=BG)
-                sels.pack(side="left")
-                for k in ("src", "dst"):
-                    self._make(sels, f"mod{i}_{k}").pack(anchor="w", pady=1)
-                self._make(slot, f"mod{i}_amt").pack(side="left")
-            return f
-        top, row = tk.Frame(f, bg=BG), tk.Frame(f, bg=BG)
-        top.pack(anchor="w", padx=2)
-        row.pack(anchor="w")
-        for n in names:
-            w = self._make(top if widget_kind(n) == "selector" else row, n)
-            w.pack(side="left", padx=2)
-        return f
-
-    def _make(self, parent, name):
-        spec = REGISTRY[name]
-        if widget_kind(name) == "selector":
-            off = 1 if name == "polyphony" else 0
-            w = Selector(parent, _labels(name), 0, lambda i, n=name, o=off: self._user(n, i + o),
-                         on_context=lambda e, n=name: self._context(n, e))
-        else:
-            w = Knob(parent, KnobModel(spec, spec.default), lambda v, n=name: self._user(n, v),
-                     label=_short(name), on_context=lambda e, n=name: self._context(n, e))
-        self.widgets[name] = w
-        self._help_register(w, name)
-        return w
+    @property
+    def widgets(self) -> dict:
+        """All controls by parameter name: the selected Synth panel's plus the app-level ones."""
+        panel = self.synth_view
+        return {**(panel.widgets if panel is not None else {}), **self._global_widgets}
 
     # ---- help mode -----------------------------------------------------------
     def _help_register(self, widget, key):
@@ -352,14 +393,14 @@ class App:
     # ---- engine <-> widgets -----------------------------------------------
     def _user(self, name, value):
         self._last = name
-        self.engine.set_param(name, value)
+        self.engine.set_param(name, value)  # master_volume -> mix; everything else -> the target synth
 
     def _show(self, name, value):
-        w = self.widgets.get(name)
-        if isinstance(w, Selector):
-            w.set_index(round(value) - (1 if name == "polyphony" else 0))
-        elif w is not None:
+        w = self._global_widgets.get(name)
+        if w is not None:
             w.set_value(value)
+        elif self.synth_view is not None:
+            self.synth_view.show(name, value)
 
     def _push_snapshot(self):
         snap = self.engine.snapshot()
@@ -521,8 +562,12 @@ class App:
                 pass  # a non-finite value must never stop the poll loop
         notes = self.engine.snapshot()["active_notes"]
         self.keyboard.set_active(notes)
-        self.drums_view.refresh()
-        self.seq_view.refresh()
+        self.manager.collect()  # old topologies / closed instances die on this thread, not in the callback
+        sel = self.panels.get(self.selected.id) if self.selected is not None else None
+        if sel is not None:
+            sel.refresh()  # hidden panels are not repainted: the Tk thread has to stay cheap next to the audio
+        for iid in list(self.panels):
+            self.strips[iid].refresh()
         self.voices.set(f"VOICES {len(notes)}")
         self.xruns.set(f"XRUNS {getattr(self.stream, 'xruns', 0)}")
         if self._armed_by_us and self.midi_map.learning is None:

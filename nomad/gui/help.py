@@ -222,13 +222,37 @@ _ELEMENTS = {
                        "BPM y SWING cambian el groove en vivo; CLEAR borra todos los pasos."),
 }
 _ELEMENTS.update({
+    "clock_source": ("Fuente de reloj",
+                     "Internal: este instrumento marca su propio tempo. Si elegís otro instrumento, "
+                     "hereda su BPM, su posición y su PLAY/STOP, y ya no podés editarlos aquí. Cambiar "
+                     "de fuente es inmediato: puede saltarse o repetirse un paso. Un instrumento que otros "
+                     "siguen no puede seguir a otro."),
+    "inst_mute": ("MUTE",
+                  "Silencia este instrumento con un fade corto, sin detenerlo: sigue su reloj y conserva su "
+                  "estado. Es independiente del PLAY."),
+    "inst_level": ("LEVEL del instrumento",
+                   "Volumen de este instrumento dentro de la mezcla (0 a 100 %). No es el volumen general: "
+                   "ese es MASTER, que afecta a todo."),
+    "inst_bpm": ("BPM del instrumento",
+                 "Tempo de este instrumento mientras usa su reloj Internal. Si sigue a otro, muestra el "
+                 "tempo de la fuente y queda bloqueado."),
+    "tab_select": ("Pestaña de instrumento",
+                   "Cada pestaña es un instrumento independiente que sigue sonando aunque no esté "
+                   "seleccionada. Click elige cuál editás; el teclado en pantalla y el MIDI van al "
+                   "Synth seleccionado."),
+    "tab_close": ("Cerrar instrumento",
+                  "Cierra este instrumento: sus notas se apagan con un fade corto. Los instrumentos "
+                  "que lo seguían como reloj pasan a reloj propio y continúan desde el mismo punto."),
+    "tab_new": ("Nuevo instrumento",
+                "Abre un menú para crear otro Synth o una Machine Drum. Cada instancia tiene sus "
+                "propios parámetros, patrón y estado."),
     "seq_toggle": ("SEQ: secuenciador del synth",
                    "Prende o apaga el secuenciador de este synth. Toca sus notas con el mismo "
                    "motor que el teclado, así que podés tocar encima a la vez.\n"
                    "Al apagarlo se sueltan sus notas."),
-    "seq_transport": ("PLAY / STOP",
-                      "Arranca o para el transporte global: la secuencia y la batería "
-                      "salen juntas y sincronizadas al mismo BPM."),
+    "seq_transport": ("PLAY / STOP del secuenciador",
+                      "Arranca o para solo la secuencia del synth. La batería tiene su propio "
+                      "PLAY en la vista DRUMS; las dos usan el BPM que se fija allí."),
     "seq_steps": ("Pasos de la secuencia",
                   "Click prende o apaga el paso; shift+click lo marca como acento.\n"
                   "La rueda del mouse cambia la nota (shift: una octava). "

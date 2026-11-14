@@ -1,6 +1,6 @@
 """16-step monophonic note sequencer: an event source for one ``SynthInstrument``.
 
-It never produces audio: on each transport step it calls the synth's own
+It never produces audio: on each clock step it calls the synth's own
 ``VoiceManager`` (same path as a played key) and releases the note after
 ``gate`` x step length. The GUI writes ``on/note/vel/gate/enabled`` with plain
 atomic stores; everything else runs on the audio thread (no allocations).
@@ -15,23 +15,28 @@ import math
 
 import numpy as np
 
-from nomad.engine.transport import STEPS, Transport
+from nomad.engine.clock import FAR, STEPS, Clock, StepGrid, StepTracker
 
 __all__ = ["StepSequencer"]
 
-_FAR = 1 << 30
 
 
 class StepSequencer:
-    def __init__(self, synth, sample_rate: float, transport: Transport) -> None:
-        self.synth, self.sr, self.transport = synth, float(sample_rate), transport
+    def __init__(self, synth, sample_rate: float) -> None:
+        self.synth, self.sr = synth, float(sample_rate)
+        self.grid = StepGrid(0.25, STEPS, 0.0)
+        self.tracker = StepTracker(self.grid)
         self.on = np.zeros(STEPS, dtype=np.uint8)
         self.note = np.full(STEPS, 60, dtype=np.uint8)
         self.vel = np.full(STEPS, 100, dtype=np.uint8)
         self.enabled = False
         self._gate = 0.5
         self._held = -1
-        self._left = _FAR
+        self._left = FAR
+
+    @property
+    def clock(self) -> Clock:
+        return self.synth.eclock  # the effective clock: own if Internal, else the source's
 
     @property
     def gate(self) -> float:
@@ -66,10 +71,25 @@ class StepSequencer:
             n = int(self.note[pos])
             self.synth.vm.note_on(n, int(self.vel[pos]) / 127.0)
             self._held = n
-            self._left = max(1, int(self._gate * self.transport.step_frames(pos)))
+            self._left = max(1, int(self._gate * self.grid.step_beats(pos) * 60.0 * self.sr / self.clock.bpm))
+
+    @property
+    def position(self) -> int:
+        return self.grid.pattern_step(self.grid.step_at(self.clock.pos)) if self.clock.running else 0
+
+    def poll(self) -> None:
+        step = self.tracker.poll(self.clock)
+        if not self.clock.running:
+            self.release()  # clock stopped: never leave a hung note
+        elif step is not None:
+            self.on_step(step)
+
+    def frames_to_event(self) -> int:
+        n = self.frames_to_off()
+        return min(n, self.tracker.frames_to_event(self.clock)) if self.enabled else n
 
     def frames_to_off(self) -> int:
-        return self._left if self._held >= 0 else _FAR
+        return self._left if self._held >= 0 else FAR
 
     def advance(self, n: int) -> None:
         if self._held < 0:
@@ -85,7 +105,7 @@ class StepSequencer:
         if self._held >= 0:
             if not self.synth._live[self._held]:
                 self.synth.vm.note_off(self._held)
-            self._held, self._left = -1, _FAR
+            self._held, self._left = -1, FAR
 
     def release(self) -> None:
         self._off()  # honours live-held keys; panic clears them first

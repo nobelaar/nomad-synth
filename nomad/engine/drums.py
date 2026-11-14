@@ -20,7 +20,8 @@ import numpy as np
 from scipy.signal import butter, lfilter
 
 from nomad.engine.params import ParamSpec
-from nomad.engine.transport import STEPS, Transport
+from nomad.engine.clock import STEPS, Clock, StepGrid, StepTracker
+from nomad.engine.instance import InstrumentBase
 
 __all__ = [
     "DRUM_REGISTRY",
@@ -178,7 +179,7 @@ REGEN_COOLDOWN_S = 0.06
 _HARD_LEVEL = (0, 1, 2)
 
 
-class DrumMachine:
+class DrumMachine(InstrumentBase):
     """Six synthesized drums, a 16-step sequencer and an allocation-free mix.
 
     Threading: the GUI writes ``values``/``steps`` and swaps ``_bank`` entries;
@@ -187,11 +188,15 @@ class DrumMachine:
     ``render`` is the audio thread: it never allocates and never raises.
     """
 
-    def __init__(self, sample_rate: float = 48000.0, transport: Transport | None = None) -> None:
-        self.sr = float(sample_rate)
-        self.transport = transport if transport is not None else Transport(self.sr)
+    kind = "drums"
+
+    def __init__(self, sample_rate: float = 48000.0, clock: Clock | None = None,
+                 name: str = "Machine Drum 01", iid: int = 0) -> None:
+        super().__init__(sample_rate, name, iid, clock)
+        self.grid = StepGrid(0.25, STEPS, 0.0)
+        self.tracker = StepTracker(self.grid)
         self.values: dict[str, float] = {n: s.default for n, s in DRUM_REGISTRY.items()}
-        self.transport.bpm, self.transport.swing = self.values["bpm"], self.values["swing"]
+        self.clock.bpm, self.grid.swing = self.values["bpm"], self.values["swing"]
         self.steps = np.zeros((len(INSTRUMENTS), STEPS), dtype=np.uint8)
         self.errors = 0
         self._bank: list[np.ndarray] = [
@@ -233,8 +238,11 @@ class DrumMachine:
         spec = DRUM_REGISTRY[name]
         v = _clamp(spec, value)
         self.values[name] = v
-        if name in ("bpm", "swing"):
-            setattr(self.transport, name, v)
+        if name == "bpm":
+            self.command("bpm", v)
+            return
+        if name == "swing":
+            self.grid.swing = v
             return
         track, _, field = name.partition("_")
         if field in ("tune", "decay"):
@@ -262,6 +270,9 @@ class DrumMachine:
         return True
 
     def trigger(self, track: str, velocity: float = 1.0) -> None:
+        self.command("trigger", (track, velocity))
+
+    def _trigger(self, track: str, velocity: float = 1.0) -> None:
         i = INSTRUMENTS.index(track)
         v = float(velocity)
         v = v if math.isfinite(v) else 1.0
@@ -272,31 +283,34 @@ class DrumMachine:
 
     @property
     def playing(self) -> bool:
-        return self.transport.playing
+        return self.eclock.running
 
     @property
     def position(self) -> int:
-        return self.transport.position
-
-    def start(self) -> None:
-        self.transport.start()
-
-    def stop(self) -> None:
-        self.transport.stop()
-
-    def toggle(self) -> None:
-        self.transport.toggle()
+        return self.grid.pattern_step(self.grid.step_at(self.eclock.pos)) if self.eclock.running else 0
 
     def stop_all(self) -> None:
-        self.transport.stop()
-        self._fade_left = self._fade_len
+        self.command("stop_all")
+
+    def panic(self) -> None:
+        self.command("stop_all")
+
+    def close_now(self) -> None:
+        self._apply("stop_all", None)
+
+    def _apply_extra(self, name, arg) -> None:
+        if name == "trigger":
+            self._trigger(*arg)
+        elif name == "stop_all":
+            self.clock.stop()
+            self._fade_left = self._fade_len
 
     # ---- audio thread ------------------------------------------------------
     def on_step(self, step: int) -> None:
         for i, track in enumerate(INSTRUMENTS):
             level = int(self.steps[i, step])
             if level:
-                self.trigger(track, ACCENT_GAIN if level == _HARD_LEVEL[2] else NORMAL_GAIN)
+                self._trigger(track, ACCENT_GAIN if level == _HARD_LEVEL[2] else NORMAL_GAIN)
 
     def _ensure(self, n: int) -> None:
         if n <= self._mix.shape[0]:
@@ -339,11 +353,21 @@ class DrumMachine:
             state[1] = 0
             state[2] = 0.0
 
+    def poll(self) -> None:
+        step = self.tracker.poll(self.eclock)
+        if step is not None:
+            self.on_step(step)
+
+    def render_block(self, b: np.ndarray, n: int) -> None:
+        self.render_chunk(b, 0, n)
+
     def frames_to_event(self) -> int:
-        return self._fade_left if self._fade_left > 0 else 1 << 30
+        n = self.tracker.frames_to_event(self.eclock)
+        return min(n, self._fade_left) if self._fade_left > 0 else n
 
     def render(self, out: np.ndarray, n: int) -> None:
-        """Standalone driver: runs the (own or shared) transport over ``n`` frames."""
+        """Standalone driver for a machine that owns its clock (tests, offline render)."""
+        self.drain_commands()
         n = min(int(n), out.shape[0])
         if n <= 0:
             return
@@ -351,4 +375,10 @@ class DrumMachine:
             if all(s[0] is None or s[1] >= s[0].shape[0] for s in self._active):
                 return
         self._ensure(n)
-        self.transport.run(n, lambda i, c: self.render_chunk(out, i, c), self.on_step, self.frames_to_event)
+        i = 0
+        while i < n:
+            self.poll()
+            chunk = min(n - i, self.frames_to_event())
+            self.render_chunk(out, i, chunk)
+            self.clock.advance(chunk)
+            i += chunk

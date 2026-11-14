@@ -17,34 +17,35 @@ import numpy as np
 from nomad.engine.lfo import LFO
 from nomad.engine.modmatrix import NUM_SLOTS, ModMatrix
 from nomad.engine.sequencer import StepSequencer
-from nomad.engine.transport import Transport
+from nomad.engine.clock import Clock
+from nomad.engine.instance import CONTROL_BLOCK, InstrumentBase
 from nomad.engine.params import REGISTRY, Smoother, clamp, from_norm, to_norm
 from nomad.engine.voice_manager import VoiceManager, _note
 
 __all__ = ["SynthInstrument", "CONTROL_BLOCK", "PITCH_SEMITONES"]
 
-CONTROL_BLOCK = 256  # frames; see R6 in the ledger
 PITCH_SEMITONES = 12.0  # semitones per unit of matrix pitch modulation
 _CTRL_SMOOTH_MS = 10.0
 _IMMEDIATE_SUFFIX = ("_wave", "_mode", "_sync", "_phase", "_src", "_dst", "_attack", "_decay", "_sustain", "_release")
 _SMOOTHED = tuple(
     n for n in REGISTRY
-    if n != "polyphony" and not n.endswith(_IMMEDIATE_SUFFIX) and not (n.startswith("mod") and n.endswith("_amt"))
+    if n not in ("polyphony", "master_volume") and not n.endswith(_IMMEDIATE_SUFFIX) and not (n.startswith("mod") and n.endswith("_amt"))
 )
 _CONTROLS = ("bend", "modwheel")
 
 
-class SynthInstrument:
+class SynthInstrument(InstrumentBase):
+    kind = "synth"
+
     def __init__(self, sample_rate: float = 48000, max_voices: int = 8, name: str = "Synth 01",
-                 transport: Transport | None = None) -> None:
-        self.sr = float(sample_rate)
-        self.name = name
+                 clock: Clock | None = None, iid: int = 0) -> None:
+        super().__init__(sample_rate, name, iid, clock)
         self.vm = VoiceManager(self.sr, max_voices)
         self._live = bytearray(128)  # keys held via note_on/note_off events (not the sequencer)
-        self.sequencer = StepSequencer(self, self.sr, transport if transport is not None else Transport(self.sr))
+        self.sequencer = StepSequencer(self, self.sr)
         self.matrix = ModMatrix()
         self.lfos = (LFO(self.sr, seed=1), LFO(self.sr, seed=2))
-        self._values = {n: s.default for n, s in REGISTRY.items()}  # caller-side targets (snapshot)
+        self._values = {n: s.default for n, s in REGISTRY.items() if n != "master_volume"}  # master lives in Engine; caller-side targets (snapshot)
         self._ctl = {"bend": 0.0, "modwheel": 0.0}
         self._p = dict(self._values)  # what voices read (smoothed)
         self._smoothers = {n: Smoother(to_norm(n, REGISTRY[n].default), self.sr, REGISTRY[n].smooth_ms) for n in _SMOOTHED}
@@ -63,6 +64,8 @@ class SynthInstrument:
         self._q.put((1, note, None))
 
     def set_param(self, name: str, value: float) -> None:
+        if name == "master_volume":
+            raise KeyError(name)  # the mix volume belongs to Engine; this instance has ``level``
         v = clamp(name, value)  # KeyError for unknown names, NaN -> default
         self._values[name] = v
         self._q.put((2, name, v))
@@ -77,6 +80,7 @@ class SynthInstrument:
 
     def panic(self) -> None:
         self._q.put((4, None, None))
+        self.command("stop")
 
     def snapshot(self) -> dict:
         """Copy of all param targets + ``bend``/``modwheel`` + ``active_notes`` (held keys).
@@ -120,7 +124,12 @@ class SynthInstrument:
             self.vm.panic()
             self.sequencer.release()
 
+    def close_now(self) -> None:
+        super().close_now()
+        self._handle(4, None, None)  # vm.panic + release the sequencer note + forget live keys
+
     def drain(self) -> None:
+        self.drain_commands()
         q = self._q
         while True:
             try:
@@ -160,15 +169,12 @@ class SynthInstrument:
         self._mods["bend"] = self._csm["bend"].value * p["bend_range"]
         self.vm.render(b, p, self._mods, self._resolve)
 
-    # ---- transport hooks (audio thread) ----
-    def on_step(self, position: int) -> None:
-        self.sequencer.on_step(position)
+    # ---- clock hooks (audio thread) ----
+    def poll(self) -> None:
+        self.sequencer.poll()
 
     def frames_to_event(self) -> int:
-        return self.sequencer.frames_to_off()
+        return self.sequencer.frames_to_event()
 
     def advance(self, n: int) -> None:
         self.sequencer.advance(n)
-
-    def on_stop(self) -> None:
-        self.sequencer.release()

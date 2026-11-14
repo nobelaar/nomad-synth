@@ -66,17 +66,17 @@ class FakeMap:
 def test_window_fits_1366x768(app):
     app.root.update_idletasks()
     assert app.root.winfo_reqwidth() <= 1366 and app.root.winfo_reqheight() <= 768
-    app.show_view("drums")
+    app.select(app.engine.drums)
     app.root.update_idletasks()
     assert app.root.winfo_reqwidth() <= 1366 and app.root.winfo_reqheight() <= 768
-    app.show_view("synth")
+    app.select(app.engine.synth)
 
 
 def test_widgets_reflect_engine_and_drive_it(app):
     assert app.widgets["filt_cutoff"].model.value == pytest.approx(1200.0)
     assert app.widgets["polyphony"].index == 7
     sent = []
-    app.engine.set_param = lambda n, v: sent.append((n, v))
+    app.synth_view.instrument.set_param = lambda n, v: sent.append((n, v))  # panels talk to their own instrument
     app.widgets["osc1_wave"].select(1)
     app.widgets["polyphony"].select(2)
     app.widgets["filt_reso"].on_change(0.5)
@@ -223,18 +223,18 @@ def test_context_menu_closes_on_click_elsewhere(app):
     assert not app._menu.winfo_ismapped()
 
 
-def test_drums_tab_switches_views_and_hides_keyboard(app):
+def test_drums_tab_switches_panels_and_hides_keyboard(app):
     app.root.update()
-    assert app.view == "synth" and app.keyboard_frame.winfo_ismapped()
-    app.show_view("drums")
+    assert app.selected is app.engine.synth and app.keyboard_frame.winfo_ismapped()
+    app.select(app.engine.drums)
     app.root.update()
-    assert app.view == "drums"
     assert not app.keyboard_frame.winfo_ismapped()
-    assert app.drums_view.winfo_ismapped()
-    app.show_view("synth")
+    assert app.drums_view.winfo_ismapped() and not app.synth_view.winfo_ismapped()
+    app.select(app.engine.synth)
     app.root.update()
-    assert app.keyboard_frame.winfo_ismapped()
+    assert app.keyboard_frame.winfo_ismapped() and app.synth_view.winfo_ismapped()
 
 
-def test_drums_tab_is_reachable_from_the_header(app):
-    assert app.synth_btn.cget("text") == "SYNTH" and app.drums_btn.cget("text") == "DRUMS"
+def test_default_instruments_have_tabs_in_the_header(app):
+    labels = [b.cget("text") for b, _ in app.tabbar.tabs.values()]
+    assert labels == ["Synth 01", "Machine Drum 01"]

@@ -1,14 +1,14 @@
 """Step editor for the synth's sequencer, embedded in the synth panel.
 
 Only the Tk thread touches widgets. It writes ``StepSequencer`` arrays and the
-shared ``Transport`` through plain stores; ``refresh`` runs from the 100 ms poll.
+shared ``Clock`` through plain stores; ``refresh`` runs from the 100 ms poll.
 """
 
 from __future__ import annotations
 
 import tkinter as tk
 
-from nomad.engine.transport import STEPS
+from nomad.engine.clock import STEPS
 from nomad.gui.drums_view import ACCENT, PLAYHEAD, _BTN
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH
 
@@ -21,9 +21,10 @@ def note_name(n: int) -> str:
 
 
 class SeqView(tk.Frame):
-    def __init__(self, parent, sequencer, transport, register_help=None):
+    def __init__(self, parent, synth, register_help=None):
         super().__init__(parent, bg=BG)
-        self.seq, self.transport, self._help = sequencer, transport, register_help
+        self.synth, self.seq, self.clock, self._help = synth, synth.sequencer, synth.clock, register_help
+        sequencer = self.seq
         top = tk.Frame(self, bg=BG)
         top.pack(anchor="w", padx=2, pady=2)
         self.seq_btn = tk.Button(top, text="SEQ", command=self.toggle_enabled, **_BTN)
@@ -66,8 +67,11 @@ class SeqView(tk.Frame):
         self.seq.enabled = not self.seq.enabled
         self.refresh()
 
+    def set_transport_locked(self, locked: bool) -> None:
+        self.play_btn.configure(state="disabled" if locked else "normal")
+
     def toggle_transport(self) -> None:
-        self.transport.toggle()
+        self.synth.toggle()  # a command: the audio thread applies it at the next render
         self.refresh()
 
     def set_gate(self, v: float) -> None:
@@ -91,8 +95,8 @@ class SeqView(tk.Frame):
 
     # ---- drawing -----------------------------------------------------------
     def refresh(self) -> None:
-        seq, playing = self.seq, self.transport.playing
-        pos = self.transport.position if playing else -1
+        seq, playing = self.seq, self.clock.running
+        pos = seq.position if playing else -1
         for s, b in enumerate(self.steps):
             on, vel = seq.on[s], int(seq.vel[s])
             b.configure(text=note_name(int(seq.note[s])),
