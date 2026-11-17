@@ -78,6 +78,12 @@ class SynthInstrument(InstrumentBase):
         self._ctl[name] = v
         self._q.put((3, name, v))
 
+    def set_rec(self, on: bool) -> None:
+        self._q.put((5, on, None))
+
+    def rest(self) -> None:
+        self._q.put((6, None, None))
+
     def panic(self) -> None:
         self._q.put((4, None, None))
         self.command("stop")
@@ -97,6 +103,8 @@ class SynthInstrument(InstrumentBase):
     def _handle(self, kind, a, b) -> None:
         if kind == 0:
             self.vm.note_on(a, b)
+            if self.sequencer.rec:
+                self.sequencer.record(int(a), int(b * 127))
             n = _note(a)
             if n is not None:
                 self._live[n] = 1
@@ -119,7 +127,12 @@ class SynthInstrument(InstrumentBase):
                 self.matrix.set_slot(i, slot[0], slot[1], slot[2])
         elif kind == 3:
             self._csm[a].set(b)
+        elif kind == 5:  # record arm: cursor restarts at step 1
+            self.sequencer.rec, self.sequencer.rec_step = bool(a), 0
+        elif kind == 6:
+            self.sequencer.rest()
         else:
+            self.sequencer.rec = False
             self._live[:] = bytes(128)
             self.vm.panic()
             self.sequencer.release()

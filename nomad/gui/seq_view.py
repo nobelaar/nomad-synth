@@ -25,12 +25,17 @@ class SeqView(tk.Frame):
         super().__init__(parent, bg=BG)
         self.synth, self.seq, self.clock, self._help = synth, synth.sequencer, synth.clock, register_help
         sequencer = self.seq
+        self._rec = False
         top = tk.Frame(self, bg=BG)
         top.pack(anchor="w", padx=2, pady=2)
         self.seq_btn = tk.Button(top, text="SEQ", command=self.toggle_enabled, **_BTN)
         self.seq_btn.pack(side="left", padx=(0, 4))
         self.play_btn = tk.Button(top, text="PLAY", command=self.toggle_transport, **_BTN)
         self.play_btn.pack(side="left", padx=(0, 8))
+        self.rec_btn = tk.Button(top, text="REC", command=self.toggle_rec, **_BTN)
+        self.rec_btn.pack(side="left", padx=(0, 4))
+        self.rest_btn = tk.Button(top, text="REST", command=self.rest, state="disabled", **_BTN)
+        self.rest_btn.pack(side="left", padx=(0, 8))
         tk.Label(top, text="GATE", bg=BG, fg=GREY, font=("TkDefaultFont", 8)).pack(side="left")
         self._gate_var = tk.DoubleVar(self, value=round(sequencer.gate * 100))
         self._gate_var.trace_add("write", lambda *_: self.set_gate(self._gate_var.get() / 100.0))
@@ -56,6 +61,8 @@ class SeqView(tk.Frame):
         self._reg(self.seq_btn, "seq_toggle")
         self._reg(self.play_btn, "seq_transport")
         self._reg(self.gate, "seq_gate")
+        self._reg(self.rec_btn, "seq_rec")
+        self._reg(self.rest_btn, "seq_rest")
         self.refresh()
 
     def _reg(self, widget, key):
@@ -68,11 +75,22 @@ class SeqView(tk.Frame):
         self.refresh()
 
     def set_transport_locked(self, locked: bool) -> None:
+        self.rec_btn.configure(text=("REC·LIVE" if playing else "REC·STEP") if self._rec else "REC",
+                               bg=ACCENT if self._rec else TROUGH, fg=BG if self._rec else GREY)
+        self.rest_btn.configure(state="normal" if self._rec and not playing else "disabled")
         self.play_btn.configure(state="disabled" if locked else "normal")
 
     def toggle_transport(self) -> None:
         self.synth.toggle()  # a command: the audio thread applies it at the next render
         self.refresh()
+
+    def toggle_rec(self) -> None:
+        self._rec = not self._rec  # intent; the audio thread owns the real flag and cursor
+        self.synth.set_rec(self._rec)
+        self.refresh()
+
+    def rest(self) -> None:
+        self.synth.rest()
 
     def set_gate(self, v: float) -> None:
         self.seq.gate = v
@@ -96,7 +114,7 @@ class SeqView(tk.Frame):
     # ---- drawing -----------------------------------------------------------
     def refresh(self) -> None:
         seq, playing = self.seq, self.clock.running
-        pos = seq.position if playing else -1
+        pos = seq.position if playing else (seq.rec_step if self._rec else -1)
         for s, b in enumerate(self.steps):
             on, vel = seq.on[s], int(seq.vel[s])
             b.configure(text=note_name(int(seq.note[s])),
