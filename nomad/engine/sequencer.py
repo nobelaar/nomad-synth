@@ -33,6 +33,8 @@ class StepSequencer:
         self._gate = 0.5
         self._held = -1
         self._left = FAR
+        self.rec = False  # audio-thread owned: set through the synth's command queue
+        self.rec_step = 0  # step-record cursor
 
     @property
     def clock(self) -> Clock:
@@ -61,6 +63,23 @@ class StepSequencer:
         self.on.fill(0)
 
     # ---- audio thread ------------------------------------------------------
+    def record(self, note: int, vel: int) -> None:
+        """Clock running: write at the nearest step (real-time). Stopped: write at the cursor and advance (step)."""
+        if self.clock.running:
+            g, pos = self.grid, self.clock.pos
+            k = g.step_at(pos)
+            if pos - g.step_start(k) > g.step_start(k + 1) - pos:
+                k += 1
+            self.set_step(g.pattern_step(k), True, note, max(vel, 1))
+        else:
+            self.set_step(self.rec_step, True, note, max(vel, 1))
+            self.rec_step = (self.rec_step + 1) % self.grid.length
+
+    def rest(self) -> None:
+        if not self.clock.running:
+            self.on[self.rec_step] = 0
+            self.rec_step = (self.rec_step + 1) % self.grid.length
+
     def on_step(self, pos: int) -> None:
         if not self.enabled:
             if self._held >= 0:

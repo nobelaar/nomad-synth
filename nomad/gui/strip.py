@@ -7,6 +7,7 @@ manager, which only enqueues commands or publishes topologies.
 
 from __future__ import annotations
 
+import time
 import tkinter as tk
 
 from nomad.gui.drums_view import _BTN
@@ -35,10 +36,16 @@ class InstanceStrip(tk.Frame):
             row.pack(anchor="w", padx=2)
             tk.Label(row, text="BPM", bg=BG, fg=GREY, font=_FONT, width=5, anchor="w").pack(side="left")
             self._bpm_var = tk.DoubleVar(self, value=inst.clock.bpm)
-            self._bpm_var.trace_add("write", lambda *_: self._on_bpm())
-            self.bpm = _scale(row, 60, 180, 120)
-            self.bpm.configure(variable=self._bpm_var)
+            # applied on Enter/focus-out/arrows, never per keystroke: typing "128" must not pass through 1 and 12
+            self.bpm = tk.Spinbox(row, from_=20, to=300, increment=1, format="%.0f", width=5, textvariable=self._bpm_var,
+                                  command=self._on_bpm, bg=TROUGH, fg=GREEN, buttonbackground=TROUGH,
+                                  insertbackground=GREEN, highlightthickness=0, bd=0)
+            self.bpm.bind("<Return>", lambda e: self._on_bpm())
+            self.bpm.bind("<FocusOut>", lambda e: self._on_bpm())
             self.bpm.pack(side="left")
+            self._taps: list[float] = []
+            self.tap_btn = tk.Button(row, text="TAP", command=self.tap, **_BTN)
+            self.tap_btn.pack(side="left", padx=4)
         row = tk.Frame(self, bg=BG)
         row.pack(anchor="w", padx=2, pady=1)
         self.mute_btn = tk.Button(row, text="MUTE", command=self.toggle_mute, **_BTN)
@@ -77,8 +84,21 @@ class InstanceStrip(tk.Frame):
         self.refresh()
 
     def _on_bpm(self) -> None:
-        if not self._syncing:
-            self.app.manager.set_bpm(self.inst, self._bpm_var.get())  # ignored for followers
+        if self._syncing:
+            return
+        try:
+            v = self._bpm_var.get()
+        except tk.TclError:  # half-typed text
+            return
+        self.app.manager.set_bpm(self.inst, v)  # clamped by the engine; ignored for followers
+
+    def tap(self) -> None:
+        now = time.monotonic()
+        self._taps = (self._taps if self._taps and now - self._taps[-1] < 2.0 else [])[-4:] + [now]
+        if len(self._taps) >= 2:
+            bpm = round(60.0 * (len(self._taps) - 1) / (self._taps[-1] - self._taps[0]))
+            self._bpm_var.set(min(max(bpm, 20), 300))
+            self._on_bpm()
 
     # ---- drawing ------------------------------------------------------------------
     def refresh(self) -> None:
@@ -95,6 +115,7 @@ class InstanceStrip(tk.Frame):
             finally:
                 self._syncing = False
             self.bpm.configure(state="disabled" if following else "normal")
+            self.tap_btn.configure(state="disabled" if following else "normal")
         elif following:
             self.panel.show_bpm(bpm)
         elif self._was_following:

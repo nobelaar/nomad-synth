@@ -257,6 +257,12 @@ _ELEMENTS.update({
                   "Click prende o apaga el paso; shift+click lo marca como acento.\n"
                   "La rueda del mouse cambia la nota (shift: una octava). "
                   "El paso iluminado es el que suena."),
+    "seq_rec": ("REC: grabar notas en la secuencia",
+                "Armalo y tocá el teclado (MIDI o el de pantalla). Con el reloj parado graba por pasos: "
+                "cada nota se escribe en el paso marcado y avanza al siguiente. Con la secuencia "
+                "sonando graba en vivo, cuantizada al paso más cercano. Volvé a tocarlo para salir."),
+    "seq_rest": ("REST: silencio en grabación por pasos",
+                 "Deja el paso marcado vacío y pasa al siguiente. Solo con REC y el reloj parado."),
     "seq_gate": ("GATE: duración de las notas",
                  "Cuánto dura cada nota respecto de su paso: poco es staccato, "
                  "al máximo las notas se pegan (legato)."),
