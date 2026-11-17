@@ -110,6 +110,8 @@ class SynthInstrument(InstrumentBase):
                 self._live[n] = 1
         elif kind == 1:
             self.vm.note_off(a)
+            if self.sequencer.rec:
+                self.sequencer.record_off()
             n = _note(a)
             if n is not None:
                 self._live[n] = 0
@@ -128,11 +130,11 @@ class SynthInstrument(InstrumentBase):
         elif kind == 3:
             self._csm[a].set(b)
         elif kind == 5:  # record arm: cursor restarts at step 1
-            self.sequencer.rec, self.sequencer.rec_step = bool(a), 0
+            self.sequencer.arm(a)
         elif kind == 6:
             self.sequencer.rest()
         else:
-            self.sequencer.rec = False
+            self.sequencer.arm(False)
             self._live[:] = bytes(128)
             self.vm.panic()
             self.sequencer.release()

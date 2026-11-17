@@ -9,11 +9,13 @@ from __future__ import annotations
 import tkinter as tk
 
 from nomad.engine.clock import STEPS
+from nomad.engine.sequencer import NONE
 from nomad.gui.drums_view import ACCENT, PLAYHEAD, _BTN
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH
 
 _NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 ACCENT_VEL, NORMAL_VEL = 127, 100
+DIVS = ((0.25, "1/16"), (0.5, "1/8"), (1.0, "1/4"), (2.0, "1/2"), (4.0, "1 bar"))  # step length in beats
 
 
 def note_name(n: int) -> str:
@@ -44,6 +46,10 @@ class SeqView(tk.Frame):
                              troughcolor=TROUGH, highlightthickness=0, bd=0, sliderlength=14,
                              activebackground=GREEN, takefocus=0)
         self.gate.pack(side="left", padx=2)
+        self.div_btn = tk.Button(top, text="", command=self.cycle_div, **_BTN)
+        self.div_btn.pack(side="left", padx=(8, 0))
+        self.len_btn = tk.Button(top, text="", command=self.cycle_len, **_BTN)
+        self.len_btn.pack(side="left", padx=(4, 0))
         self.clear_btn = tk.Button(top, text="CLEAR", command=self.clear, **_BTN)
         self.clear_btn.pack(side="left", padx=8)
         grid = tk.Frame(self, bg=BG)
@@ -62,6 +68,8 @@ class SeqView(tk.Frame):
         self._reg(self.play_btn, "seq_transport")
         self._reg(self.gate, "seq_gate")
         self._reg(self.rec_btn, "seq_rec")
+        self._reg(self.div_btn, "seq_div")
+        self._reg(self.len_btn, "seq_len")
         self._reg(self.rest_btn, "seq_rest")
         self.refresh()
 
@@ -75,9 +83,6 @@ class SeqView(tk.Frame):
         self.refresh()
 
     def set_transport_locked(self, locked: bool) -> None:
-        self.rec_btn.configure(text=("REC·LIVE" if playing else "REC·STEP") if self._rec else "REC",
-                               bg=ACCENT if self._rec else TROUGH, fg=BG if self._rec else GREY)
-        self.rest_btn.configure(state="normal" if self._rec and not playing else "disabled")
         self.play_btn.configure(state="disabled" if locked else "normal")
 
     def toggle_transport(self) -> None:
@@ -91,6 +96,16 @@ class SeqView(tk.Frame):
 
     def rest(self) -> None:
         self.synth.rest()
+
+    def cycle_div(self) -> None:
+        cur = self.seq.grid.division
+        i = min(range(len(DIVS)), key=lambda j: abs(DIVS[j][0] - cur))
+        self.seq.grid.division = DIVS[(i + 1) % len(DIVS)][0]
+        self.refresh()
+
+    def cycle_len(self) -> None:
+        self.seq.grid.length = self.seq.grid.length % STEPS + 1
+        self.refresh()
 
     def set_gate(self, v: float) -> None:
         self.seq.gate = v
@@ -108,7 +123,7 @@ class SeqView(tk.Frame):
         self.refresh()
 
     def set_note(self, step: int, delta: int) -> None:
-        self.seq.set_step(step, bool(self.seq.on[step]), note=int(self.seq.note[step]) + delta)
+        self.seq.transpose(step, delta)
         self.refresh()
 
     # ---- drawing -----------------------------------------------------------
@@ -117,10 +132,17 @@ class SeqView(tk.Frame):
         pos = seq.position if playing else (seq.rec_step if self._rec else -1)
         for s, b in enumerate(self.steps):
             on, vel = seq.on[s], int(seq.vel[s])
-            b.configure(text=note_name(int(seq.note[s])),
-                        bg=(ACCENT if vel == ACCENT_VEL else GREEN) if on else TROUGH,
-                        fg=BG if on else GREY, highlightthickness=2,
+            extra = int((seq.extra[s] != NONE).sum())
+            live = s < seq.grid.length
+            b.configure(text=note_name(int(seq.note[s])) + (f"+{extra}" if extra else ""),
+                        bg=(ACCENT if vel == ACCENT_VEL else GREEN) if on and live else TROUGH,
+                        fg=BG if on and live else GREY, highlightthickness=2,
                         highlightbackground=PLAYHEAD if s == pos else BG)
         self.seq_btn.configure(bg=GREEN if seq.enabled else TROUGH, fg=BG if seq.enabled else GREY)
+        self.div_btn.configure(text="DIV " + dict((d, n) for d, n in DIVS).get(seq.grid.division, "?"))
+        self.len_btn.configure(text=f"LEN {seq.grid.length}")
+        self.rec_btn.configure(text=("REC·LIVE" if playing else "REC·STEP") if self._rec else "REC",
+                               bg=ACCENT if self._rec else TROUGH, fg=BG if self._rec else GREY)
+        self.rest_btn.configure(state="normal" if self._rec and not playing else "disabled")
         self.play_btn.configure(text="STOP" if playing else "PLAY",
                                 bg=GREEN if playing else TROUGH, fg=BG if playing else GREY)

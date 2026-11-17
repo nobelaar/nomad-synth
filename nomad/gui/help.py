@@ -259,10 +259,17 @@ _ELEMENTS.update({
                   "El paso iluminado es el que suena."),
     "seq_rec": ("REC: grabar notas en la secuencia",
                 "Armalo y tocá el teclado (MIDI o el de pantalla). Con el reloj parado graba por pasos: "
-                "cada nota se escribe en el paso marcado y avanza al siguiente. Con la secuencia "
+                "cada nota se escribe en el paso marcado y avanza al siguiente; si mantenés varias teclas "
+                "apretadas, el paso guarda el acorde (hasta 6 notas). Con la secuencia "
                 "sonando graba en vivo, cuantizada al paso más cercano. Volvé a tocarlo para salir."),
     "seq_rest": ("REST: silencio en grabación por pasos",
                  "Deja el paso marcado vacío y pasa al siguiente. Solo con REC y el reloj parado."),
+    "seq_div": ("DIV: duración de cada paso",
+                "De 1/16 a un compás entero por paso. Con 1 compás y LEN 4, cuatro acordes son una "
+                "progresión de 4 compases en loop. Subí GATE al máximo para que los acordes queden pegados."),
+    "seq_len": ("LEN: cantidad de pasos",
+                "Cuántos pasos recorre la secuencia antes de volver al primero (1 a 16). "
+                "Los pasos fuera del largo se ven apagados."),
     "seq_gate": ("GATE: duración de las notas",
                  "Cuánto dura cada nota respecto de su paso: poco es staccato, "
                  "al máximo las notas se pegan (legato)."),
