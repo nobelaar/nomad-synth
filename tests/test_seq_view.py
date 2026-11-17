@@ -88,3 +88,13 @@ def test_gate_slider_writes_sequencer(view):
     v.gate.set(80)
     v.update()
     assert e.synth.sequencer.gate == pytest.approx(0.8)
+
+
+def test_rec_button_and_div_len_labels(view):
+    v, e = view
+    v.toggle_rec()
+    assert v.rec_btn["text"] == "REC·STEP" and str(v.rest_btn["state"]) == "normal"
+    v.set_transport_locked(False)  # must not touch the REC button
+    assert v.rec_btn["text"] == "REC·STEP"
+    v.cycle_div(); v.cycle_len()
+    assert v.div_btn["text"] == "DIV 1/8" and v.len_btn["text"] == "LEN 1"
