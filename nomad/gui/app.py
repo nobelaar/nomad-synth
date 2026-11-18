@@ -22,6 +22,7 @@ from nomad.gui.drums_view import DrumView
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH, Knob, KnobModel
 from nomad.gui.help import help_for
 from nomad.gui.keyboard import Keyboard
+from nomad.presets import PresetStore
 from nomad.gui.scope_view import ScopeView
 from nomad.gui.selector import Selector
 from nomad.engine.manager import InstrumentManager
@@ -42,8 +43,9 @@ HELP_WRAP = 330
 
 
 class App:
-    def __init__(self, engine, stream=None, midi_map=None):
+    def __init__(self, engine, stream=None, midi_map=None, presets=None):
         self.engine, self.stream, self.midi_map = engine, stream, midi_map
+        self.presets = presets if presets is not None else PresetStore(None)
         self._global_widgets: dict[str, Knob | Selector] = {}  # app-level controls (master volume)
         self.strips: dict[int, InstanceStrip] = {}
         self.panels: dict[int, tk.Misc] = {}   # instance id -> persistent panel (Synth/Drum view)
@@ -588,5 +590,5 @@ class App:
             pass
 
 
-def build_app(engine, stream=None, midi_map=None) -> App:
-    return App(engine, stream, midi_map)
+def build_app(engine, stream=None, midi_map=None, presets=None) -> App:
+    return App(engine, stream, midi_map, presets)
