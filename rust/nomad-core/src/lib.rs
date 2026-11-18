@@ -7,6 +7,7 @@ pub mod mods;
 pub mod oscillator;
 pub mod params;
 pub mod rng;
+pub mod sequencer;
 pub mod smoother;
 pub mod synth;
 pub mod voice;
