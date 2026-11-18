@@ -165,3 +165,80 @@ pub static DRUM_PARAMS: [ParamSpec; 20] = [
     spec("bpm", 110.0, 60.0, 180.0, Curve::Lin, "BPM"),
     spec("swing", 0.0, 0.0, 0.6, Curve::Lin, ""),
 ];
+
+/// Index of each synth parameter in `SYNTH_PARAMS` (and in `ParamValues`).
+pub mod pid {
+    pub const POLYPHONY: usize = 0;
+    pub const GLIDE: usize = 1;
+    pub const MASTER_VOLUME: usize = 2;
+    pub const OSC1_WAVE: usize = 3;
+    pub const OSC1_MODE: usize = 4;
+    pub const OSC1_COARSE: usize = 5;
+    pub const OSC1_HZ: usize = 6;
+    pub const OSC1_FINE: usize = 7;
+    pub const OSC1_PW: usize = 8;
+    pub const OSC1_LEVEL: usize = 9;
+    pub const OSC1_SYNC: usize = 10;
+    pub const OSC2_WAVE: usize = 11;
+    pub const OSC2_MODE: usize = 12;
+    pub const OSC2_COARSE: usize = 13;
+    pub const OSC2_HZ: usize = 14;
+    pub const OSC2_FINE: usize = 15;
+    pub const OSC2_PW: usize = 16;
+    pub const OSC2_LEVEL: usize = 17;
+    pub const OSC2_SYNC: usize = 18;
+    pub const FILT_CUTOFF: usize = 19;
+    pub const FILT_RESO: usize = 20;
+    pub const FILT_ENV_AMT: usize = 21;
+    pub const AMP_ATTACK: usize = 22;
+    pub const AMP_DECAY: usize = 23;
+    pub const AMP_SUSTAIN: usize = 24;
+    pub const AMP_RELEASE: usize = 25;
+    pub const FILT_ATTACK: usize = 26;
+    pub const FILT_DECAY: usize = 27;
+    pub const FILT_SUSTAIN: usize = 28;
+    pub const FILT_RELEASE: usize = 29;
+    pub const LFO1_RATE: usize = 30;
+    pub const LFO1_WAVE: usize = 31;
+    pub const LFO1_DEPTH: usize = 32;
+    pub const LFO1_PHASE: usize = 33;
+    pub const LFO2_RATE: usize = 34;
+    pub const LFO2_WAVE: usize = 35;
+    pub const LFO2_DEPTH: usize = 36;
+    pub const LFO2_PHASE: usize = 37;
+    pub const MOD0_SRC: usize = 38;
+    pub const MOD0_DST: usize = 39;
+    pub const MOD0_AMT: usize = 40;
+    pub const MOD1_SRC: usize = 41;
+    pub const MOD1_DST: usize = 42;
+    pub const MOD1_AMT: usize = 43;
+    pub const MOD2_SRC: usize = 44;
+    pub const MOD2_DST: usize = 45;
+    pub const MOD2_AMT: usize = 46;
+    pub const MOD3_SRC: usize = 47;
+    pub const MOD3_DST: usize = 48;
+    pub const MOD3_AMT: usize = 49;
+    pub const MOD4_SRC: usize = 50;
+    pub const MOD4_DST: usize = 51;
+    pub const MOD4_AMT: usize = 52;
+    pub const MOD5_SRC: usize = 53;
+    pub const MOD5_DST: usize = 54;
+    pub const MOD5_AMT: usize = 55;
+    pub const MOD6_SRC: usize = 56;
+    pub const MOD6_DST: usize = 57;
+    pub const MOD6_AMT: usize = 58;
+    pub const MOD7_SRC: usize = 59;
+    pub const MOD7_DST: usize = 60;
+    pub const MOD7_AMT: usize = 61;
+    pub const BEND_RANGE: usize = 62;
+    /// Number of synth parameters.
+    pub const COUNT: usize = 63;
+}
+
+/// Synth parameter values, indexed by `pid`.
+pub type ParamValues = [f64; pid::COUNT];
+
+/// The registry defaults, in `pid` order.
+pub fn default_values() -> ParamValues {
+    std::array::from_fn(|i| SYNTH_PARAMS[i].default)
+}
