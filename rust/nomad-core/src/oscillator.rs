@@ -56,11 +56,53 @@ fn square(t: f64, inc: f64, pw: f64) -> f64 {
     sq
 }
 
+/// Scalar PolyBLEP for the samples around a hard-sync reset (`dt` > 0 here).
+fn blep_at(t: f64, dt: f64) -> f64 {
+    if t < dt {
+        let x = t / dt;
+        return x + x - x * x - 1.0;
+    }
+    if t > 1.0 - dt {
+        let y = (t - 1.0) / dt;
+        return y * y + y + y + 1.0;
+    }
+    0.0
+}
+
+/// Ideal waveform value at one phase, mirroring the render formulas.
+fn value_at(t: f64, wave: Wave, pw: f64) -> f64 {
+    match wave {
+        Wave::Sine => (TWO_PI * t).sin(),
+        Wave::Triangle => 4.0 * t.min(1.0 - t) - 1.0,
+        Wave::Saw => 2.0 * t - 1.0,
+        Wave::Square => {
+            if t < pw {
+                1.0
+            } else {
+                -1.0
+            }
+        }
+    }
+}
+
+/// BLEP term the waveform applies for its own edge at phase 0.
+fn edge_at(t: f64, inc: f64, wave: Wave) -> f64 {
+    match wave {
+        Wave::Saw => -blep_at(t, inc),
+        Wave::Square => blep_at(t, inc),
+        _ => 0.0,
+    }
+}
+
 pub struct Oscillator {
     pub wave: Wave,
     pub phase: f64,
     sample_rate: f64,
     t: Vec<f64>,
+    /// (sample index after the reset, fractional position inside the interval).
+    resets: Vec<(usize, f64)>,
+    /// Last master sample of the previous synced block; `None` after a free block.
+    last_master: Option<f64>,
 }
 
 impl Oscillator {
@@ -72,10 +114,16 @@ impl Oscillator {
             phase: 0.0,
             sample_rate,
             t: vec![0.0; MAX_BLOCK],
+            resets: Vec::with_capacity(MAX_BLOCK),
+            last_master: None,
         }
     }
 
     /// Add one block of the current wave into `out`, advance and return the phase.
+    ///
+    /// `sync_master_phase` carries the master's phase for these samples; the local
+    /// phase restarts at every master wrap. If its length differs from `out`, nothing
+    /// is written and the phase is returned unchanged (Python raises instead).
     ///
     /// Scratch is sized for `MAX_BLOCK`; a longer block grows it once (allocates).
     pub fn render_into(
@@ -85,9 +133,8 @@ impl Oscillator {
         pw: f64,
         sync_master_phase: Option<&[f64]>,
     ) -> f64 {
-        let _ = sync_master_phase; // hard sync: Task 3
         let n = out.len();
-        if n == 0 {
+        if n == 0 || sync_master_phase.is_some_and(|m| m.len() != n) {
             return self.phase;
         }
         let sr = self.sample_rate;
@@ -105,13 +152,82 @@ impl Oscillator {
             self.t.resize(n, 0.0);
         }
         let phase = self.phase;
-        let t = &mut self.t[..n];
-        for (i, ti) in t.iter_mut().enumerate() {
-            *ti = (i as f64 * inc + phase).rem_euclid(1.0);
+        self.resets.clear();
+        match sync_master_phase {
+            Some(master) if inc > 0.0 => {
+                self.synced_ramp(n, inc, phase, master);
+                self.sync_correction(out, inc, pw);
+            }
+            _ => {
+                // A frozen oscillator has no edges of its own to reset.
+                for (i, ti) in self.t[..n].iter_mut().enumerate() {
+                    *ti = (i as f64 * inc + phase).rem_euclid(1.0);
+                }
+                self.last_master = None;
+            }
         }
+        let t = &self.t[..n];
         add_wave(out, t, self.wave, inc, pw);
-        self.phase = (phase + n as f64 * inc).rem_euclid(1.0);
+        self.phase = if self.resets.is_empty() {
+            (phase + n as f64 * inc).rem_euclid(1.0)
+        } else {
+            // After a reset the free-running phase is meaningless.
+            (t[n - 1] + inc).rem_euclid(1.0)
+        };
         self.phase
+    }
+
+    /// Phase ramp restarted at every wrap of the master (`_synced_ramp`).
+    fn synced_ramp(&mut self, n: usize, inc: f64, phase: f64, master: &[f64]) {
+        let mut prev = self.last_master.unwrap_or(master[0]);
+        self.last_master = Some(master[n - 1]);
+        for (i, &b) in master.iter().enumerate() {
+            if b < prev {
+                let a = prev;
+                // The master ran from a to 1 + b and crossed 1.0 this far into the interval.
+                let frac = ((1.0 - a) / (1.0 + b - a)).clamp(0.0, 1.0);
+                self.resets.push((i, frac));
+            }
+            prev = b;
+        }
+        let t = &mut self.t[..n];
+        if self.resets.is_empty() {
+            for (i, ti) in t.iter_mut().enumerate() {
+                *ti = (i as f64 * inc + phase).rem_euclid(1.0);
+            }
+            return;
+        }
+        // rst: where the last reset happened, in samples (running maximum).
+        let mut rst = -phase / inc;
+        let mut next = self.resets.iter().peekable();
+        for (i, ti) in t.iter_mut().enumerate() {
+            if let Some(&&(j, frac)) = next.peek()
+                && j == i
+            {
+                rst = rst.max((i as f64 - 1.0) + frac);
+                next.next();
+            }
+            *ti = ((i as f64 - rst) * inc).rem_euclid(1.0);
+        }
+    }
+
+    /// Band-limit the resets with a PolyBLEP scaled by their position (`_sync_correction`).
+    fn sync_correction(&self, out: &mut [f64], inc: f64, pw: f64) {
+        let (t, wave) = (&self.t, self.wave);
+        for &(i, f) in &self.resets {
+            let t_new = t[i];
+            // Sample -1 belongs to the previous block: one step behind the start phase.
+            let t_old = if i > 0 {
+                t[i - 1]
+            } else {
+                (self.phase - inc).rem_euclid(1.0)
+            };
+            let jump = 0.5 * (value_at(t_new, wave, pw) - value_at(t_old, wave, pw));
+            out[i] += -jump * f * f - edge_at(t_new, inc, wave);
+            if i > 0 {
+                out[i - 1] += jump * (1.0 - f) * (1.0 - f) - edge_at(t_old, inc, wave);
+            }
+        }
     }
 }
 
