@@ -10,3 +10,6 @@ path = "src/main.rs"
 [dependencies]
 nomad-core = { path = "../nomad-core" }
 nomad-runtime = { path = "../nomad-runtime" }
+
+[dev-dependencies]
+serde_json = "1"

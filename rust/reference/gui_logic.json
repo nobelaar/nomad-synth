@@ -1,0 +1,5628 @@
+{
+"format": [
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 1.0,
+"norm": 0.0,
+"text": "1 voices"
+},
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 8.0,
+"norm": 1.0,
+"text": "8 voices"
+},
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 8.0,
+"norm": 1.0,
+"text": "8 voices"
+},
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 3.59,
+"norm": 0.37,
+"text": "4 voices"
+},
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 1.0,
+"norm": 0.0,
+"text": "1 voices"
+},
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 4.5,
+"norm": 0.5,
+"text": "4 voices"
+},
+{
+"reg": "synth",
+"param": "polyphony",
+"value": 3.5,
+"norm": 0.35714285714285715,
+"text": "4 voices"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 0.0,
+"norm": 0.0,
+"text": "0.0 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 0.0,
+"norm": 0.0,
+"text": "0.0 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 1000.0,
+"norm": 1.0,
+"text": "1.00 s"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 370.0,
+"norm": 0.37,
+"text": "370 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 99.95,
+"norm": 0.09995,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 100.0,
+"norm": 0.1,
+"text": "100 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 999.9,
+"norm": 0.9999,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 1000.0,
+"norm": 1.0,
+"text": "1.00 s"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 9.95,
+"norm": 0.009949999999999999,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 1.25,
+"norm": 0.00125,
+"text": "1.2 ms"
+},
+{
+"reg": "synth",
+"param": "glide",
+"value": 2.5,
+"norm": 0.0025,
+"text": "2.5 ms"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.7,
+"norm": 0.7,
+"text": "70%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "master_volume",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 2.0,
+"norm": 0.6666666666666666,
+"text": "200%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 3.0,
+"norm": 1.0,
+"text": "300%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 1.1099999999999999,
+"norm": 0.36999999999999994,
+"text": "111%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 0.005,
+"norm": 0.0016666666666666668,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 0.125,
+"norm": 0.041666666666666664,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 0.625,
+"norm": 0.20833333333333334,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_wave",
+"value": 0.335,
+"norm": 0.11166666666666668,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_mode",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": -24.0,
+"norm": 0.0,
+"text": "-24 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": 24.0,
+"norm": 1.0,
+"text": "+24 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": -6.240000000000002,
+"norm": 0.36999999999999994,
+"text": "-6 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": -0.4,
+"norm": 0.4916666666666667,
+"text": "-0 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": 0.4,
+"norm": 0.5083333333333333,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": -0.5,
+"norm": 0.4895833333333333,
+"text": "-0 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": 0.5,
+"norm": 0.5104166666666666,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": 2.5,
+"norm": 0.5520833333333334,
+"text": "+2 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": -2.5,
+"norm": 0.4479166666666667,
+"text": "-2 st"
+},
+{
+"reg": "synth",
+"param": "osc1_coarse",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 20.0,
+"norm": 0.0,
+"text": "20.0 Hz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 220.0,
+"norm": 0.4002185532343357,
+"text": "220 Hz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 8000.0,
+"norm": 1.0,
+"text": "8.00 kHz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 2972.6,
+"norm": 0.8347641810840651,
+"text": "2.97 kHz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 99.95,
+"norm": 0.2685383139200975,
+"text": "100.0 Hz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 100.5,
+"norm": 0.26945422796908747,
+"text": "100 Hz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 1250.0,
+"norm": 0.6901762539408429,
+"text": "1.25 kHz"
+},
+{
+"reg": "synth",
+"param": "osc1_hz",
+"value": 20.5,
+"norm": 0.004121298289629417,
+"text": "20.5 Hz"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": -50.0,
+"norm": 0.0,
+"text": "-50 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": 50.0,
+"norm": 1.0,
+"text": "+50 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": -13.0,
+"norm": 0.37,
+"text": "-13 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": -0.4,
+"norm": 0.496,
+"text": "-0 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": 0.4,
+"norm": 0.504,
+"text": "+0 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": -0.5,
+"norm": 0.495,
+"text": "-0 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": 0.5,
+"norm": 0.505,
+"text": "+0 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": 2.5,
+"norm": 0.525,
+"text": "+2 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_fine",
+"value": -2.5,
+"norm": 0.475,
+"text": "-2 ct"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.05,
+"norm": 0.0,
+"text": "5%"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.5,
+"norm": 0.5000000000000001,
+"text": "50%"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.95,
+"norm": 1.0,
+"text": "95%"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.38299999999999995,
+"norm": 0.37,
+"text": "38%"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.125,
+"norm": 0.08333333333333334,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.625,
+"norm": 0.638888888888889,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc1_pw",
+"value": 0.335,
+"norm": 0.3166666666666667,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc1_sync",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 2.0,
+"norm": 0.6666666666666666,
+"text": "200%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 3.0,
+"norm": 1.0,
+"text": "300%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 1.1099999999999999,
+"norm": 0.36999999999999994,
+"text": "111%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 0.005,
+"norm": 0.0016666666666666668,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 0.125,
+"norm": 0.041666666666666664,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 0.625,
+"norm": 0.20833333333333334,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_wave",
+"value": 0.335,
+"norm": 0.11166666666666668,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_mode",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": -24.0,
+"norm": 0.0,
+"text": "-24 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": 24.0,
+"norm": 1.0,
+"text": "+24 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": -6.240000000000002,
+"norm": 0.36999999999999994,
+"text": "-6 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": -0.4,
+"norm": 0.4916666666666667,
+"text": "-0 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": 0.4,
+"norm": 0.5083333333333333,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": -0.5,
+"norm": 0.4895833333333333,
+"text": "-0 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": 0.5,
+"norm": 0.5104166666666666,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": 2.5,
+"norm": 0.5520833333333334,
+"text": "+2 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": -2.5,
+"norm": 0.4479166666666667,
+"text": "-2 st"
+},
+{
+"reg": "synth",
+"param": "osc2_coarse",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0 st"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 20.0,
+"norm": 0.0,
+"text": "20.0 Hz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 220.0,
+"norm": 0.4002185532343357,
+"text": "220 Hz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 8000.0,
+"norm": 1.0,
+"text": "8.00 kHz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 2972.6,
+"norm": 0.8347641810840651,
+"text": "2.97 kHz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 99.95,
+"norm": 0.2685383139200975,
+"text": "100.0 Hz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 100.5,
+"norm": 0.26945422796908747,
+"text": "100 Hz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 1250.0,
+"norm": 0.6901762539408429,
+"text": "1.25 kHz"
+},
+{
+"reg": "synth",
+"param": "osc2_hz",
+"value": 20.5,
+"norm": 0.004121298289629417,
+"text": "20.5 Hz"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": -50.0,
+"norm": 0.0,
+"text": "-50 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": 50.0,
+"norm": 1.0,
+"text": "+50 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": -13.0,
+"norm": 0.37,
+"text": "-13 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": -0.4,
+"norm": 0.496,
+"text": "-0 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": 0.4,
+"norm": 0.504,
+"text": "+0 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": -0.5,
+"norm": 0.495,
+"text": "-0 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": 0.5,
+"norm": 0.505,
+"text": "+0 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": 2.5,
+"norm": 0.525,
+"text": "+2 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_fine",
+"value": -2.5,
+"norm": 0.475,
+"text": "-2 ct"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.05,
+"norm": 0.0,
+"text": "5%"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.5,
+"norm": 0.5000000000000001,
+"text": "50%"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.95,
+"norm": 1.0,
+"text": "95%"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.38299999999999995,
+"norm": 0.37,
+"text": "38%"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.125,
+"norm": 0.08333333333333334,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.625,
+"norm": 0.638888888888889,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc2_pw",
+"value": 0.335,
+"norm": 0.3166666666666667,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "osc2_sync",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 20.0,
+"norm": 0.0,
+"text": "20.0 Hz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 1200.0,
+"norm": 0.601897523545253,
+"text": "1.20 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 18000.0,
+"norm": 1.0,
+"text": "18.0 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 6672.6,
+"norm": 0.8541157631462591,
+"text": "6.67 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 9999.0,
+"norm": 0.9135765138077411,
+"text": "10.00 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 10000.0,
+"norm": 0.9135912152480151,
+"text": "10.00 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 99.95,
+"norm": 0.2365252008112118,
+"text": "100.0 Hz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 100.5,
+"norm": 0.23733192649292445,
+"text": "100 Hz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 1250.0,
+"norm": 0.607898644612256,
+"text": "1.25 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 12345.0,
+"norm": 0.9445606072243411,
+"text": "12.3 kHz"
+},
+{
+"reg": "synth",
+"param": "filt_cutoff",
+"value": 20.5,
+"norm": 0.003629988180560136,
+"text": "20.5 Hz"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.3,
+"norm": 0.3,
+"text": "30%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "filt_reso",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "filt_env_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 1.0,
+"norm": 0.0,
+"text": "1.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 5.0,
+"norm": 0.1889634150903278,
+"text": "5.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 5000.0,
+"norm": 1.0,
+"text": "5.00 s"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 1850.6299999999999,
+"norm": 0.883305242884971,
+"text": "1.85 s"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 99.95,
+"norm": 0.5406323371397832,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 100.0,
+"norm": 0.5406910566064481,
+"text": "100 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 999.9,
+"norm": 0.8110248433654702,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 1000.0,
+"norm": 0.8110365849096721,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 9.95,
+"norm": 0.26975700791735374,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 1.25,
+"norm": 0.026199188664535324,
+"text": "1.2 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 2.5,
+"norm": 0.10758130187743156,
+"text": "2.5 ms"
+},
+{
+"reg": "synth",
+"param": "amp_attack",
+"value": 1234.5,
+"norm": 0.8357707931245815,
+"text": "1.23 s"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 1.0,
+"norm": 0.0,
+"text": "1.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 300.0,
+"norm": 0.6696786542783323,
+"text": "300 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 5000.0,
+"norm": 1.0,
+"text": "5.00 s"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 1850.6299999999999,
+"norm": 0.883305242884971,
+"text": "1.85 s"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 99.95,
+"norm": 0.5406323371397832,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 100.0,
+"norm": 0.5406910566064481,
+"text": "100 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 999.9,
+"norm": 0.8110248433654702,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 1000.0,
+"norm": 0.8110365849096721,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 9.95,
+"norm": 0.26975700791735374,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 1.25,
+"norm": 0.026199188664535324,
+"text": "1.2 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 2.5,
+"norm": 0.10758130187743156,
+"text": "2.5 ms"
+},
+{
+"reg": "synth",
+"param": "amp_decay",
+"value": 1234.5,
+"norm": 0.8357707931245815,
+"text": "1.23 s"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.8,
+"norm": 0.8,
+"text": "80%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "amp_sustain",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 5.0,
+"norm": 0.0,
+"text": "5.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 400.0,
+"norm": 0.5939509123545538,
+"text": "400 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 8000.0,
+"norm": 1.0,
+"text": "8.00 s"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 2963.15,
+"norm": 0.8653807121706089,
+"text": "2.96 s"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 99.95,
+"norm": 0.40598129943931166,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 100.0,
+"norm": 0.40604908764544617,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 999.9,
+"norm": 0.7181337080070468,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 1000.0,
+"norm": 0.7181472629363386,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 9.95,
+"norm": 0.09327149982753907,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "amp_release",
+"value": 1234.5,
+"norm": 0.7467014665127332,
+"text": "1.23 s"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 1.0,
+"norm": 0.0,
+"text": "1.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 5.0,
+"norm": 0.1889634150903278,
+"text": "5.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 5000.0,
+"norm": 1.0,
+"text": "5.00 s"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 1850.6299999999999,
+"norm": 0.883305242884971,
+"text": "1.85 s"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 99.95,
+"norm": 0.5406323371397832,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 100.0,
+"norm": 0.5406910566064481,
+"text": "100 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 999.9,
+"norm": 0.8110248433654702,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 1000.0,
+"norm": 0.8110365849096721,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 9.95,
+"norm": 0.26975700791735374,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 1.25,
+"norm": 0.026199188664535324,
+"text": "1.2 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 2.5,
+"norm": 0.10758130187743156,
+"text": "2.5 ms"
+},
+{
+"reg": "synth",
+"param": "filt_attack",
+"value": 1234.5,
+"norm": 0.8357707931245815,
+"text": "1.23 s"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 1.0,
+"norm": 0.0,
+"text": "1.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 250.0,
+"norm": 0.6482723584838795,
+"text": "250 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 5000.0,
+"norm": 1.0,
+"text": "5.00 s"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 1850.6299999999999,
+"norm": 0.883305242884971,
+"text": "1.85 s"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 99.95,
+"norm": 0.5406323371397832,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 100.0,
+"norm": 0.5406910566064481,
+"text": "100 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 999.9,
+"norm": 0.8110248433654702,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 1000.0,
+"norm": 0.8110365849096721,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 9.95,
+"norm": 0.26975700791735374,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 1.25,
+"norm": 0.026199188664535324,
+"text": "1.2 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 2.5,
+"norm": 0.10758130187743156,
+"text": "2.5 ms"
+},
+{
+"reg": "synth",
+"param": "filt_decay",
+"value": 1234.5,
+"norm": 0.8357707931245815,
+"text": "1.23 s"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.3,
+"norm": 0.3,
+"text": "30%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "filt_sustain",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 5.0,
+"norm": 0.0,
+"text": "5.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 400.0,
+"norm": 0.5939509123545538,
+"text": "400 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 8000.0,
+"norm": 1.0,
+"text": "8.00 s"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 2963.15,
+"norm": 0.8653807121706089,
+"text": "2.96 s"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 99.95,
+"norm": 0.40598129943931166,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 100.0,
+"norm": 0.40604908764544617,
+"text": "100.0 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 999.9,
+"norm": 0.7181337080070468,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 1000.0,
+"norm": 0.7181472629363386,
+"text": "1000 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 9.95,
+"norm": 0.09327149982753907,
+"text": "9.9 ms"
+},
+{
+"reg": "synth",
+"param": "filt_release",
+"value": 1234.5,
+"norm": 0.7467014665127332,
+"text": "1.23 s"
+},
+{
+"reg": "synth",
+"param": "lfo1_rate",
+"value": 0.02,
+"norm": 0.0,
+"text": "0.02 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo1_rate",
+"value": 1.0,
+"norm": 0.514678753773118,
+"text": "1.00 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo1_rate",
+"value": 40.0,
+"norm": 1.0,
+"text": "40.0 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo1_rate",
+"value": 14.812599999999998,
+"norm": 0.8693048240686975,
+"text": "14.8 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo1_rate",
+"value": 9.995,
+"norm": 0.81754870641438,
+"text": "9.99 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo1_rate",
+"value": 20.5,
+"norm": 0.9120558944773192,
+"text": "20.5 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 4.0,
+"norm": 1.0,
+"text": "400%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 1.48,
+"norm": 0.37,
+"text": "148%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.005,
+"norm": 0.00125,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.125,
+"norm": 0.03125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.625,
+"norm": 0.15625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_wave",
+"value": 0.335,
+"norm": 0.08375,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_depth",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo1_phase",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "lfo2_rate",
+"value": 0.02,
+"norm": 0.0,
+"text": "0.02 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo2_rate",
+"value": 1.0,
+"norm": 0.514678753773118,
+"text": "1.00 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo2_rate",
+"value": 40.0,
+"norm": 1.0,
+"text": "40.0 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo2_rate",
+"value": 14.812599999999998,
+"norm": 0.8693048240686975,
+"text": "14.8 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo2_rate",
+"value": 9.995,
+"norm": 0.81754870641438,
+"text": "9.99 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo2_rate",
+"value": 20.5,
+"norm": 0.9120558944773192,
+"text": "20.5 Hz"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 4.0,
+"norm": 1.0,
+"text": "400%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 1.48,
+"norm": 0.37,
+"text": "148%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.005,
+"norm": 0.00125,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.125,
+"norm": 0.03125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.625,
+"norm": 0.15625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_wave",
+"value": 0.335,
+"norm": 0.08375,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_depth",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "lfo2_phase",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod0_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod0_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod1_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod1_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod2_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod2_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod3_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod3_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod4_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod4_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod5_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod5_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod6_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod6_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 5.0,
+"norm": 1.0,
+"text": "500%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 1.85,
+"norm": 0.37,
+"text": "185%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.005,
+"norm": 0.001,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.125,
+"norm": 0.025,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.625,
+"norm": 0.125,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_src",
+"value": 0.335,
+"norm": 0.067,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 7.0,
+"norm": 1.0,
+"text": "700%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 2.59,
+"norm": 0.37,
+"text": "259%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.005,
+"norm": 0.0007142857142857143,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.125,
+"norm": 0.017857142857142856,
+"text": "12%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.625,
+"norm": 0.08928571428571429,
+"text": "62%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "synth",
+"param": "mod7_dst",
+"value": 0.335,
+"norm": 0.04785714285714286,
+"text": "34%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "synth",
+"param": "mod7_amt",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "synth",
+"param": "bend_range",
+"value": 1.0,
+"norm": 0.0,
+"text": "+1 st"
+},
+{
+"reg": "synth",
+"param": "bend_range",
+"value": 2.0,
+"norm": 0.09090909090909091,
+"text": "+2 st"
+},
+{
+"reg": "synth",
+"param": "bend_range",
+"value": 12.0,
+"norm": 1.0,
+"text": "+12 st"
+},
+{
+"reg": "synth",
+"param": "bend_range",
+"value": 5.07,
+"norm": 0.37000000000000005,
+"text": "+5 st"
+},
+{
+"reg": "synth",
+"param": "bend_range",
+"value": 2.5,
+"norm": 0.13636363636363635,
+"text": "+2 st"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "kick_tune",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "kick_decay",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.6,
+"norm": 0.6,
+"text": "60%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "kick_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "snare_tune",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "snare_decay",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "snare_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "clap_tune",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "clap_decay",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.45,
+"norm": 0.45,
+"text": "45%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "clap_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "tom_tune",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "tom_decay",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "tom_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "chat_tune",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "chat_decay",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.35,
+"norm": 0.35,
+"text": "35%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "chat_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": -1.0,
+"norm": 0.0,
+"text": "-100%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 1.0,
+"norm": 1.0,
+"text": "+100%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": -0.26,
+"norm": 0.37,
+"text": "-26%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 0.005,
+"norm": 0.5025,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 0.125,
+"norm": 0.5625,
+"text": "+12%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 0.625,
+"norm": 0.8125,
+"text": "+62%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": -0.005,
+"norm": 0.4975,
+"text": "-1%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": -0.125,
+"norm": 0.4375,
+"text": "-12%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 0.0,
+"norm": 0.5,
+"text": "+0%"
+},
+{
+"reg": "drums",
+"param": "ohat_tune",
+"value": 0.335,
+"norm": 0.6675,
+"text": "+34%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.5,
+"norm": 0.5,
+"text": "50%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "ohat_decay",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.3,
+"norm": 0.3,
+"text": "30%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 1.0,
+"norm": 1.0,
+"text": "100%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.37,
+"norm": 0.37,
+"text": "37%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.005,
+"norm": 0.005,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.125,
+"norm": 0.125,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.625,
+"norm": 0.625,
+"text": "62%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "ohat_level",
+"value": 0.335,
+"norm": 0.335,
+"text": "34%"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 60.0,
+"norm": 0.0,
+"text": "60 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 110.0,
+"norm": 0.4166666666666667,
+"text": "110 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 180.0,
+"norm": 1.0,
+"text": "180 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 104.4,
+"norm": 0.37000000000000005,
+"text": "104.4 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 110.0,
+"norm": 0.4166666666666667,
+"text": "110 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 119.4,
+"norm": 0.49500000000000005,
+"text": "119.4 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 60.0,
+"norm": 0.0,
+"text": "60 BPM"
+},
+{
+"reg": "drums",
+"param": "bpm",
+"value": 123.456789,
+"norm": 0.5288065750000001,
+"text": "123.457 BPM"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.6,
+"norm": 1.0,
+"text": "60%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.222,
+"norm": 0.37,
+"text": "22%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.005,
+"norm": 0.008333333333333333,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.125,
+"norm": 0.20833333333333334,
+"text": "12%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.0,
+"norm": 0.0,
+"text": "0%"
+},
+{
+"reg": "drums",
+"param": "swing",
+"value": 0.335,
+"norm": 0.5583333333333333,
+"text": "34%"
+}
+],
+"gestures": [
+{
+"param": "filt_cutoff",
+"ops": [
+[
+"drag",
+40,
+false
+],
+[
+"drag",
+-7,
+true
+],
+[
+"wheel",
+3,
+false
+],
+[
+"wheel",
+-1,
+true
+],
+[
+"drag",
+1000,
+false
+],
+[
+"wheel",
+-200,
+false
+],
+[
+"reset"
+]
+],
+"steps": [
+{
+"norm": 0.801897523545253,
+"value": 4677.6718090994245,
+"text": "4.68 kHz"
+},
+{
+"norm": 0.7983975235452531,
+"value": 4567.619297885049,
+"text": "4.57 kHz"
+},
+{
+"norm": 0.858397523545253,
+"value": 6869.805632260464,
+"text": "6.87 kHz"
+},
+{
+"norm": 0.856397523545253,
+"value": 6776.976266350624,
+"text": "6.78 kHz"
+},
+{
+"norm": 1.0,
+"value": 18000.0,
+"text": "18.0 kHz"
+},
+{
+"norm": 0.0,
+"value": 20.0,
+"text": "20.0 Hz"
+},
+{
+"norm": 0.601897523545253,
+"value": 1199.9999999999998,
+"text": "1.20 kHz"
+}
+]
+},
+{
+"param": "osc1_coarse",
+"ops": [
+[
+"drag",
+13,
+false
+],
+[
+"wheel",
+1,
+true
+],
+[
+"drag",
+0,
+false
+],
+[
+"reset"
+]
+],
+"steps": [
+{
+"norm": 0.565,
+"value": 3.1199999999999974,
+"text": "+3 st"
+},
+{
+"norm": 0.567,
+"value": 3.2159999999999975,
+"text": "+3 st"
+},
+{
+"norm": 0.567,
+"value": 3.2159999999999975,
+"text": "+3 st"
+},
+{
+"norm": 0.5,
+"value": 0.0,
+"text": "+0 st"
+}
+]
+},
+{
+"param": "amp_attack",
+"ops": [
+[
+"wheel",
+5,
+false
+],
+[
+"drag",
+-3,
+true
+],
+[
+"reset"
+]
+],
+"steps": [
+{
+"norm": 0.2889634150903278,
+"value": 11.718364557960495,
+"text": "11.7 ms"
+},
+{
+"norm": 0.2874634150903278,
+"value": 11.569605476472026,
+"text": "11.6 ms"
+},
+{
+"norm": 0.1889634150903278,
+"value": 4.999999999999999,
+"text": "5.0 ms"
+}
+]
+}
+]
+}
