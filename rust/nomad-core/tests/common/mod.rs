@@ -51,3 +51,90 @@ pub fn load() -> Reference {
 pub fn close(a: f64, b: f64) -> bool {
     a == b || (a - b).abs() <= 1e-12 * a.abs().max(b.abs())
 }
+
+fn reference_path(file: &str) -> String {
+    format!("{}/../reference/{file}", env!("CARGO_MANIFEST_DIR"))
+}
+
+/// Binary reference written by `tools/refio.py`: `<name>.f64` + `<name>.json`.
+pub struct Blob {
+    data: Vec<f64>,
+    entries: serde_json::Map<String, serde_json::Value>,
+}
+
+impl Blob {
+    pub fn open(name: &str) -> Blob {
+        let raw = std::fs::read(reference_path(&format!("{name}.f64"))).expect("blob .f64");
+        let data = raw
+            .as_chunks::<8>()
+            .0
+            .iter()
+            .map(|c| f64::from_le_bytes(*c))
+            .collect();
+        let text =
+            std::fs::read_to_string(reference_path(&format!("{name}.json"))).expect("blob .json");
+        let mut json: serde_json::Value = serde_json::from_str(&text).expect("valid blob json");
+        let entries = json["entries"].as_object_mut().expect("entries").clone();
+        Blob { data, entries }
+    }
+
+    fn entry(&self, label: &str) -> &serde_json::Value {
+        self.entries
+            .get(label)
+            .unwrap_or_else(|| panic!("no entry {label:?}"))
+    }
+
+    pub fn get(&self, label: &str) -> &[f64] {
+        let e = self.entry(label);
+        let off = e["offset"].as_u64().unwrap() as usize;
+        let len = e["len"].as_u64().unwrap() as usize;
+        &self.data[off..off + len]
+    }
+
+    pub fn meta(&self, label: &str) -> &serde_json::Value {
+        &self.entry(label)["meta"]
+    }
+
+    /// Labels in insertion order (serde_json's map is sorted, so order by offset).
+    pub fn labels(&self) -> Vec<String> {
+        let mut v: Vec<(u64, String)> = self
+            .entries
+            .iter()
+            .map(|(k, e)| (e["offset"].as_u64().unwrap(), k.clone()))
+            .collect();
+        v.sort();
+        v.into_iter().map(|(_, k)| k).collect()
+    }
+}
+
+/// A meta number; non-finite values are stored as "nan", "inf", "-inf".
+pub fn num(v: &serde_json::Value) -> f64 {
+    match v.as_str() {
+        Some("nan") => f64::NAN,
+        Some("inf") => f64::INFINITY,
+        Some("-inf") => f64::NEG_INFINITY,
+        Some(s) => panic!("not a number: {s:?}"),
+        None => v.as_f64().unwrap_or_else(|| panic!("not a number: {v}")),
+    }
+}
+
+pub fn nums(v: &serde_json::Value) -> Vec<f64> {
+    v.as_array().expect("array").iter().map(num).collect()
+}
+
+pub fn ints(v: &serde_json::Value) -> Vec<usize> {
+    v.as_array()
+        .expect("array")
+        .iter()
+        .map(|x| x.as_u64().unwrap() as usize)
+        .collect()
+}
+
+/// Per-sample tolerance of the plan: |a-b| <= 1e-9 + 1e-9*|b|.
+pub fn assert_close(got: &[f64], want: &[f64], what: &str) {
+    assert_eq!(got.len(), want.len(), "{what}: length");
+    for (i, (&a, &b)) in got.iter().zip(want).enumerate() {
+        let ok = a == b || (a.is_nan() && b.is_nan()) || (a - b).abs() <= 1e-9 + 1e-9 * b.abs();
+        assert!(ok, "{what}[{i}]: got {a}, want {b}");
+    }
+}

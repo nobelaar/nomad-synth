@@ -1,0 +1,16 @@
+{
+ "entries": {
+  "ramp": {
+   "offset": 0,
+   "len": 8,
+   "meta": {
+    "tag": "x"
+   }
+  },
+  "half": {
+   "offset": 8,
+   "len": 1,
+   "meta": {}
+  }
+ }
+}
