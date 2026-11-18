@@ -153,6 +153,8 @@ impl Oscillator {
         }
         let phase = self.phase;
         self.resets.clear();
+        // At most one reset per sample: never reallocates within a block.
+        self.resets.reserve(n);
         match sync_master_phase {
             Some(master) if inc > 0.0 => {
                 self.synced_ramp(n, inc, phase, master);

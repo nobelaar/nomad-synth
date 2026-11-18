@@ -95,3 +95,13 @@ fn free_run_clears_last_master() {
     let (all_synced, _) = render_synced(Wave::Saw, 300.0, 750.0, &[64; 3], &[true; 3]);
     assert!((after_free[128] - all_synced[128]).abs() > 1e-3);
 }
+
+#[test]
+fn sync_block_above_max_block_equals_split() {
+    // 4096 > MAX_BLOCK exercises the grown scratch. At 1370 Hz no master wrap falls
+    // between samples 2047 and 2048, so splitting there must not change the output
+    // (only phase rounding differs, hence 1e-9).
+    let (one, _) = render_synced(Wave::Saw, 300.0, 1370.0, &[4096], &[true]);
+    let (two, _) = render_synced(Wave::Saw, 300.0, 1370.0, &[2048, 2048], &[true, true]);
+    assert_close(&one, &two, "4096 vs 2x2048");
+}
