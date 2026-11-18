@@ -26,7 +26,7 @@ impl ParamSpec {
         if !v.is_finite() {
             return self.default;
         }
-        v.max(self.lo).min(self.hi)
+        v.clamp(self.lo, self.hi)
     }
 
     /// Map a raw value (clamped first) onto its 0..1 knob position.
@@ -40,7 +40,7 @@ impl ParamSpec {
 
     /// Map a 0..1 knob position (clamped first) back to a raw value.
     pub fn from_norm(&self, n: f64) -> f64 {
-        let n = n.max(0.0).min(1.0);
+        let n = n.clamp(0.0, 1.0); // NaN stays NaN, as in Python
         match self.curve {
             Curve::Exp => self.lo * (self.hi / self.lo).powf(n),
             Curve::Lin => self.lo + n * (self.hi - self.lo),

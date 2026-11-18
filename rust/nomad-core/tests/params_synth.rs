@@ -78,3 +78,11 @@ fn find_known_and_unknown() {
     assert_eq!(find(&SYNTH_PARAMS, "glide").map(|s| s.hi), Some(1000.0));
     assert!(find(&SYNTH_PARAMS, "nope").is_none());
 }
+
+#[test]
+fn from_norm_nan_propagates_like_python() {
+    // Python: min(max(nan, 0.0), 1.0) is nan, so from_norm returns nan.
+    for s in &SYNTH_PARAMS {
+        assert!(s.from_norm(f64::NAN).is_nan(), "{}", s.name);
+    }
+}

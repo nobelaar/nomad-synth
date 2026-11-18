@@ -34,7 +34,10 @@ fn clamp_matches_python() {
 
 #[test]
 fn instrument_order() {
-    assert_eq!(INSTRUMENTS, ["kick", "snare", "clap", "tom", "chat", "ohat"]);
+    assert_eq!(
+        INSTRUMENTS,
+        ["kick", "snare", "clap", "tom", "chat", "ohat"]
+    );
     for i in INSTRUMENTS {
         for p in ["tune", "decay", "level"] {
             assert!(find(&DRUM_PARAMS, &format!("{i}_{p}")).is_some(), "{i}_{p}");
