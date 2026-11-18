@@ -330,6 +330,7 @@ dependencies = [
  "cpal",
  "nomad-core",
  "rtrb",
+ "serde_json",
 ]
 
 [[package]]
