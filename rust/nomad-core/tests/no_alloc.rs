@@ -179,7 +179,7 @@ fn set_bank_hands_back_old_shot() {
     let spare = assert_no_alloc("set_bank playing", || e.set_drum_bank(DRUMS, 0, shot)).unwrap();
     assert!(spare.is_empty());
     e.render(&mut out);
-    assert!(e.set_drum_bank(99, 0, vec![1.0]).is_none());
+    assert_eq!(e.set_drum_bank(99, 0, vec![1.0]), Err(vec![1.0]));
 }
 
 #[test]
@@ -195,4 +195,11 @@ fn insert_rejects_when_full() {
     let (id, name) = e.next_id(Kind::Synth);
     let back = e.insert_instance(build_instance(SR, 1, Kind::Synth, id, name));
     assert!(back.is_err());
+}
+
+/// The counter itself works: an allocation inside the guard is caught.
+#[test]
+#[should_panic(expected = "allocator calls")]
+fn counter_detects_allocation() {
+    assert_no_alloc("self-test", || drop(std::hint::black_box(vec![1u8; 10])));
 }

@@ -361,15 +361,35 @@ impl Engine {
         }
     }
 
-    /// Swap a drum one-shot built off the audio thread; returns the buffer that
-    /// is no longer needed (for the caller to free), `None` for a bad id.
+    /// Swap a drum one-shot built off the audio thread. `Ok` holds the buffer that
+    /// is no longer needed and `Err` hands `shot` back for a bad id: either way the
+    /// caller frees it, never the engine.
     pub fn set_drum_bank(
         &mut self,
         id: InstrumentId,
         track: usize,
         shot: Vec<f32>,
-    ) -> Option<Vec<f32>> {
-        Some(self.drums_mut(id)?.set_bank(track, shot))
+    ) -> Result<Vec<f32>, Vec<f32>> {
+        match self.drums_mut(id) {
+            Some(d) => Ok(d.set_bank(track, shot)),
+            None => Err(shot),
+        }
+    }
+
+    /// Every instance: Synth = panic + stop its clock; Drums = `stop_all` (Python's
+    /// `Engine.panic`, where each instance also queues a clock stop).
+    pub fn panic(&mut self) {
+        for inst in &mut self.insts {
+            inst.close_now();
+        }
+    }
+
+    /// Bend or mod wheel on the target synth.
+    pub fn set_control(&mut self, ctl: crate::synth::Control, value: f64) {
+        let target = self.target_synth;
+        if let Some(s) = self.synth_mut(target) {
+            s.set_control(ctl, value);
+        }
     }
 
     pub fn name(&self, id: InstrumentId) -> Option<&str> {

@@ -1,0 +1,8 @@
+[package]
+name = "nomad-runtime"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+nomad-core = { path = "../nomad-core" }
+rtrb = "0.4"
