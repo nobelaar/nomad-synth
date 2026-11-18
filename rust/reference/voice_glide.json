@@ -1,0 +1,214 @@
+{
+ "entries": {
+  "steal": {
+   "offset": 0,
+   "len": 3500,
+   "meta": {
+    "params": {},
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      2000
+     ],
+     [
+      "steal",
+      72,
+      0.6
+     ],
+     [
+      "run",
+      1500
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "retrigger": {
+   "offset": 3500,
+   "len": 2000,
+   "meta": {
+    "params": {},
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1000
+     ],
+     [
+      "steal",
+      60,
+      0.9
+     ],
+     [
+      "run",
+      1000
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "glide/fresh": {
+   "offset": 5500,
+   "len": 3000,
+   "meta": {
+    "params": {
+     "glide": 200.0
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      72,
+      0.8,
+      60.0
+     ],
+     [
+      "run",
+      3000
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "glide/steal": {
+   "offset": 8500,
+   "len": 4000,
+   "meta": {
+    "params": {
+     "glide": 300.0
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1000
+     ],
+     [
+      "steal",
+      72,
+      0.8
+     ],
+     [
+      "run",
+      3000
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "glide/legato": {
+   "offset": 12500,
+   "len": 4500,
+   "meta": {
+    "params": {
+     "glide": 100.0
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1500
+     ],
+     [
+      "target",
+      67
+     ],
+     [
+      "run",
+      3000
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "vel/nan": {
+   "offset": 17000,
+   "len": 400,
+   "meta": {
+    "params": {},
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      "nan"
+     ],
+     [
+      "run",
+      400
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "vel/neg": {
+   "offset": 17400,
+   "len": 400,
+   "meta": {
+    "params": {},
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      -1.0
+     ],
+     [
+      "run",
+      400
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "vel/big": {
+   "offset": 17800,
+   "len": 400,
+   "meta": {
+    "params": {},
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      7.0
+     ],
+     [
+      "run",
+      400
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  }
+ }
+}

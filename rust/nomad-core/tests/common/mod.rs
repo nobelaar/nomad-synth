@@ -138,3 +138,17 @@ pub fn assert_close(got: &[f64], want: &[f64], what: &str) {
         assert!(ok, "{what}[{i}]: got {a}, want {b}");
     }
 }
+
+/// Registry defaults with `{name: value}` overrides from a reference meta.
+pub fn params_from(overrides: &serde_json::Value) -> nomad_core::params::ParamValues {
+    use nomad_core::params::{SYNTH_PARAMS, default_values};
+    let mut p = default_values();
+    for (name, v) in overrides.as_object().expect("params object") {
+        let i = SYNTH_PARAMS
+            .iter()
+            .position(|s| s.name == name)
+            .unwrap_or_else(|| panic!("{name}"));
+        p[i] = num(v);
+    }
+    p
+}
