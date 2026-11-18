@@ -138,3 +138,30 @@ pub static SYNTH_PARAMS: [ParamSpec; 63] = [
     spec("mod7_amt", 0.0, -1.0, 1.0, Curve::Lin, ""),
     spec("bend_range", 2.0, 1.0, 12.0, Curve::Lin, "st"),
 ];
+
+/// Machine Drum instruments, in the order of `nomad/engine/drums.py`.
+pub const INSTRUMENTS: [&str; 6] = ["kick", "snare", "clap", "tom", "chat", "ohat"];
+
+/// Drum registry (`DRUM_REGISTRY`): tune/decay/level per instrument, then bpm and swing.
+pub static DRUM_PARAMS: [ParamSpec; 20] = [
+    spec("kick_tune", 0.0, -1.0, 1.0, Curve::Lin, ""),
+    spec("kick_decay", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("kick_level", 0.6, 0.0, 1.0, Curve::Lin, ""),
+    spec("snare_tune", 0.0, -1.0, 1.0, Curve::Lin, ""),
+    spec("snare_decay", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("snare_level", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("clap_tune", 0.0, -1.0, 1.0, Curve::Lin, ""),
+    spec("clap_decay", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("clap_level", 0.45, 0.0, 1.0, Curve::Lin, ""),
+    spec("tom_tune", 0.0, -1.0, 1.0, Curve::Lin, ""),
+    spec("tom_decay", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("tom_level", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("chat_tune", 0.0, -1.0, 1.0, Curve::Lin, ""),
+    spec("chat_decay", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("chat_level", 0.35, 0.0, 1.0, Curve::Lin, ""),
+    spec("ohat_tune", 0.0, -1.0, 1.0, Curve::Lin, ""),
+    spec("ohat_decay", 0.5, 0.0, 1.0, Curve::Lin, ""),
+    spec("ohat_level", 0.3, 0.0, 1.0, Curve::Lin, ""),
+    spec("bpm", 110.0, 60.0, 180.0, Curve::Lin, "BPM"),
+    spec("swing", 0.0, 0.0, 0.6, Curve::Lin, ""),
+];
