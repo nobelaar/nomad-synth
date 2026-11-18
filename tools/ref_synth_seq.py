@@ -10,6 +10,7 @@ propagate through the voices' state, so this still checks the whole render.
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import numpy as np
@@ -112,7 +113,8 @@ def write(out_dir: Path) -> None:
     for label, (preset, bpm, seconds, blob, events) in SCENARIOS.items():
         out, applied, seq, n_cb = run(preset, bpm, seconds, events)
         w = blobs.setdefault(blob, BlobWriter(blob))
-        w.add(label, out[::DECIM], params=applied, seq=seq, bpm=bpm, callbacks=n_cb, callback=CALLBACK,
+        # Checksums of every sample, so the decimated blob still verifies the full render.
+        w.add(label, out[::DECIM], sum=math.fsum(out), sumsq=math.fsum(out * out), params=applied, seq=seq, bpm=bpm, callbacks=n_cb, callback=CALLBACK,
               decim=DECIM, events=events)
     for w in blobs.values():
         w.write(out_dir)

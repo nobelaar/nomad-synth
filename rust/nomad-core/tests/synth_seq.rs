@@ -21,6 +21,12 @@ fn u8s(v: &serde_json::Value) -> Vec<u8> {
 }
 
 fn run(m: &serde_json::Value) -> Vec<f64> {
+    let decim = m["decim"].as_u64().unwrap() as usize;
+    run_full(m).into_iter().step_by(decim).collect()
+}
+
+/// Every rendered sample (not decimated).
+fn run_full(m: &serde_json::Value) -> Vec<f64> {
     let mut s = Synth::new(SR, 8);
     let mut clock = Clock::new(SR);
     for pv in m["params"].as_array().unwrap() {
@@ -64,8 +70,7 @@ fn run(m: &serde_json::Value) -> Vec<f64> {
         }
         run_single_instrument(&mut s, &mut clock, ID, buf);
     }
-    let decim = m["decim"].as_u64().unwrap() as usize;
-    out.into_iter().step_by(decim).collect()
+    out
 }
 
 #[test]
@@ -140,4 +145,24 @@ fn live_key_is_not_cut_by_sequencer() {
     };
     assert_eq!(play(false), 0.0);
     assert!(play(true) > 0.05);
+}
+
+#[test]
+fn full_render_checksums_match_python() {
+    for name in ["synth_seq", "synth_seq_more"] {
+        let blob = Blob::open(name);
+        for label in blob.labels() {
+            let m = blob.meta(&label);
+            let full = run_full(m);
+            let (sum, sumsq): (f64, f64) = (full.iter().sum(), full.iter().map(|x| x * x).sum());
+            for (got, key) in [(sum, "sum"), (sumsq, "sumsq")] {
+                let want = num(&m[key]);
+                // Long accumulations: a looser bound than per-sample.
+                assert!(
+                    (got - want).abs() <= 1e-6 + 1e-9 * want.abs(),
+                    "{label} {key}: {got} vs {want}"
+                );
+            }
+        }
+    }
 }
