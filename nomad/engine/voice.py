@@ -53,6 +53,7 @@ class Voice:
         self.amp_env = Envelope(self.sr)
         self.filt_env = Envelope(self.sr)
         self._pitch_note = 60  # key the oscillators follow (old note during a steal)
+        self._cur = 60.0  # pitch actually sounding, in semitones: glides towards ``_pitch_note``
         self._lc = None  # smoothed log2 cutoff; None = initialise on next grain
         self._fade_left = 0
         self._pending: tuple[int, float] | None = None
@@ -70,19 +71,24 @@ class Voice:
     def is_active(self) -> bool:
         return self._pending is not None or self._fade_left > 0 or not self.amp_env.is_idle()
 
-    def _trigger(self, note: int, velocity: float) -> None:
+    def _trigger(self, note: int, velocity: float, start: float | None = None) -> None:
         if self.amp_env.is_idle():  # fresh start: deterministic phase and clean filter
             self.osc1.phase = self.osc2.phase = 0.0
             self.filter.reset()
             self._lc = None
+            self._cur = float(note if start is None else start)  # a steal keeps ``_cur``: it glides on from there
         self.note = self._pitch_note = int(note)
         self.velocity = min(max(_f(velocity), 0.0), 1.0)
         self.amp_env.note_on()
         self.filt_env.note_on()
 
-    def note_on(self, note: int, velocity: float) -> None:
+    def note_on(self, note: int, velocity: float, start: float | None = None) -> None:
         self._pending, self._fade_left = None, 0
-        self._trigger(note, velocity)
+        self._trigger(note, velocity, start)
+
+    def set_target(self, note: int) -> None:
+        """Legato: glide to ``note`` without touching the envelopes."""
+        self.note = self._pitch_note = int(note)
 
     def note_off(self) -> None:
         if self._pending is not None:  # cancel the retrigger; the fade ends in silence
@@ -106,7 +112,7 @@ class Voice:
         if _f(p[mode_key]) >= 0.5:  # free: absolute Hz, ignores key and bend
             base, semis = _f(p[hz_key], 220.0), semis + _f(p[fine_key]) / 100.0
         else:
-            semis += self._pitch_note - 69 + _f(p[coarse_key]) + _f(p[fine_key]) / 100.0 + _f(m["bend"])
+            semis += self._cur - 69 + _f(p[coarse_key]) + _f(p[fine_key]) / 100.0 + _f(m["bend"])
             base = 440.0
         return base * 2.0 ** (min(max(semis, -200.0), 200.0) / 12.0)
 
@@ -124,6 +130,14 @@ class Voice:
         self.amp_env.process(a_env)
         self.filt_env.process(f_env)
         self.env2_level = float(f_env[n - 1])
+
+        # portamento (shortcut: one frequency per block, so glides under ~20 ms sound stepped)
+        glide = _f(p.get("glide", 0.0))
+        d = self._pitch_note - self._cur
+        if glide <= 0.0 or abs(d) < 1e-3:
+            self._cur = float(self._pitch_note)
+        else:
+            self._cur += d * (1.0 - math.exp(-n / (sr * glide / 3000.0)))  # RC curve: glide ms ~ 3 time constants
 
         # oscillators: whole block each
         mix[:] = 0.0

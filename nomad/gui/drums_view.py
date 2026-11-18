@@ -55,9 +55,6 @@ class DrumView(tk.Frame):
     def _build_top(self):
         top = tk.Frame(self, bg=BG)
         top.pack(anchor="w", padx=2, pady=2)
-        self.play_btn = tk.Button(top, text="PLAY", command=self.toggle_transport, **_BTN)
-        self.play_btn.pack(side="left", padx=(0, 8))
-        self._knob(top, "bpm").pack(side="left", padx=2)
         self._knob(top, "swing").pack(side="left", padx=2)
         self.clear_btn = tk.Button(top, text="CLEAR", command=self.clear, **_BTN)
         self.clear_btn.pack(side="left", padx=8)
@@ -119,18 +116,6 @@ class DrumView(tk.Frame):
     def reset(self, name: str) -> None:
         self.set_value(name, DRUM_REGISTRY[name].default)
 
-    def set_transport_locked(self, locked: bool) -> None:
-        self._locked = locked
-        self.play_btn.configure(state="disabled" if locked else "normal")
-        self.knobs["bpm"].locked = locked
-
-    def show_bpm(self, bpm: float) -> None:
-        self.knobs["bpm"].set_value(bpm)
-
-    def toggle_transport(self) -> None:
-        self.drums.toggle()
-        self.refresh()
-
     def clear(self) -> None:
         self.drums.clear_pattern()
         for i in range(len(self._steps)):
@@ -149,12 +134,10 @@ class DrumView(tk.Frame):
             self._paint(track, step)
 
     def refresh(self) -> None:
-        if not hasattr(self, "play_btn"):
+        if not self.ready:
             return  # still being assembled
         self.drums.flush()
         for name, knob in self.knobs.items():
-            if name == "bpm" and self._locked:
-                continue  # a follower shows its source's tempo (see set_transport_locked / show_bpm)
             value = self.drums.values[name]
             if abs(knob.model.value - value) > 1e-9:
                 knob.set_value(value)
@@ -162,6 +145,3 @@ class DrumView(tk.Frame):
         for track in range(len(self._steps)):
             for step in range(STEPS):
                 self._paint(track, step, current=(step == position))
-        playing = self.drums.playing
-        self.play_btn.configure(text="STOP" if playing else "PLAY",
-                                bg=GREEN if playing else TROUGH, fg=BG if playing else GREY)

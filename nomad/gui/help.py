@@ -145,6 +145,10 @@ _FIXED = {
                   "Cuántas notas pueden sonar a la vez, de 1 a 8. Con 1 es monofónico.\n"
                   "Si tocás más notas que voces, se roba la más vieja (primero las que "
                   "están en release)."),
+    "glide": ("GLIDE: portamento",
+              "Tiempo que tarda cada nota en deslizarse desde la anterior (0 = apagado, hasta 1 s). "
+              "Con acordes, cada voz barre desde la última nota hasta la suya. En mono (polifonía 1) y "
+              "con una tecla apretada es legato: la nota nueva se desliza sin reiniciar las envolventes."),
     "bend_range": ("Rango de pitch bend",
                    "Cuántos semitonos mueve la rueda de pitch bend del controlador al "
                    "extremo, de 1 a 12. 2 es lo habitual; 12 = una octava.\n"
@@ -218,8 +222,8 @@ _ELEMENTS = {
                    "más fuerte).\n"
                    "La columna iluminada es el paso que está sonando."),
     "drum_transport": ("Transporte de la batería",
-                       "PLAY/STOP arranca o para el patrón (STOP vuelve al paso 1).\n"
-                       "BPM y SWING cambian el groove en vivo; CLEAR borra todos los pasos."),
+                       "PLAY/STOP y BPM están en la barra de arriba. SWING cambia el groove en vivo; "
+                       "CLEAR borra todos los pasos."),
 }
 _ELEMENTS.update({
     "clock_source": ("Fuente de reloj",
@@ -234,7 +238,8 @@ _ELEMENTS.update({
                    "Volumen de este instrumento dentro de la mezcla (0 a 100 %). No es el volumen general: "
                    "ese es MASTER, que afecta a todo."),
     "inst_bpm": ("BPM del instrumento",
-                 "Tempo de este instrumento mientras usa su reloj Internal. Si sigue a otro, muestra el "
+                 "Tempo de este instrumento mientras usa su reloj Internal (20 a 300; escribí el número y Enter, o usá "
+                 "las flechas; TAP lo marca a mano). Si sigue a otro, muestra el "
                  "tempo de la fuente y queda bloqueado."),
     "tab_select": ("Pestaña de instrumento",
                    "Cada pestaña es un instrumento independiente que sigue sonando aunque no esté "
@@ -250,9 +255,10 @@ _ELEMENTS.update({
                    "Prende o apaga el secuenciador de este synth. Toca sus notas con el mismo "
                    "motor que el teclado, así que podés tocar encima a la vez.\n"
                    "Al apagarlo se sueltan sus notas."),
-    "seq_transport": ("PLAY / STOP del secuenciador",
-                      "Arranca o para solo la secuencia del synth. La batería tiene su propio "
-                      "PLAY en la vista DRUMS; las dos usan el BPM que se fija allí."),
+    "inst_play": ("PLAY / STOP",
+                  "Arranca o para el reloj de este instrumento: su secuencia (Synth) o su patrón "
+                  "(Machine Drum). Cada instrumento tiene el suyo; si sigue a otro, el PLAY es el de su fuente "
+                  "y queda bloqueado."),
     "seq_steps": ("Pasos de la secuencia",
                   "Click prende o apaga el paso; shift+click lo marca como acento.\n"
                   "La rueda del mouse cambia la nota (shift: una octava). "

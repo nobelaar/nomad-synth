@@ -43,9 +43,7 @@ def test_refresh_marks_playhead(view):
 def test_knobs_write_through_to_the_machine(view):
     v, dm = view
     v.knobs["kick_level"].on_change(0.2)
-    v.knobs["bpm"].on_change(140.0)
     assert dm.values["kick_level"] == pytest.approx(0.2)
-    assert dm.values["bpm"] == pytest.approx(140.0)
 
 
 def test_reset_returns_a_knob_to_its_default(view):
@@ -55,12 +53,8 @@ def test_reset_returns_a_knob_to_its_default(view):
     assert dm.values["kick_level"] == pytest.approx(0.6)
 
 
-def test_transport_and_clear(view):
+def test_clear(view):
     v, dm = view
-    v.toggle_transport()
-    assert dm.playing
-    v.toggle_transport()
-    assert not dm.playing
     v.clear()
     assert not dm.steps.any()
 
