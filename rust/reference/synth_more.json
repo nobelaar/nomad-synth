@@ -639,8 +639,76 @@
     ]
    }
   },
-  "clamps": {
+  "hi_reso": {
    "offset": 18000,
+   "len": 2000,
+   "meta": {
+    "commands": [
+     [
+      "param",
+      "filt_reso",
+      0.9
+     ],
+     [
+      "param",
+      "filt_cutoff",
+      600.0
+     ],
+     [
+      "param",
+      "filt_env_amt",
+      0.4
+     ],
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      256
+     ],
+     [
+      "run",
+      256
+     ],
+     [
+      "run",
+      100
+     ],
+     [
+      "run",
+      256
+     ],
+     [
+      "run",
+      256
+     ],
+     [
+      "run",
+      100
+     ],
+     [
+      "run",
+      256
+     ],
+     [
+      "run",
+      256
+     ],
+     [
+      "run",
+      100
+     ],
+     [
+      "run",
+      164
+     ]
+    ]
+   }
+  },
+  "clamps": {
+   "offset": 20000,
    "len": 2000,
    "meta": {
     "commands": [

@@ -55,6 +55,8 @@ MORE = {
     + [["on", 64, 0.8]] + runs(1500) + [["on", 67, 0.8]] + runs(1500) + [["off", 67]] + runs(500),
     "lfo_sh": params(lfo2_wave=4, lfo2_rate=8.0, lfo2_depth=1.0, mod0_src=2, mod0_dst=6, mod0_amt=1.0,
                      osc1_wave=3) + [["on", 48, 0.8]] + runs(4000),
+    # k > 3.2 inside full synth blocks (16-sample grains, state clamp).
+    "hi_reso": params(filt_reso=0.9, filt_cutoff=600.0, filt_env_amt=0.4) + [["on", 60, 0.8]] + runs(2000),
     "clamps": params(filt_cutoff=1e9, filt_reso=NAN, osc1_coarse=-100.0, amp_sustain=5.0, polyphony=0.4,
                      mod1_src=9.7, mod1_dst=2.5, mod1_amt=-3.0)
     + [["on", 60, 0.8], ["on", 64, 0.8], ["panic"]] + runs(600) + [["on", 67, 0.8]] + runs(1400),

@@ -24,6 +24,8 @@ VOICE = {
     "sync": ({"osc2_sync": 1.0, "osc2_coarse": 7.0, "osc1_level": 0.2}, {}, ON60, 16),
     "free_mode": ({"osc1_mode": 1.0, "osc1_hz": 330.0}, {}, ON60, 16),
     "filter_env": ({"filt_env_amt": 0.8, "filt_reso": 0.6, "filt_cutoff": 400.0}, {}, ON60, 256),
+    # k = 0.9*K_MAX > 3.2: 16-sample filter grains and the per-call state clamp.
+    "filter_hi_reso": ({"filt_reso": 0.9, "filt_cutoff": 800.0, "filt_env_amt": 0.5}, {}, ON60, 256),
     "mods": ({"osc1_wave": 3.0}, {"pitch": 0.5, "pitch1": -1.2, "cutoff": 0.3, "pw1": 0.2,
                                   "amp": -0.3, "bend": 2.0}, ON60, 16),
     "mods_extreme": ({}, {"pitch": 1000.0, "cutoff": NAN, "amp": -5.0},

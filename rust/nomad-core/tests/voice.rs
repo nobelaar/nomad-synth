@@ -74,7 +74,7 @@ fn scenarios_match_python() {
             count += 1;
         }
     }
-    assert_eq!(count, 15);
+    assert_eq!(count, 16);
 }
 
 #[test]

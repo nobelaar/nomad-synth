@@ -156,8 +156,40 @@
     "active_end": true
    }
   },
-  "mods": {
+  "filter_hi_reso": {
    "offset": 9000,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "filt_reso": 0.9,
+     "filt_cutoff": 800.0,
+     "filt_env_amt": 0.5
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 256,
+    "active_end": true
+   }
+  },
+  "mods": {
+   "offset": 10800,
    "len": 1800,
    "meta": {
     "params": {
@@ -194,7 +226,7 @@
    }
   },
   "mods_extreme": {
-   "offset": 10800,
+   "offset": 12600,
    "len": 800,
    "meta": {
     "params": {},
