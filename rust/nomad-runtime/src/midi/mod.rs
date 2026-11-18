@@ -2,3 +2,4 @@
 //! the router (held keys, sustain pedal, wheel, panic) and the CC map.
 
 pub mod parse;
+pub mod router;
