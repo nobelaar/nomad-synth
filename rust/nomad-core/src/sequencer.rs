@@ -50,6 +50,10 @@ pub struct StepSequencer {
     held: [u8; EXTRA + 1],
     nheld: usize,
     left: i64,
+    /// Step record: keys of the current chord still down.
+    rec_down: usize,
+    /// Real-time record: absolute step the last note went to (-1 = none).
+    rt_last: i64,
 }
 
 impl StepSequencer {
@@ -69,6 +73,8 @@ impl StepSequencer {
             held: [NONE; EXTRA + 1],
             nheld: 0,
             left: FAR,
+            rec_down: 0,
+            rt_last: -1,
         }
     }
 
@@ -142,6 +148,72 @@ impl StepSequencer {
     pub fn clear(&mut self) {
         self.on = [0; STEPS];
         self.extra = [[NONE; EXTRA]; STEPS];
+    }
+
+    fn next_rec_step(&self) -> usize {
+        (self.rec_step + 1) % self.grid.length.max(1)
+    }
+
+    /// Clock running: write at the nearest step (real time). Stopped: write at the
+    /// cursor; the first key rewrites the step, the next ones add to the chord.
+    pub fn record(&mut self, note: i64, vel: i64, clock: &Clock) {
+        if clock.running {
+            self.rec_down = 0; // the clock started while keys were down
+            let (g, pos) = (&self.grid, clock.pos);
+            let mut k = g.step_at(pos);
+            if pos - g.step_start(k) > g.step_start(k + 1) - pos {
+                k += 1;
+            }
+            let step = g.pattern_step(k);
+            if k == self.rt_last {
+                self.add_note(step, note); // same step as the last note: a chord
+            } else {
+                self.set_step(step, true, Some(note), Some(vel.max(1)));
+                self.clear_extra(step);
+                self.rt_last = k;
+            }
+        } else {
+            self.rt_last = -1;
+            let step = self.rec_step;
+            if self.rec_down == 0 {
+                self.set_step(step, true, Some(note), Some(vel.max(1)));
+                self.clear_extra(step);
+            } else {
+                self.add_note(step, note);
+            }
+            self.rec_down += 1;
+        }
+    }
+
+    fn clear_extra(&mut self, step: usize) {
+        if let Some(e) = self.extra.get_mut(step) {
+            *e = [NONE; EXTRA];
+        }
+    }
+
+    /// A key was released: when the last key of a chord comes up, the cursor advances.
+    pub fn record_off(&mut self, clock: &Clock) {
+        if self.rec_down > 0 && !clock.running {
+            self.rec_down -= 1;
+            if self.rec_down == 0 {
+                self.rec_step = self.next_rec_step();
+            }
+        }
+    }
+
+    pub fn arm(&mut self, on: bool) {
+        self.rec = on;
+        self.rec_step = 0;
+        self.rec_down = 0;
+        self.rt_last = -1;
+    }
+
+    /// Step record only (clock stopped, no key down): blank the step and advance.
+    pub fn rest(&mut self, clock: &Clock) {
+        if !clock.running && self.rec_down == 0 {
+            self.set_step(self.rec_step, false, None, None);
+            self.rec_step = self.next_rec_step();
+        }
     }
 
     pub fn position(&self, clock: &Clock) -> usize {
