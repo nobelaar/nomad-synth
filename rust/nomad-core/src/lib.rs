@@ -1,4 +1,5 @@
 pub mod clock;
+pub mod drum_synth;
 pub mod envelope;
 pub mod filter;
 pub mod lfo;
