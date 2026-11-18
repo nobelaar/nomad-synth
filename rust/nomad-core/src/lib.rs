@@ -1,3 +1,4 @@
+pub mod clock;
 pub mod envelope;
 pub mod filter;
 pub mod lfo;
