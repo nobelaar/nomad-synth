@@ -91,7 +91,7 @@ fn closing_instance_renders_until_dropped() {
     let fade = render(&mut e, 256);
     assert!(fade[..8].iter().any(|&x| x != 0.0), "still fading out");
     render(&mut e, 2048);
-    e.drop_closed();
+    e.drop_closed(&mut drop);
     assert!(e.clock(SYNTH).is_none());
     assert!(render(&mut e, 1024).iter().all(|&x| x == 0.0));
 }

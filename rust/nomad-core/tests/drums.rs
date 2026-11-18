@@ -42,7 +42,7 @@ fn run(m: &serde_json::Value) -> Vec<f64> {
             "bank" => {
                 let t = c[1].as_u64().unwrap() as usize;
                 let (tune, decay) = (dm.values[3 * t], dm.values[3 * t + 1]);
-                dm.set_bank(t, render_one_shot(t, SR, tune, decay));
+                drop(dm.set_bank(t, render_one_shot(t, SR, tune, decay)));
             }
             "start" => clock.start(),
             "trigger" => dm.trigger(track(s(1)), num(&c[2])),

@@ -270,7 +270,7 @@ pub fn run_engine_ops(
             "remove" => {
                 e.remove_instrument(id(1));
             }
-            "drop_closed" => e.drop_closed(),
+            "drop_closed" => e.drop_closed(&mut drop),
             "seq_on" => {
                 let sq = &mut e.synth_mut(id(1)).unwrap().sequencer;
                 sq.enabled = true;

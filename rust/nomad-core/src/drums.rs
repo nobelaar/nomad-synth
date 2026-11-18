@@ -128,15 +128,19 @@ impl DrumMachine {
         }
     }
 
-    /// Swap in a new one-shot for `track`. A voice still playing the old one keeps it.
-    pub fn set_bank(&mut self, track: usize, shot: Vec<f32>) {
+    /// Swap in a new one-shot for `track`. A voice still playing the old one keeps
+    /// it; the buffer nobody needs any more is returned for the caller to free
+    /// (no deallocation here). A bad track hands `shot` straight back.
+    pub fn set_bank(&mut self, track: usize, shot: Vec<f32>) -> Vec<f32> {
         if track >= TRACKS {
-            return;
+            return shot;
         }
         let previous = std::mem::replace(&mut self.bank[track], shot);
         if self.active[track].src == Src::Bank {
-            self.old[track] = previous;
             self.active[track].src = Src::Old;
+            std::mem::replace(&mut self.old[track], previous)
+        } else {
+            previous
         }
     }
 

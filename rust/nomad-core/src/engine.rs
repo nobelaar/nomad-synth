@@ -17,6 +17,9 @@ use crate::synth::{CONTROL_BLOCK, Synth};
 
 pub type InstrumentId = u32;
 
+/// Capacity of the instance array, reserved in `Engine::new` (it never grows).
+pub const MAX_INSTANCES: usize = 16;
+
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub enum Kind {
     Synth,
@@ -28,7 +31,9 @@ enum Body {
     Drums(Box<DrumMachine>),
 }
 
-struct Inst {
+/// One instrument instance with its own clock and mix state. Built off the audio
+/// thread with [`build_instance`] and moved into the engine with `insert_instance`.
+pub struct Instance {
     id: InstrumentId,
     name: String,
     body: Body,
@@ -42,13 +47,13 @@ struct Inst {
     buf: Vec<f64>,
 }
 
-impl Inst {
-    fn new(id: InstrumentId, name: String, body: Body, sr: f64) -> Inst {
+impl Instance {
+    fn new(id: InstrumentId, name: String, body: Body, sr: f64) -> Instance {
         let mut clock = Clock::new(sr);
         if let Body::Drums(d) = &body {
             clock.bpm = d.values[18];
         }
-        Inst {
+        Instance {
             id,
             name,
             body,
@@ -119,7 +124,10 @@ pub struct Engine {
     /// Instances created per kind (Synth, Drums), for the `NN` in the names.
     counters: [usize; 2],
     /// Mix order: live instances, then the closing ones.
-    insts: Vec<Inst>,
+    // Boxed on purpose: instances are built off the audio thread and moved in and
+    // out as boxes, so inserting or handing one back never copies or allocates.
+    #[allow(clippy::vec_box)]
+    insts: Vec<Box<Instance>>,
     target_synth: InstrumentId,
     master_sm: Smoother,
     master_p: f64,
@@ -132,20 +140,21 @@ impl Engine {
     pub fn new(sample_rate: f64, max_voices: usize) -> Engine {
         let sr = sample_rate;
         let spec = &SYNTH_PARAMS[pid::MASTER_VOLUME];
-        let insts = vec![
-            Inst::new(
-                1,
-                "Synth 01".into(),
-                Body::Synth(Box::new(Synth::new(sr, max_voices))),
-                sr,
-            ),
-            Inst::new(
-                2,
-                "Machine Drum 01".into(),
-                Body::Drums(Box::new(DrumMachine::new(sr))),
-                sr,
-            ),
-        ];
+        let mut insts = Vec::with_capacity(MAX_INSTANCES);
+        insts.push(build_instance(
+            sr,
+            max_voices,
+            Kind::Synth,
+            1,
+            "Synth 01".into(),
+        ));
+        insts.push(build_instance(
+            sr,
+            max_voices,
+            Kind::Drums,
+            2,
+            "Machine Drum 01".into(),
+        ));
         Engine {
             sr,
             max_voices,
@@ -164,8 +173,8 @@ impl Engine {
         self.insts.iter().position(|i| i.id == id)
     }
 
-    fn inst_mut(&mut self, id: InstrumentId) -> Option<&mut Inst> {
-        self.insts.iter_mut().find(|i| i.id == id)
+    fn inst_mut(&mut self, id: InstrumentId) -> Option<&mut Instance> {
+        self.insts.iter_mut().find(|i| i.id == id).map(|b| &mut **b)
     }
 
     /// Clock an instance plays from (its source's, if it follows one), plus that clock's id.
@@ -223,9 +232,9 @@ impl Engine {
         }
     }
 
-    /// New instance with the next id, named `"<Label> NN"`; it joins the mix before
-    /// the closing ones. Allocates (caller thread only).
-    pub fn add_instrument(&mut self, kind: Kind) -> InstrumentId {
+    /// Id and name (`"<Label> NN"`, counters as in Python) for the next instance of
+    /// `kind`. Allocates the name: caller thread only.
+    pub fn next_id(&mut self, kind: Kind) -> (InstrumentId, String) {
         let (k, label) = match kind {
             Kind::Synth => (0, "Synth"),
             Kind::Drums => (1, "Machine Drum"),
@@ -233,17 +242,29 @@ impl Engine {
         self.counters[k] += 1;
         let id = self.next_id;
         self.next_id += 1;
-        let name = format!("{label} {:02}", self.counters[k]);
-        let body = match kind {
-            Kind::Synth => Body::Synth(Box::new(Synth::new(self.sr, self.max_voices))),
-            Kind::Drums => Body::Drums(Box::new(DrumMachine::new(self.sr))),
-        };
+        (id, format!("{label} {:02}", self.counters[k]))
+    }
+
+    /// Move a built instance into the mix, before the closing ones. No allocation;
+    /// `Err` hands the box back when `MAX_INSTANCES` are already present.
+    pub fn insert_instance(&mut self, inst: Box<Instance>) -> Result<(), Box<Instance>> {
+        if self.insts.len() >= MAX_INSTANCES {
+            return Err(inst);
+        }
         let at = self
             .insts
             .iter()
             .position(|i| i.closing)
             .unwrap_or(self.insts.len());
-        self.insts.insert(at, Inst::new(id, name, body, self.sr));
+        self.insts.insert(at, inst);
+        Ok(())
+    }
+
+    /// Shortcut for tests and offline use: `next_id` + `build_instance` +
+    /// `insert_instance` (allocates; if the array is full the instance is dropped).
+    pub fn add_instrument(&mut self, kind: Kind) -> InstrumentId {
+        let (id, name) = self.next_id(kind);
+        let _ = self.insert_instance(build_instance(self.sr, self.max_voices, kind, id, name));
         id
     }
 
@@ -332,9 +353,23 @@ impl Engine {
         true
     }
 
-    /// Release the closed instances (the GUI's 100 ms timer in Python).
-    pub fn drop_closed(&mut self) {
-        self.insts.retain(|i| !i.closing);
+    /// Hand every closed instance to `sink` (the GUI's 100 ms timer in Python); the
+    /// engine never frees them itself, so this is safe on the audio thread.
+    pub fn drop_closed(&mut self, sink: &mut dyn FnMut(Box<Instance>)) {
+        while let Some(i) = self.insts.iter().position(|x| x.closing) {
+            sink(self.insts.remove(i));
+        }
+    }
+
+    /// Swap a drum one-shot built off the audio thread; returns the buffer that
+    /// is no longer needed (for the caller to free), `None` for a bad id.
+    pub fn set_drum_bank(
+        &mut self,
+        id: InstrumentId,
+        track: usize,
+        shot: Vec<f32>,
+    ) -> Option<Vec<f32>> {
+        Some(self.drums_mut(id)?.set_bank(track, shot))
     }
 
     pub fn name(&self, id: InstrumentId) -> Option<&str> {
@@ -375,7 +410,7 @@ impl Engine {
             }
             ValueEffect::Regenerate(t) => {
                 let shot = render_one_shot(t, sr, dm.values[3 * t], dm.values[3 * t + 1]);
-                dm.set_bank(t, shot);
+                drop(dm.set_bank(t, shot));
             }
             ValueEffect::None => {}
         }
@@ -526,4 +561,20 @@ impl Engine {
             inst.advance(chunk as i64);
         }
     }
+}
+
+/// Build an instance (allocates: synthesizes drum shots, voice buffers). Call it
+/// off the audio thread and move the box in with `Engine::insert_instance`.
+pub fn build_instance(
+    sample_rate: f64,
+    max_voices: usize,
+    kind: Kind,
+    id: InstrumentId,
+    name: String,
+) -> Box<Instance> {
+    let body = match kind {
+        Kind::Synth => Body::Synth(Box::new(Synth::new(sample_rate, max_voices))),
+        Kind::Drums => Body::Drums(Box::new(DrumMachine::new(sample_rate))),
+    };
+    Box::new(Instance::new(id, name, body, sample_rate))
 }
