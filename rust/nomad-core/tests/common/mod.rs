@@ -180,3 +180,37 @@ pub fn run_single_instrument(
     }
     synth.poll_sequencer(clock, clock_id);
 }
+
+/// `DrumMachine.render`: the standalone driver of a machine with its own clock.
+pub fn drums_render(
+    dm: &mut nomad_core::drums::DrumMachine,
+    clock: &mut nomad_core::clock::Clock,
+    clock_id: u64,
+    out: &mut [f64],
+) {
+    let n = out.len();
+    if n == 0 || dm.is_idle(clock) {
+        return;
+    }
+    let mut i = 0;
+    while i < n {
+        dm.poll(clock, clock_id);
+        let chunk = (n - i).min(dm.frames_to_event(clock) as usize);
+        dm.render_chunk(&mut out[i..i + chunk]);
+        clock.advance(chunk as i64);
+        i += chunk;
+    }
+}
+
+/// Sum and sum of squares, compared against the Python checksums.
+pub fn assert_checksums(full: &[f64], meta: &serde_json::Value, what: &str) {
+    let sum: f64 = full.iter().sum();
+    let sumsq: f64 = full.iter().map(|x| x * x).sum();
+    for (got, key) in [(sum, "sum"), (sumsq, "sumsq")] {
+        let want = num(&meta[key]);
+        assert!(
+            (got - want).abs() <= 1e-6 + 1e-9 * want.abs(),
+            "{what} {key}: {got} vs {want}"
+        );
+    }
+}
