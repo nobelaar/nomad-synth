@@ -1,0 +1,82 @@
+"""Dump the Python parameter registry and Smoother traces for the Rust tests.
+
+Usage: python tools/export_reference.py rust/reference
+Reads nomad/ without modifying it; writes <out_dir>/params.json.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from nomad.engine import drums  # noqa: E402
+from nomad.engine.params import REGISTRY, Smoother, clamp, from_norm, to_norm  # noqa: E402
+
+FROM_NORM_IN = [-0.5, 0.0, 0.25, 0.5, 1.0, 1.5]
+SMOOTHER_CASES = [
+    (0.0, 1.0, 48000.0, 15.0, [64, 64, 256, 512, 0]),
+    (0.25, 0.75, 44100.0, 0.0, [1, 16, 0]),
+]
+
+
+def _spec(spec) -> dict:
+    return {
+        "name": spec.name,
+        "default": spec.default,
+        "lo": spec.lo,
+        "hi": spec.hi,
+        "curve": spec.curve,
+        "unit": spec.unit,
+        "smooth_ms": spec.smooth_ms,
+        "clamp_in": [-1e9, spec.lo, (spec.lo + spec.hi) / 2, spec.hi, 1e9],
+    }
+
+
+def _synth(spec) -> dict:
+    d = _spec(spec)
+    d["clamp_out"] = [clamp(spec.name, x) for x in d["clamp_in"]]
+    d["to_norm_out"] = [to_norm(spec.name, x) for x in d["clamp_in"]]
+    d["from_norm_in"] = FROM_NORM_IN
+    d["from_norm_out"] = [from_norm(spec.name, n) for n in FROM_NORM_IN]
+    return d
+
+
+def _drum(spec) -> dict:
+    d = _spec(spec)
+    d["clamp_out"] = [drums._clamp(spec, x) for x in d["clamp_in"]]
+    return d
+
+
+def _smoother(start, target, sr, ms, steps) -> dict:
+    s = Smoother(start, sr, ms)
+    s.set(target)
+    values = [s.advance(n) for n in steps]
+    return {"start": start, "target": target, "sample_rate": sr, "time_ms": ms,
+            "steps": steps, "values": values}
+
+
+def build_params() -> dict:
+    return {
+        "version": 1,
+        "synth": [_synth(s) for s in REGISTRY.values()],
+        "drums": [_drum(s) for s in drums.DRUM_REGISTRY.values()],
+        "smoother": [_smoother(*c) for c in SMOOTHER_CASES],
+    }
+
+
+def write(out_dir: Path) -> None:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    # allow_nan=False enforces "no non-finite values in the file".
+    text = json.dumps(build_params(), indent=1, allow_nan=False)
+    (out_dir / "params.json").write_text(text + "\n")
+
+
+def main() -> None:
+    write(Path(sys.argv[1] if len(sys.argv) > 1 else "rust/reference"))
+
+
+if __name__ == "__main__":
+    main()
