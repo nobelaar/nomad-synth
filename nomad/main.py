@@ -13,6 +13,7 @@ from nomad.audio.scope import ScopeBuffer
 from nomad.audio.stream import AudioStream
 from nomad.engine.engine import Engine
 from nomad.midi.mapping import MidiMap
+from nomad.presets import PresetStore
 from nomad.midi.midi_input import MidiEvent, MidiInput, MidiRouter
 
 
@@ -62,6 +63,7 @@ class Runtime:
         self.args, self.engine, self.stream = args, engine, stream
         self.midi_map, self.midi_in, self.router = midi_map, midi_in, router
         self.app = None
+        self.presets = None
         self.last_stats: dict | None = None
         self._closed = False
         self._stop = False
@@ -102,7 +104,7 @@ class Runtime:
             return
         _warm_up(self.engine.sr)  # first-use numpy/scipy costs must not land in the audio callback
         from nomad.gui.app import build_app
-        self.app = app = build_app(self.engine, self.stream, self.midi_map)
+        self.app = app = build_app(self.engine, self.stream, self.midi_map, self.presets)
         app.root.update()  # Tk widget construction holds the GIL: finish it BEFORE the stream starts
         try:
             self.stream.start()
@@ -182,6 +184,7 @@ def build_runtime(argv=None) -> Runtime:
     midi_map = MidiMap(cfg / "midi-map.json")
     midi_map.load()
     rt = Runtime(args, engine, stream, midi_map, None, None)
+    rt.presets = PresetStore(cfg / "presets")
     rt.router = MidiRouter(engine, on_cc=rt._on_cc)
     rt.midi_in = MidiInput(rt.router.handle)
     return rt

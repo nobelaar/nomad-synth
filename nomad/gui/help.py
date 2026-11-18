@@ -270,6 +270,13 @@ _ELEMENTS.update({
     "seq_len": ("LEN: cantidad de pasos",
                 "Cuántos pasos recorre la secuencia antes de volver al primero (1 a 16). "
                 "Los pasos fuera del largo se ven apagados."),
+    "preset_menu": ("PRESET: sonidos y patrones",
+                    "Carga un preset en este instrumento: perillas, matriz y secuencia (o el patrón de la "
+                    "batería). Primero los de fábrica, después los tuyos. No cambia el tempo ni el reloj, "
+                    "y no prende el secuenciador: apretá SEQ y PLAY."),
+    "preset_save": ("SAVE: guardar tu preset",
+                    "Guarda el estado actual de este instrumento con el nombre que elijas, en "
+                    "~/.config/nomad-synth/presets. No se puede usar el nombre de uno de fábrica."),
     "seq_gate": ("GATE: duración de las notas",
                  "Cuánto dura cada nota respecto de su paso: poco es staccato, "
                  "al máximo las notas se pegan (legato)."),

@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import time
 import tkinter as tk
+from tkinter import simpledialog
 
+from nomad import presets
 from nomad.gui.drums_view import _BTN
 from nomad.gui.knob import BG, GREEN, GREY, TROUGH
 
@@ -30,6 +32,15 @@ class InstanceStrip(tk.Frame):
         tk.Label(self, text="CLOCK / MIX", bg=BG, fg=GREEN, font=_FONT).pack(anchor="w", padx=4)
         self.clock_btn = tk.Button(self, text="CLOCK: Internal", command=self.cycle_source, **_BTN)
         self.clock_btn.pack(anchor="w", padx=2, pady=1)
+        prow = tk.Frame(self, bg=BG)
+        prow.pack(anchor="w", padx=2, pady=1)
+        self.preset_btn = tk.Menubutton(prow, text="PRESET ▾", width=14, anchor="w", relief="flat", bg=TROUGH, fg=GREEN,
+                                        activebackground=GREEN, activeforeground=BG, highlightthickness=0, bd=0)
+        self.preset_menu = tk.Menu(self.preset_btn, tearoff=0, postcommand=self._fill_presets)
+        self.preset_btn.configure(menu=self.preset_menu)
+        self.preset_btn.pack(side="left")
+        self.save_btn = tk.Button(prow, text="SAVE", command=self.save_preset, **_BTN)
+        self.save_btn.pack(side="left", padx=4)
         self.bpm = None
         if with_bpm:
             row = tk.Frame(self, bg=BG)
@@ -56,7 +67,8 @@ class InstanceStrip(tk.Frame):
         self.level.configure(variable=self._level_var)
         self.level.pack(side="left")
         if register_help is not None:
-            for w, key in ((self.clock_btn, "clock_source"), (self.mute_btn, "inst_mute"), (self.level, "inst_level")):
+            for w, key in ((self.preset_btn, "preset_menu"), (self.save_btn, "preset_save"),
+                           (self.clock_btn, "clock_source"), (self.mute_btn, "inst_mute"), (self.level, "inst_level")):
                 register_help(w, key)
             if self.bpm is not None:
                 register_help(self.bpm, "inst_bpm")
@@ -77,6 +89,47 @@ class InstanceStrip(tk.Frame):
             self.app.status.set("CLOCK: no se puede sincronizar con esa fuente")
         self.app.refresh_tabs()
         self.refresh()
+
+    # ---- presets -------------------------------------------------------------------
+    def _fill_presets(self) -> None:
+        menu, store, kind = self.preset_menu, self.app.presets, self._kind
+        menu.delete(0, "end")
+        last = None
+        for name, origin in store.list(kind):
+            if last is not None and origin != last:
+                menu.add_separator()
+            menu.add_command(label=name, command=lambda n=name: self.load_preset(n))
+            last = origin
+
+    @property
+    def _kind(self) -> str:
+        return "synth" if self.inst.kind == "synth" else "drums"
+
+    def load_preset(self, name: str) -> None:
+        try:
+            presets.apply(self.inst, self.app.presets.get(self._kind, name))
+        except (KeyError, ValueError) as e:
+            self.app.status.set(f"PRESET: {e}"[:80])
+            return
+        self.preset_btn.configure(text=name[:14] + " ▾")
+        if hasattr(self.panel, "push_snapshot"):
+            self.panel.push_snapshot()
+        self.panel.refresh()
+
+    def save_preset(self) -> None:
+        if not self.app.presets.can_save:
+            self.app.status.set("PRESET: no hay carpeta de presets")
+            return
+        name = simpledialog.askstring("Guardar preset", "Nombre:", parent=self.app.root)
+        if not name:
+            return
+        try:
+            stored = self.app.presets.save(self._kind, name, presets.capture(self.inst))
+        except (OSError, ValueError) as e:
+            self.app.status.set(f"PRESET: {e}"[:80])
+            return
+        self.preset_btn.configure(text=stored[:14] + " ▾")
+        self.app.status.set(f"PRESET guardado: {stored}")
 
     def toggle_mute(self) -> None:
         self._muted = not self._muted
