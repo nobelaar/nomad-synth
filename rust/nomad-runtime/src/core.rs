@@ -109,6 +109,10 @@ fn trash(queue: &mut Producer<Garbage>, pending: &mut Vec<Garbage>, g: Garbage) 
 }
 
 impl AudioCore {
+    pub fn telemetry(&self) -> Arc<Telemetry> {
+        Arc::clone(&self.telemetry)
+    }
+
     /// Device callback: apply queued commands, render, write `out` interleaved
     /// (`channels` >= 1; mono on channels 0 and 1, the rest silent). A panic is
     /// contained: the callback outputs silence and counts an error.

@@ -10,3 +10,4 @@ mod telemetry;
 pub use command::{Command, Garbage};
 pub use core::{AudioCore, ControlHandle, create};
 pub use telemetry::{ScopeRing, Telemetry};
+pub mod output;
