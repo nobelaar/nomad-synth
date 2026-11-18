@@ -1,14 +1,16 @@
 //! DSP core of one Synth instance: voices, smoothed parameters, two LFOs, the
-//! modulation matrix and the bend/modwheel controls. Ported from
-//! `SynthInstrument` in `nomad/engine/instrument.py` (the specification),
-//! without the sequencer, the clock and the command queue (M1-C / M2): here
-//! notes and parameters are applied directly, in call order, which matches
-//! Python draining its queue before every block.
+//! modulation matrix, the bend/modwheel controls and the step sequencer. Ported
+//! from `SynthInstrument` in `nomad/engine/instrument.py` (the specification),
+//! without the command queue (M2): notes and parameters are applied directly,
+//! in call order, which matches Python draining its queue before every block.
+//! The clock is not owned here (topology is M1-D): it is passed in.
 
+use crate::clock::Clock;
 use crate::lfo::Lfo;
 use crate::modmatrix::{ModMatrix, NUM_SLOTS, Sources};
 use crate::mods::Mods;
 use crate::params::{ParamValues, SYNTH_PARAMS, default_values, pid};
+use crate::sequencer::StepSequencer;
 use crate::smoother::Smoother;
 use crate::voice_manager::VoiceManager;
 
@@ -40,6 +42,7 @@ pub fn is_smoothed(id: usize) -> bool {
 }
 
 pub struct Synth {
+    pub sequencer: StepSequencer,
     vm: VoiceManager,
     matrix: ModMatrix,
     lfos: [Lfo; 2],
@@ -61,6 +64,7 @@ impl Synth {
     pub fn new(sample_rate: f64, max_voices: usize) -> Synth {
         let sr = sample_rate;
         Synth {
+            sequencer: StepSequencer::new(sr),
             vm: VoiceManager::new(sr, max_voices),
             matrix: ModMatrix::new(),
             lfos: [Lfo::new(sr, 1), Lfo::new(sr, 2)],
@@ -80,15 +84,23 @@ impl Synth {
         }
     }
 
-    pub fn note_on(&mut self, note: i64, velocity: f64) {
+    /// A played key; while REC is armed it is also recorded.
+    pub fn note_on(&mut self, note: i64, velocity: f64, clock: &Clock) {
         self.vm.note_on(note, velocity);
+        if self.sequencer.rec {
+            self.sequencer
+                .record(note, (velocity * 127.0) as i64, clock);
+        }
         if let Ok(n @ 0..=127) = usize::try_from(note) {
             self.live[n] = true;
         }
     }
 
-    pub fn note_off(&mut self, note: i64) {
+    pub fn note_off(&mut self, note: i64, clock: &Clock) {
         self.vm.note_off(note);
+        if self.sequencer.rec {
+            self.sequencer.record_off(clock);
+        }
         if let Ok(n @ 0..=127) = usize::try_from(note) {
             self.live[n] = false;
         }
@@ -139,9 +151,38 @@ impl Synth {
         }
     }
 
+    /// Disarm REC, forget live keys, fade every voice out and release the sequencer note.
     pub fn panic(&mut self) {
+        self.sequencer.arm(false);
         self.live = [false; 128];
         self.vm.panic();
+        self.sequencer.release(&mut self.vm, &self.live);
+    }
+
+    /// Arm or disarm REC (the cursor restarts at step 1).
+    pub fn arm_rec(&mut self, on: bool) {
+        self.sequencer.arm(on);
+    }
+
+    /// Step-record rest (only with the clock stopped).
+    pub fn rest(&mut self, clock: &Clock) {
+        self.sequencer.rest(clock);
+    }
+
+    /// Clock hook: fire the sequencer step due at `clock.pos`, if any.
+    pub fn poll_sequencer(&mut self, clock: &Clock, clock_id: u64) {
+        self.sequencer
+            .poll(clock, clock_id, &mut self.vm, &self.live);
+    }
+
+    /// Frames until the next sequencer event (step or note-off).
+    pub fn frames_to_event(&self, clock: &Clock) -> i64 {
+        self.sequencer.frames_to_event(clock)
+    }
+
+    /// Clock hook: `n` frames went by (gate countdown).
+    pub fn advance_sequencer(&mut self, n: i64) {
+        self.sequencer.advance(n, &mut self.vm, &self.live);
     }
 
     /// Parameter targets as last set (not the smoothed values).

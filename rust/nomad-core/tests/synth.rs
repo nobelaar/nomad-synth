@@ -1,6 +1,7 @@
 mod common;
 
 use common::{Blob, assert_close, num};
+use nomad_core::clock::Clock;
 use nomad_core::params::{SYNTH_PARAMS, find, pid};
 use nomad_core::synth::{CONTROL_BLOCK, Control, Synth, is_smoothed};
 
@@ -27,8 +28,8 @@ fn replay(commands: &serde_json::Value) -> Vec<f64> {
                 };
                 s.set_control(ctl, num(&c[2]));
             }
-            "on" => s.note_on(c[1].as_i64().unwrap(), num(&c[2])),
-            "off" => s.note_off(c[1].as_i64().unwrap()),
+            "on" => s.note_on(c[1].as_i64().unwrap(), num(&c[2]), &Clock::new(SR)),
+            "off" => s.note_off(c[1].as_i64().unwrap(), &Clock::new(SR)),
             "panic" => s.panic(),
             "run" => {
                 let mut b = vec![0.0; c[1].as_u64().unwrap() as usize];
@@ -105,7 +106,7 @@ fn set_control_clamps() {
     let play = |bend: f64| {
         let mut s = Synth::new(SR, 8);
         s.set_control(Control::Bend, bend);
-        s.note_on(60, 0.8);
+        s.note_on(60, 0.8, &Clock::new(SR));
         let mut out = vec![0.0; 2048];
         for b in out.chunks_mut(CONTROL_BLOCK) {
             s.render_block(b);
@@ -121,7 +122,7 @@ fn set_control_clamps() {
 fn render_adds_into_buffer() {
     let render = |init: f64| {
         let mut s = Synth::new(SR, 8);
-        s.note_on(60, 0.8);
+        s.note_on(60, 0.8, &Clock::new(SR));
         let mut b = vec![init; CONTROL_BLOCK];
         s.render_block(&mut b);
         b
@@ -135,11 +136,11 @@ fn render_adds_into_buffer() {
 #[test]
 fn is_live_tracks_note_on_off() {
     let mut s = Synth::new(SR, 8);
-    s.note_on(60, 0.8);
-    s.note_on(64, 0.8);
-    s.note_on(200, 0.8);
+    s.note_on(60, 0.8, &Clock::new(SR));
+    s.note_on(64, 0.8, &Clock::new(SR));
+    s.note_on(200, 0.8, &Clock::new(SR));
     assert!(s.is_live(60) && s.is_live(64) && !s.is_live(61) && !s.is_live(200));
-    s.note_off(60);
+    s.note_off(60, &Clock::new(SR));
     assert!(!s.is_live(60) && s.is_live(64));
     s.panic();
     assert!(!s.is_live(64));
@@ -149,7 +150,7 @@ fn is_live_tracks_note_on_off() {
 fn panic_goes_silent() {
     let mut s = Synth::new(SR, 8);
     for n in [48, 55, 60, 64, 67] {
-        s.note_on(n, 1.0);
+        s.note_on(n, 1.0, &Clock::new(SR));
     }
     let mut b = [0.0; CONTROL_BLOCK];
     for _ in 0..20 {

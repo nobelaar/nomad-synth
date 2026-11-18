@@ -152,3 +152,31 @@ pub fn params_from(overrides: &serde_json::Value) -> nomad_core::params::ParamVa
     }
     p
 }
+
+/// One audio callback of `Engine.render` for a single Internal instance at unity
+/// level (no master gain or limiter): poll, chunk to the next event, render in
+/// CONTROL_BLOCK slices, advance the sequencer and the clock, and a final poll.
+/// Events (notes, commands) are applied by the caller between callbacks, which is
+/// where Python's drain applies them.
+pub fn run_single_instrument(
+    synth: &mut nomad_core::synth::Synth,
+    clock: &mut nomad_core::clock::Clock,
+    clock_id: u64,
+    out: &mut [f64],
+) {
+    use nomad_core::synth::CONTROL_BLOCK;
+    let total = out.len();
+    let mut i = 0;
+    while i < total {
+        synth.poll_sequencer(clock, clock_id);
+        let chunk = (total - i).min(synth.frames_to_event(clock) as usize);
+        for block in out[i..i + chunk].chunks_mut(CONTROL_BLOCK) {
+            block.fill(0.0);
+            synth.render_block(block);
+        }
+        synth.advance_sequencer(chunk as i64);
+        clock.advance(chunk as i64);
+        i += chunk;
+    }
+    synth.poll_sequencer(clock, clock_id);
+}
