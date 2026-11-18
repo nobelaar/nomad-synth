@@ -78,7 +78,15 @@ impl Instance {
         }
     }
 
-    fn kind(&self) -> Kind {
+    pub fn id(&self) -> InstrumentId {
+        self.id
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    pub fn kind(&self) -> Kind {
         match self.body {
             Body::Synth(_) => Kind::Synth,
             Body::Drums(_) => Kind::Drums,

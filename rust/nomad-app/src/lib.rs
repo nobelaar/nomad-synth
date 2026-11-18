@@ -59,3 +59,5 @@ impl Args {
     }
 }
 pub mod bench;
+pub mod model;
+pub mod tap;
