@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nomad.engine import drums  # noqa: E402
 from nomad.engine.params import REGISTRY, Smoother, clamp, from_norm, to_norm  # noqa: E402
+from tools import ref_oscillator  # noqa: E402
 
 FROM_NORM_IN = [-0.5, 0.0, 0.25, 0.5, 1.0, 1.5]
 SMOOTHER_CASES = [
@@ -72,6 +73,7 @@ def write(out_dir: Path) -> None:
     # allow_nan=False enforces "no non-finite values in the file".
     text = json.dumps(build_params(), indent=1, allow_nan=False)
     (out_dir / "params.json").write_text(text + "\n")
+    ref_oscillator.write(out_dir)
 
 
 def main() -> None:
