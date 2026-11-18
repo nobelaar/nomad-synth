@@ -15,8 +15,13 @@ impl Args {
             let Some(name) = flag.strip_prefix("--") else {
                 return Err(format!("unexpected argument: {flag}"));
             };
-            let value = it.next().ok_or_else(|| format!("--{name} needs a value"))?;
-            pairs.push((name.to_string(), value.clone()));
+            // A flag followed by another flag (or nothing) has the empty value, so
+            // `--midi` alone works; numeric flags then fail to parse, as they should.
+            let value = match it.as_slice().first() {
+                Some(v) if !v.starts_with("--") => it.next().cloned().unwrap_or_default(),
+                _ => String::new(),
+            };
+            pairs.push((name.to_string(), value));
         }
         Ok(Args { pairs })
     }

@@ -14,6 +14,8 @@ use crate::command::{Command, Garbage};
 use crate::telemetry::Telemetry;
 
 const COMMANDS: usize = 4096;
+/// The MIDI input's own queue: two producers never share one SPSC queue.
+const MIDI: usize = 1024;
 const GARBAGE: usize = 256;
 /// Garbage kept on the audio side while the garbage queue is full.
 const PENDING: usize = 64;
@@ -25,6 +27,7 @@ const DIVISIONS: [f64; 5] = [0.25, 0.5, 1.0, 2.0, 4.0];
 pub struct AudioCore {
     engine: Engine,
     commands: Consumer<Command>,
+    midi: Consumer<Command>,
     garbage: Producer<Garbage>,
     pending: Vec<Garbage>,
     mono: Vec<f64>,
@@ -34,6 +37,7 @@ pub struct AudioCore {
 
 pub struct ControlHandle {
     commands: Producer<Command>,
+    midi: Option<Producer<Command>>,
     garbage: Consumer<Garbage>,
     telemetry: Arc<Telemetry>,
 }
@@ -42,10 +46,12 @@ pub struct ControlHandle {
 pub fn create(engine: Engine, sample_rate: f64) -> (AudioCore, ControlHandle) {
     let (cmd_tx, cmd_rx) = RingBuffer::new(COMMANDS);
     let (gar_tx, gar_rx) = RingBuffer::new(GARBAGE);
-    let telemetry = Arc::new(Telemetry::new(sample_rate));
+    let (midi_tx, midi_rx) = RingBuffer::new(MIDI);
+    let telemetry = Arc::new(Telemetry::with_target(sample_rate, engine.target_synth()));
     let core = AudioCore {
         engine,
         commands: cmd_rx,
+        midi: midi_rx,
         garbage: gar_tx,
         pending: Vec::with_capacity(PENDING),
         mono: vec![0.0; BATCH],
@@ -54,6 +60,7 @@ pub fn create(engine: Engine, sample_rate: f64) -> (AudioCore, ControlHandle) {
     };
     let ctl = ControlHandle {
         commands: cmd_tx,
+        midi: Some(midi_tx),
         garbage: gar_rx,
         telemetry,
     };
@@ -72,6 +79,15 @@ impl ControlHandle {
                 false
             }
         }
+    }
+
+    /// The MIDI input's sender (handed out once; `None` afterwards).
+    pub fn midi_sender(&mut self) -> Option<MidiSender> {
+        let commands = self.midi.take()?;
+        Some(MidiSender {
+            commands,
+            telemetry: Arc::clone(&self.telemetry),
+        })
     }
 
     /// Free everything the audio thread handed back; returns how many objects.
@@ -94,6 +110,29 @@ impl ControlHandle {
     }
 }
 
+/// Producer of the MIDI queue, for the MIDI input thread.
+pub struct MidiSender {
+    commands: Producer<Command>,
+    telemetry: Arc<Telemetry>,
+}
+
+impl MidiSender {
+    /// Queue a command; `false` when full (dropped and counted in `midi_dropped`).
+    pub fn send(&mut self, cmd: Command) -> bool {
+        match self.commands.push(cmd) {
+            Ok(()) => true,
+            Err(PushError::Full(_)) => {
+                self.telemetry.midi_dropped.fetch_add(1, Ordering::Relaxed);
+                false
+            }
+        }
+    }
+
+    pub fn telemetry(&self) -> &Arc<Telemetry> {
+        &self.telemetry
+    }
+}
+
 /// Hand `g` to the control side without ever freeing it here: if the queue is
 /// full it waits in `pending`.
 fn trash(queue: &mut Producer<Garbage>, pending: &mut Vec<Garbage>, g: Garbage) {
@@ -111,6 +150,11 @@ fn trash(queue: &mut Producer<Garbage>, pending: &mut Vec<Garbage>, g: Garbage) 
 impl AudioCore {
     pub fn telemetry(&self) -> Arc<Telemetry> {
         Arc::clone(&self.telemetry)
+    }
+
+    /// The engine, for inspection in tests and offline tools (the core owns it).
+    pub fn engine_mut(&mut self) -> &mut Engine {
+        &mut self.engine
     }
 
     /// Device callback: apply queued commands, render, write `out` interleaved
@@ -135,6 +179,9 @@ impl AudioCore {
             }
         }
         while let Ok(cmd) = self.commands.pop() {
+            self.apply(cmd);
+        }
+        while let Ok(cmd) = self.midi.pop() {
             self.apply(cmd);
         }
         let start = Instant::now();
@@ -179,6 +226,9 @@ impl AudioCore {
             Command::SetMaster(v) => e.set_master_volume(v),
             Command::SetTargetSynth(id) => {
                 e.set_target_synth(id);
+                self.telemetry
+                    .target_synth
+                    .store(e.target_synth(), Ordering::Relaxed);
             }
             Command::Start(id) => {
                 e.start(id);

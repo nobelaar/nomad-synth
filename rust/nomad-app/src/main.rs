@@ -2,15 +2,19 @@
 
 use std::process::ExitCode;
 use std::sync::atomic::Ordering::Relaxed;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use nomad_app::bench::{bench_engine, parse_bench, run_bench};
 use nomad_app::{Args, scene};
+use nomad_runtime::midi::input::{MidiInput, list_input_ports};
+use nomad_runtime::midi::map::{MidiMap, default_config_dir};
 use nomad_runtime::output::{AudioOutput, list_output_devices, negotiate};
-use nomad_runtime::{Telemetry, create};
+use nomad_runtime::{ControlHandle, Telemetry, create};
 
 const USAGE: &str = "usage: nomad devices
-       nomad demo  [--device N] [--seconds S]
+       nomad midi  [--port TEXT] [--seconds 20]
+       nomad demo  [--device N] [--seconds S] [--midi [TEXT]] [--midi-map PATH]
        nomad bench [--voices 8] [--synths 2] [--seconds 10] [--block 512]
        nomad soak  [--minutes 10] [--device N] [--voices 8] [--synths 2]";
 
@@ -18,6 +22,7 @@ fn main() -> ExitCode {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let result = match argv.first().map(String::as_str) {
         Some("devices") => devices(),
+        Some("midi") => Args::parse(&argv[1..]).and_then(|a| midi(&a)),
         Some("demo") => Args::parse(&argv[1..]).and_then(|a| demo(&a)),
         Some("bench") => {
             parse_bench(&argv[1..]).map(|o| bench(o.voices, o.synths, o.seconds, o.block))
@@ -59,14 +64,106 @@ pub fn line(t: &Telemetry) -> String {
     )
 }
 
+/// Open the MIDI input for `demo` (the map file is only read, never saved).
+fn open_midi(a: &Args, ctl: &mut ControlHandle) -> Result<Option<MidiInput>, String> {
+    let Some(text) = a.opt::<String>("midi")? else {
+        return Ok(None);
+    };
+    let path = a
+        .opt::<String>("midi-map")?
+        .map_or_else(|| default_config_dir().join("midi-map.json"), Into::into);
+    let mut map = MidiMap::new(Some(path.clone()));
+    map.load();
+    match &map.error {
+        Some(e) => println!("midi map: {e} (empty map)"),
+        None => println!(
+            "midi map: {} binding(s) from {}",
+            map.bindings().len(),
+            path.display()
+        ),
+    }
+    let sender = ctl.midi_sender().ok_or("MIDI sender already taken")?;
+    let port = (!text.is_empty()).then_some(text.as_str());
+    match MidiInput::open(port, sender, Arc::new(Mutex::new(map))) {
+        Ok(m) => {
+            println!("midi in: {}", m.port_name());
+            Ok(Some(m))
+        }
+        Err(e) => {
+            println!("midi in: {e} (playing without MIDI)");
+            Ok(None)
+        }
+    }
+}
+
+fn midi(a: &Args) -> Result<ExitCode, String> {
+    a.only(&["port", "seconds"])?;
+    let port: Option<String> = a.opt("port")?;
+    let seconds: f64 = a.get("seconds", 20.0)?;
+    let ports = list_input_ports();
+    println!("MIDI input ports:");
+    for p in &ports {
+        println!("  {p}");
+    }
+    let (mut core, mut ctl) = create(scene::demo_engine(48000.0), 48000.0);
+    let sender = ctl.midi_sender().ok_or("MIDI sender already taken")?;
+    let map = MidiMap::new(Some(default_config_dir().join("midi-map.json")));
+    let mut map = map;
+    map.load();
+    let input = MidiInput::open(
+        port.as_deref().filter(|p| !p.is_empty()),
+        sender,
+        Arc::new(Mutex::new(map)),
+    )?;
+    println!(
+        "listening on {} for {seconds} s (Ctrl-C to stop)",
+        input.port_name()
+    );
+    let lines = input.monitor();
+    let start = Instant::now();
+    let mut buf = vec![0.0f32; 480];
+    let mut events = 0;
+    let mut checked = 0.0;
+    while start.elapsed().as_secs_f64() < seconds {
+        std::thread::sleep(Duration::from_millis(10));
+        core.render_stereo(&mut buf, 1); // drains the MIDI queue into the engine (no device)
+        ctl.reap();
+        for l in lines.try_iter() {
+            events += 1;
+            println!("{:>7.3} s  {l}", start.elapsed().as_secs_f64());
+        }
+        let t = start.elapsed().as_secs_f64();
+        if t - checked >= 1.0 {
+            checked = t;
+            if !input.is_alive() {
+                input.reset();
+                println!("port {} went away", input.port_name());
+                return Ok(ExitCode::FAILURE);
+            }
+        }
+    }
+    if events == 0 {
+        println!("no events in {seconds} s");
+    }
+    let tel = ctl.telemetry();
+    println!(
+        "midi events {} errors {} dropped {}",
+        tel.midi_events.load(Relaxed),
+        tel.midi_errors.load(Relaxed),
+        tel.midi_dropped.load(Relaxed)
+    );
+    Ok(ExitCode::SUCCESS)
+}
+
 fn demo(a: &Args) -> Result<ExitCode, String> {
-    a.only(&["device", "seconds"])?;
+    a.only(&["device", "seconds", "midi", "midi-map"])?;
     let device: Option<usize> = a.opt("device")?;
     let seconds: f64 = a.get("seconds", 10.0)?;
     let (index, rate) = negotiate(device, 48000)?;
     println!("device {index} at {rate} Hz");
     let (core, mut ctl) = create(scene::demo_engine(f64::from(rate)), f64::from(rate));
     let tel = ctl.telemetry();
+    let midi_in = open_midi(a, &mut ctl)?;
     let mut out = AudioOutput::start(core, Some(index), rate, 512)?;
     let start = Instant::now();
     let mut next = 1.0;
@@ -74,7 +171,15 @@ fn demo(a: &Args) -> Result<ExitCode, String> {
         std::thread::sleep(Duration::from_millis(50));
         ctl.reap();
         if start.elapsed().as_secs_f64() >= next {
-            println!("{:>4.0} s  {}", next, line(&tel));
+            let midi = midi_in.as_ref().map_or(String::new(), |m| {
+                let alive = m.is_alive();
+                if !alive {
+                    m.reset(); // nothing may hang when the port goes away
+                }
+                let state = if alive { "ok" } else { "lost" };
+                format!("  midi {} ({state})", tel.midi_events.load(Relaxed))
+            });
+            println!("{:>4.0} s  {}{midi}", next, line(&tel));
             next += 1.0;
         }
     }

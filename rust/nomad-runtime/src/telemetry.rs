@@ -3,6 +3,8 @@
 
 use std::sync::atomic::{AtomicU32, AtomicU64, AtomicUsize, Ordering};
 
+use nomad_core::engine::InstrumentId;
+
 pub struct Telemetry {
     pub callbacks: AtomicU64,
     pub xruns: AtomicU64,
@@ -11,11 +13,20 @@ pub struct Telemetry {
     pub render_ns_last: AtomicU64,
     pub render_ns_max: AtomicU64,
     pub late_us_max: AtomicU64,
+    /// Synth that MIDI notes and mapped CCs go to (updated by the audio thread).
+    pub target_synth: AtomicU32,
+    pub midi_events: AtomicU64,
+    pub midi_errors: AtomicU64,
+    pub midi_dropped: AtomicU64,
     pub scope: ScopeRing,
 }
 
 impl Telemetry {
     pub fn new(sample_rate: f64) -> Telemetry {
+        Telemetry::with_target(sample_rate, 1)
+    }
+
+    pub fn with_target(sample_rate: f64, target: InstrumentId) -> Telemetry {
         Telemetry {
             callbacks: AtomicU64::new(0),
             xruns: AtomicU64::new(0),
@@ -24,6 +35,10 @@ impl Telemetry {
             render_ns_last: AtomicU64::new(0),
             render_ns_max: AtomicU64::new(0),
             late_us_max: AtomicU64::new(0),
+            target_synth: AtomicU32::new(target),
+            midi_events: AtomicU64::new(0),
+            midi_errors: AtomicU64::new(0),
+            midi_dropped: AtomicU64::new(0),
             scope: ScopeRing::new((2.0 * sample_rate) as usize),
         }
     }

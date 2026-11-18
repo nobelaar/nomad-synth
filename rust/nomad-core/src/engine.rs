@@ -456,6 +456,11 @@ impl Engine {
         }
     }
 
+    /// The synth `note_on`/`note_off`/`set_control` go to.
+    pub fn target_synth(&self) -> InstrumentId {
+        self.target_synth
+    }
+
     /// Which synth receives `note_on`/`note_off`/`set_param`; false if `id` is not a live synth.
     pub fn set_target_synth(&mut self, id: InstrumentId) -> bool {
         let ok = self

@@ -8,7 +8,7 @@ mod core;
 mod telemetry;
 
 pub use command::{Command, Garbage};
-pub use core::{AudioCore, ControlHandle, create};
+pub use core::{AudioCore, ControlHandle, MidiSender, create};
 pub use telemetry::{ScopeRing, Telemetry};
 pub mod midi;
 pub mod output;
