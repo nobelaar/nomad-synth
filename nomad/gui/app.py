@@ -86,10 +86,12 @@ class App:
     def _build(self):
         root = self.root
         self._build_header(tk.Frame(root, bg=BG)).grid(row=0, column=0, columnspan=2, sticky="ew", padx=6, pady=4)
+        self.bar_host = tk.Frame(root, bg=BG)  # the selected instrument's transport bar
+        self.bar_host.grid(row=1, column=0, columnspan=2, sticky="ew", padx=6, pady=2)
         left = tk.Frame(root, bg=BG)
-        left.grid(row=1, column=0, sticky="nw", padx=6)
+        left.grid(row=2, column=0, sticky="nw", padx=6)
         right = tk.Frame(root, bg=BG)
-        right.grid(row=1, column=1, sticky="nw", padx=6)
+        right.grid(row=2, column=1, sticky="nw", padx=6)
         self.left = left
         self.side = tk.Frame(right, bg=BG)  # per-instance VOICE sections live here (below scope + master)
         self.scope_frame = tk.Frame(right, bg=BG, width=250, height=150)
@@ -104,9 +106,9 @@ class App:
         self._global_widgets["master_volume"].pack(anchor="w", padx=2)
         master.pack(anchor="nw", pady=2)
         self.side.pack(anchor="nw", pady=2)
-        self.keyboard_frame = tk.Frame(root, bg=BG, width=1350, height=84)
+        self.keyboard_frame = tk.Frame(root, bg=BG, width=1350, height=70)
         self.keyboard_frame.pack_propagate(False)
-        self.keyboard_frame.grid(row=2, column=0, columnspan=2, padx=6, pady=4)
+        self.keyboard_frame.grid(row=3, column=0, columnspan=2, padx=6, pady=4)
         self.keyboard = Keyboard(self.keyboard_frame, self.engine.note_on, self.engine.note_off, octaves=6)
         self.keyboard.pack()
         self._help_register(self.keyboard, "keyboard")
@@ -132,13 +134,8 @@ class App:
             panel = DrumView(self.left, inst, register_help=self._help_register,
                              on_context=lambda n, e, i=inst: self._drum_context(i, n, e), eager=eager)
         panel.grid(row=0, column=0, sticky="nw", padx=2, pady=2)
-        if not hasattr(panel, "side_frame"):  # Machine Drum: its strip lives in the right column too
-            panel.side_frame = tk.Frame(self.side, bg=BG)
-            panel.side_frame.grid(row=0, column=0, sticky="nw")
-        strip = InstanceStrip(panel.side_frame, self, inst, panel, with_bpm=inst.kind == "synth",
-                              register_help=self._help_register)
-        strip.pack(anchor="nw", pady=2, before=next(iter(panel.side_frame.pack_slaves()), None))
-        self.strips[inst.id] = strip
+        strip = InstanceStrip(self.bar_host, self, inst, panel, register_help=self._help_register)
+        panel.strip = self.strips[inst.id] = strip
         self._set_visible(panel, False)
         return panel
 
@@ -147,8 +144,10 @@ class App:
         if hasattr(panel, "set_visible"):
             panel.set_visible(on)
         else:
-            for f in (panel, panel.side_frame):
-                f.grid() if on else f.grid_remove()
+            panel.grid() if on else panel.grid_remove()
+        strip = getattr(panel, "strip", None)
+        if strip is not None:
+            strip.pack(fill="x") if on else strip.pack_forget()
 
     def add_instrument(self, kind, defer=True):
         """Create an instance (audible at once) and its panel; the panel is assembled in small ``after`` steps
@@ -218,7 +217,9 @@ class App:
             self.on_target_change()
         self.manager.remove(inst)
         panel = self.panels.pop(inst.id, None)
-        self.strips.pop(inst.id, None)
+        strip = self.strips.pop(inst.id, None)
+        if strip is not None:
+            strip.destroy()
         if panel is not None:
             if hasattr(panel, "side_frame"):
                 panel.side_frame.destroy()

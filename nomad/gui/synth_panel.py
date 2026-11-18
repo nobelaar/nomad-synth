@@ -25,7 +25,7 @@ LAYOUT: dict[str, list[str]] = {
     "lfo1": ["lfo1_wave", "lfo1_rate", "lfo1_depth", "lfo1_phase"],
     "lfo2": ["lfo2_wave", "lfo2_rate", "lfo2_depth", "lfo2_phase"],
     "matrix": _P,
-    "global": ["master_volume", "polyphony", "bend_range"],
+    "global": ["master_volume", "polyphony", "bend_range", "glide"],
 }
 HIDDEN = {"osc1_sync"}  # osc1_sync: engine only reads osc2_sync (dead param)
 
@@ -54,6 +54,8 @@ def _labels(name: str) -> list[str]:
 def _short(name: str) -> str:
     if name == "master_volume":
         return "volume"
+    if name == "bend_range":
+        return "bend"
     if name.endswith("_level"):
         return name[:4]  # mixer: osc1 / osc2
     if name.startswith("mod"):
@@ -92,8 +94,8 @@ class SynthPanel(tk.Frame):
         # Built one step at a time: Tk widget construction can hold the GIL, so a panel created while the
         # audio runs is assembled over several ``after`` ticks instead of one long stall.
         self._steps = [lambda s=sec, r=r, c=c: self.section(s).grid(row=r, column=c, sticky="nw", padx=2, pady=2)
-                       for sec, r, c in (("osc1", 0, 0), ("osc2", 0, 1), ("filter", 0, 2), ("mixer", 0, 3),
-                                         ("amp_env", 1, 0), ("filt_env", 1, 1), ("lfo1", 1, 2), ("lfo2", 1, 3))]
+                       for sec, r, c in (("osc1", 1, 0), ("osc2", 1, 1), ("filter", 1, 2), ("mixer", 1, 3),
+                                         ("amp_env", 2, 0), ("filt_env", 2, 1), ("lfo1", 2, 2), ("lfo2", 2, 3))]
         self._steps += [self._build_matrix, self._build_seq, self._build_voice]
         if eager:
             self.build_all()
@@ -113,11 +115,33 @@ class SynthPanel(tk.Frame):
             pass
 
     def _build_matrix(self):
-        self.section("matrix").grid(row=2, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
+        """Collapsed by default: the 8 slots are most of the screen and rarely edited. The widgets always exist
+        (MIDI learn, snapshots and help use them); only the body is shown or hidden."""
+        wrap = tk.Frame(self, bg=BG)
+        wrap.grid(row=3, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
+        self.mod_btn = tk.Button(wrap, text="", command=self.toggle_matrix, bg=TROUGH, fg=GREEN, relief="flat", bd=0,
+                                 padx=8, pady=2, font=_FONT, takefocus=0, activebackground=GREEN, activeforeground=BG)
+        self.mod_btn.pack(anchor="w")
+        self._matrix_body = self.section("matrix", parent=wrap)
+        self._matrix_open = False
+        self._update_mod_label()
+
+    def toggle_matrix(self) -> None:
+        self._matrix_open = not self._matrix_open
+        if self._matrix_open:
+            self._matrix_body.pack(anchor="w", pady=2)
+        else:
+            self._matrix_body.pack_forget()
+        self._update_mod_label()
+
+    def _update_mod_label(self) -> None:
+        v = self.instrument._values
+        active = sum(1 for i in range(8) if v[f"mod{i}_src"] and v[f"mod{i}_dst"] and v[f"mod{i}_amt"])
+        self.mod_btn.configure(text=f"MODULACIÓN {'▾' if self._matrix_open else '▸'}  ({active} en uso)")
 
     def _build_seq(self):
         self.seq_view = SeqView(self, self.instrument, register_help=self.app._help_register)
-        self.seq_view.grid(row=3, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
+        self.seq_view.grid(row=0, column=0, columnspan=4, sticky="nw", padx=2, pady=2)
 
     def _build_voice(self):
         # polyphony / bend_range are per-instance; master_volume stays app-level (the mix volume)
@@ -177,7 +201,5 @@ class SynthPanel(tk.Frame):
     def refresh(self):
         if self.seq_view is not None:
             self.seq_view.refresh()
-
-    def set_transport_locked(self, locked: bool) -> None:
-        if self.seq_view is not None:
-            self.seq_view.set_transport_locked(locked)
+        if getattr(self, "mod_btn", None) is not None:
+            self._update_mod_label()

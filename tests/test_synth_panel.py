@@ -54,3 +54,18 @@ def test_panel_visibility_hides_side_section_too(app):
     app.synth_view.set_visible(True)
     app.root.update()
     assert app.synth_view.winfo_ismapped() and app.synth_view.side_frame.winfo_ismapped()
+
+
+def test_matrix_is_collapsed_by_default_and_counts_active_slots(app):
+    p = app.synth_view
+    app.root.update()
+    assert not p._matrix_body.winfo_ismapped() and "0 en uso" in p.mod_btn["text"]
+    app.engine.synth.set_param("mod0_src", 1)
+    app.engine.synth.set_param("mod0_dst", 5)
+    app.engine.synth.set_param("mod0_amt", 0.3)
+    p.refresh()
+    assert "1 en uso" in p.mod_btn["text"]
+    p.mod_btn.invoke()
+    app.root.update()
+    assert p._matrix_body.winfo_ismapped() and "▾" in p.mod_btn["text"]
+    assert "mod0_src" in p.widgets  # widgets exist even while collapsed

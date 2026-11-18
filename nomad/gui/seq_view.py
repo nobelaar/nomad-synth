@@ -29,15 +29,23 @@ class SeqView(tk.Frame):
         sequencer = self.seq
         self._rec = False
         top = tk.Frame(self, bg=BG)
-        top.pack(anchor="w", padx=2, pady=2)
+        top.pack(anchor="w", padx=2, pady=(2, 4))
+
+        def gap():
+            tk.Frame(top, bg=BG, width=18).pack(side="left")
+
         self.seq_btn = tk.Button(top, text="SEQ", command=self.toggle_enabled, **_BTN)
         self.seq_btn.pack(side="left", padx=(0, 4))
-        self.play_btn = tk.Button(top, text="PLAY", command=self.toggle_transport, **_BTN)
-        self.play_btn.pack(side="left", padx=(0, 8))
         self.rec_btn = tk.Button(top, text="REC", command=self.toggle_rec, **_BTN)
         self.rec_btn.pack(side="left", padx=(0, 4))
         self.rest_btn = tk.Button(top, text="REST", command=self.rest, state="disabled", **_BTN)
-        self.rest_btn.pack(side="left", padx=(0, 8))
+        self.rest_btn.pack(side="left")
+        gap()
+        self.div_btn = tk.Button(top, text="", command=self.cycle_div, **_BTN)
+        self.div_btn.pack(side="left", padx=(0, 4))
+        self.len_btn = tk.Button(top, text="", command=self.cycle_len, **_BTN)
+        self.len_btn.pack(side="left")
+        gap()
         tk.Label(top, text="GATE", bg=BG, fg=GREY, font=("TkDefaultFont", 8)).pack(side="left")
         self._gate_var = tk.DoubleVar(self, value=round(sequencer.gate * 100))
         self._gate_var.trace_add("write", lambda *_: self.set_gate(self._gate_var.get() / 100.0))
@@ -46,18 +54,15 @@ class SeqView(tk.Frame):
                              troughcolor=TROUGH, highlightthickness=0, bd=0, sliderlength=14,
                              activebackground=GREEN, takefocus=0)
         self.gate.pack(side="left", padx=2)
-        self.div_btn = tk.Button(top, text="", command=self.cycle_div, **_BTN)
-        self.div_btn.pack(side="left", padx=(8, 0))
-        self.len_btn = tk.Button(top, text="", command=self.cycle_len, **_BTN)
-        self.len_btn.pack(side="left", padx=(4, 0))
+        gap()
         self.clear_btn = tk.Button(top, text="CLEAR", command=self.clear, **_BTN)
-        self.clear_btn.pack(side="left", padx=8)
+        self.clear_btn.pack(side="left")
         grid = tk.Frame(self, bg=BG)
         grid.pack(anchor="w", padx=2)
         self.steps: list[tk.Button] = []
         for s in range(STEPS):
-            b = tk.Button(grid, text="", width=4, **_BTN)
-            b.pack(side="left", padx=1)
+            b = tk.Button(grid, text="", width=6, height=2, **{**_BTN, "font": ("TkDefaultFont", 9)})
+            b.pack(side="left", padx=(10 if s and s % 4 == 0 else 1, 1))  # one gap per beat group of four
             b.bind("<Button-1>", lambda e, s=s: self.toggle_step(s, bool(e.state & 1)))
             b.bind("<Button-4>", lambda e, s=s: self.set_note(s, 12 if e.state & 1 else 1))
             b.bind("<Button-5>", lambda e, s=s: self.set_note(s, -12 if e.state & 1 else -1))
@@ -65,7 +70,6 @@ class SeqView(tk.Frame):
             self.steps.append(b)
             self._reg(b, "seq_steps")
         self._reg(self.seq_btn, "seq_toggle")
-        self._reg(self.play_btn, "seq_transport")
         self._reg(self.gate, "seq_gate")
         self._reg(self.rec_btn, "seq_rec")
         self._reg(self.div_btn, "seq_div")
@@ -80,13 +84,6 @@ class SeqView(tk.Frame):
     # ---- user actions ------------------------------------------------------
     def toggle_enabled(self) -> None:
         self.seq.enabled = not self.seq.enabled
-        self.refresh()
-
-    def set_transport_locked(self, locked: bool) -> None:
-        self.play_btn.configure(state="disabled" if locked else "normal")
-
-    def toggle_transport(self) -> None:
-        self.synth.toggle()  # a command: the audio thread applies it at the next render
         self.refresh()
 
     def toggle_rec(self) -> None:
@@ -128,15 +125,16 @@ class SeqView(tk.Frame):
 
     # ---- drawing -----------------------------------------------------------
     def refresh(self) -> None:
-        seq, playing = self.seq, self.clock.running
+        seq, playing = self.seq, self.synth.eclock.running  # the effective clock: a follower shows its source
         pos = seq.position if playing else (seq.rec_step if self._rec else -1)
         for s, b in enumerate(self.steps):
             on, vel = seq.on[s], int(seq.vel[s])
             extra = int((seq.extra[s] != NONE).sum())
             live = s < seq.grid.length
-            b.configure(text=note_name(int(seq.note[s])) + (f"+{extra}" if extra else ""),
+            label = (note_name(int(seq.note[s])) if on else "·") + "\n" + (f"+{extra}" if on and extra else " ")
+            b.configure(text=label,
                         bg=(ACCENT if vel == ACCENT_VEL else GREEN) if on and live else TROUGH,
-                        fg=BG if on and live else GREY, highlightthickness=2,
+                        fg=BG if on and live else GREY, highlightthickness=3,
                         highlightbackground=PLAYHEAD if s == pos else BG)
         self.seq_btn.configure(bg=GREEN if seq.enabled else TROUGH, fg=BG if seq.enabled else GREY)
         self.div_btn.configure(text="DIV " + dict((d, n) for d, n in DIVS).get(seq.grid.division, "?"))
@@ -144,5 +142,3 @@ class SeqView(tk.Frame):
         self.rec_btn.configure(text=("REC·LIVE" if playing else "REC·STEP") if self._rec else "REC",
                                bg=ACCENT if self._rec else TROUGH, fg=BG if self._rec else GREY)
         self.rest_btn.configure(state="normal" if self._rec and not playing else "disabled")
-        self.play_btn.configure(text="STOP" if playing else "PLAY",
-                                bg=GREEN if playing else TROUGH, fg=BG if playing else GREY)

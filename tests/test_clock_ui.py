@@ -47,14 +47,14 @@ def test_following_locks_bpm_and_play(app):
     app.strips[d1.id].cycle_source()                    # Internal -> Synth 01
     tick(app)
     assert d1.source is s1
-    assert str(app.strips[d1.id].panel.play_btn["state"]) == "disabled"
-    assert app.strips[d1.id].panel.knobs["bpm"].locked
-    assert app.strips[d1.id].panel.knobs["bpm"].model.value == pytest.approx(128.0)
+    st = app.strips[d1.id]
+    assert str(st.play_btn["state"]) == "disabled" and str(st.bpm["state"]) == "disabled"
+    assert st._bpm_var.get() == pytest.approx(128.0) and d1.values["bpm"] == pytest.approx(128.0)
     s2 = app.add_instrument("synth", defer=False)
     app.strips[s2.id].cycle_source()
     tick(app)
     st = app.strips[s2.id]
-    assert str(st.bpm["state"]) == "disabled" and str(app.panels[s2.id].seq_view.play_btn["state"]) == "disabled"
+    assert str(st.bpm["state"]) == "disabled" and str(st.play_btn["state"]) == "disabled"
     assert st.clock_btn["text"] == "CLOCK: Synth 01"
 
 
@@ -95,7 +95,7 @@ def test_closing_master_updates_follower_ui_to_internal(app):
     tick(app)
     assert d1.source is None and d1.clock.running and d1.clock.bpm == pytest.approx(125.0)
     assert app.strips[d1.id].clock_btn["text"] == "CLOCK: Internal"
-    assert not app.panels[d1.id].knobs["bpm"].locked
+    assert str(app.strips[d1.id].bpm["state"]) == "normal"
     assert d1.values["bpm"] == pytest.approx(125.0)     # the drum knob keeps the inherited tempo
 
 
@@ -120,3 +120,26 @@ def test_help_for_new_controls():
 def test_window_still_fits_with_strip(app):
     app.root.update_idletasks()
     assert app.root.winfo_reqwidth() <= 1366 and app.root.winfo_reqheight() <= 768
+
+
+def test_bar_play_bpm_and_visibility_for_both_kinds(app):
+    s1, d1 = app.engine.synth, app.engine.drums
+    st_s, st_d = app.strips[s1.id], app.strips[d1.id]
+    app.select(s1)
+    app.root.update()
+    assert st_s.winfo_ismapped() and not st_d.winfo_ismapped()
+    app.select(d1)
+    app.root.update()
+    assert st_d.winfo_ismapped() and not st_s.winfo_ismapped()
+    for inst, st in ((s1, st_s), (d1, st_d)):
+        st.play_btn.invoke()
+        tick(app)
+        assert inst.eclock.running and st.play_btn["text"] == "STOP"
+        st._bpm_var.set(133)
+        st._on_bpm()
+        tick(app)
+        assert inst.eclock.bpm == pytest.approx(133.0)
+        st.play_btn.invoke()
+        tick(app)
+        assert not inst.eclock.running
+    assert d1.values["bpm"] == pytest.approx(133.0)

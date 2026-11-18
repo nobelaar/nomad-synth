@@ -66,11 +66,12 @@ EXPECTED_NAMES = {
     "mod7_dst",
     "mod7_amt",
     "bend_range",
+    "glide",
 }
 
 
 def test_registry_has_exactly_the_expected_names():
-    assert len(REGISTRY) == 62
+    assert len(REGISTRY) == 63
     assert set(REGISTRY) == EXPECTED_NAMES
     for name, spec in REGISTRY.items():
         assert spec.name == name

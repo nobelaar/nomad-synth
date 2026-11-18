@@ -148,7 +148,7 @@ FACTORY: dict[str, list[dict]] = {
             "osc1_wave": 2, "osc2_wave": 3, "osc2_coarse": -12, "osc1_level": 0.6, "osc2_level": 0.4,
             "filt_cutoff": 400, "filt_reso": 0.45, "filt_env_amt": 0.6,
             "amp_attack": 2, "amp_decay": 220, "amp_sustain": 0.5, "amp_release": 120,
-            "filt_attack": 1, "filt_decay": 200, "filt_sustain": 0.1, "filt_release": 100, "polyphony": 1},
+            "filt_attack": 1, "filt_decay": 200, "filt_sustain": 0.1, "filt_release": 100, "polyphony": 1, "glide": 60},
             [36, 36, 39, 36, 34, 41], gate=0.45,
             on=[1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0]),
         _synth("Lead", {
@@ -156,7 +156,7 @@ FACTORY: dict[str, list[dict]] = {
             "filt_cutoff": 3500, "filt_reso": 0.25, "filt_env_amt": 0.3,
             "amp_attack": 8, "amp_decay": 250, "amp_sustain": 0.7, "amp_release": 300,
             "lfo1_wave": 1, "lfo1_rate": 5.5, "lfo1_depth": 1.0, "mod0_src": 1, "mod0_dst": 1, "mod0_amt": 0.04,
-            "mod1_src": 3, "mod1_dst": 5, "mod1_amt": 0.3, "polyphony": 1},
+            "mod1_src": 3, "mod1_dst": 5, "mod1_amt": 0.3, "polyphony": 1, "glide": 90},
             [69, 72, 76, 72, 69, 67, 64, 67], length=8, gate=0.8),
         _synth("Pluck", {
             "osc1_wave": 2, "osc2_wave": 1, "osc2_coarse": 12, "osc1_level": 0.5, "osc2_level": 0.3,

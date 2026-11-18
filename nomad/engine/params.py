@@ -59,6 +59,7 @@ def _build_registry() -> dict[str, ParamSpec]:
     """Build the parameter registry in the canonical UI order."""
     specs: list[ParamSpec] = [
         ParamSpec("polyphony", 8.0, 1.0, 8.0, "lin", "voices"),
+        ParamSpec("glide", 0.0, 0.0, 1000.0, "lin", "ms"),
         ParamSpec("master_volume", 0.7, 0.0, 1.0, "lin"),
     ]
     for n in (1, 2):

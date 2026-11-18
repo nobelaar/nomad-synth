@@ -122,6 +122,8 @@ class SynthInstrument(InstrumentBase):
                 self._p[a] = b
             if a == "polyphony":
                 self.vm.set_polyphony(int(b))
+            elif a == "glide":
+                self.vm.set_glide(b)
             elif a.startswith("mod"):
                 i, field = int(a[3 : a.index("_")]), a[a.index("_") + 1 :]
                 slot = self._slots[i]

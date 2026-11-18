@@ -47,6 +47,8 @@ class VoiceManager:
         self._stamp = [0] * self.max_voices
         self._clock = 0
         self.polyphony = self.max_voices
+        self.glide = 0.0  # ms; > 0 makes new voices slide in from ``_last`` (and mono legato)
+        self._last = None  # last note played: where a fresh voice starts its glide
 
     def set_polyphony(self, n) -> None:
         try:
@@ -57,6 +59,13 @@ class VoiceManager:
         held = sorted(self._held_slots(), key=self._stamp.__getitem__)
         for i in held[: max(0, len(held) - self.polyphony)]:
             self._release(i)
+
+    def set_glide(self, ms) -> None:
+        try:
+            ms = float(ms)
+        except (TypeError, ValueError):
+            return
+        self.glide = ms if math.isfinite(ms) and ms > 0.0 else 0.0
 
     def _held_slots(self) -> list[int]:
         return [i for i, v in enumerate(self.voices) if self._held[i] and v.is_active()]
@@ -71,6 +80,14 @@ class VoiceManager:
             return
         self._clock += 1
         active = [i for i, v in enumerate(self.voices) if v.is_active()]
+        if self.glide > 0.0 and self.polyphony == 1:
+            held = self._held_slots()
+            if held:  # mono legato: the held voice just glides to the new key, envelopes keep running
+                i = held[0]
+                if self.voices[i].note != note:
+                    self.voices[i].set_target(note)
+                self._stamp[i], self.voices[i].age, self._last = self._clock, self._clock, note
+                return
         same = [i for i in active if self.voices[i].note == note]
         if same:
             i = min(same, key=self._stamp.__getitem__)
@@ -83,7 +100,11 @@ class VoiceManager:
             i = min(releasing or active, key=self._stamp.__getitem__)
             steal = True
         v = self.voices[i]
-        (v.begin_steal if steal else v.note_on)(note, velocity)
+        if steal:
+            v.begin_steal(note, velocity)
+        else:
+            v.note_on(note, velocity, self._last)
+        self._last = note
         self._held[i], self._stamp[i] = True, self._clock
         v.age = self._clock
         # a steal can leave more held voices than polyphony only via set_polyphony; handled there
