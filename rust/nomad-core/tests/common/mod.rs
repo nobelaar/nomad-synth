@@ -223,18 +223,22 @@ pub struct EngineRun {
     pub sums: Vec<[f64; 2]>,
     pub clocks: Vec<Vec<[f64; 3]>>,
     pub returns: Vec<bool>,
+    /// `(id, name)` of the live instances after every operation.
+    pub names: Vec<Vec<(u32, String)>>,
 }
 
 pub fn run_engine_ops(
     e: &mut nomad_core::engine::Engine,
     commands: &serde_json::Value,
 ) -> EngineRun {
+    use nomad_core::engine::Kind;
     use nomad_core::params::SYNTH_PARAMS;
     let mut r = EngineRun {
         audio: Vec::new(),
         sums: Vec::new(),
         clocks: Vec::new(),
         returns: Vec::new(),
+        names: Vec::new(),
     };
     for c in commands.as_array().unwrap() {
         let c = c.as_array().unwrap();
@@ -253,15 +257,56 @@ pub fn run_engine_ops(
                 let p = SYNTH_PARAMS.iter().position(|s| s.name == name).unwrap();
                 e.set_param(p, num(&c[2]));
             }
+            "add" => {
+                e.add_instrument(if c[1] == "synth" {
+                    Kind::Synth
+                } else {
+                    Kind::Drums
+                });
+            }
+            "source" => r
+                .returns
+                .push(e.set_source(id(1), c[2].as_u64().map(|x| x as u32))),
+            "remove" => {
+                e.remove_instrument(id(1));
+            }
+            "drop_closed" => e.drop_closed(),
+            "seq_on" => {
+                let sq = &mut e.synth_mut(id(1)).unwrap().sequencer;
+                sq.enabled = true;
+                for s in 0..16 {
+                    sq.set_step(s, true, Some(48 + s as i64), None);
+                }
+            }
+            "hats" => {
+                let d = e.drums_mut(id(1)).unwrap();
+                d.clear_pattern();
+                for s in 0..16 {
+                    d.set_step(4, s, 1);
+                }
+            }
+            "length" => {
+                e.synth_mut(id(1)).unwrap().sequencer.grid.length = c[2].as_u64().unwrap() as usize
+            }
             "render" => {
-                let mut o = vec![0.0; c[1].as_u64().unwrap() as usize];
-                e.render(&mut o);
+                let n = c[1].as_u64().unwrap() as usize;
+                let call = 4096; // like tests/test_follow.py::run (renders of <= 4096 frames)
+                let mut o = vec![0.0; n];
+                for part in o.chunks_mut(call) {
+                    e.render(part);
+                }
                 r.sums.push([o.iter().sum(), o.iter().map(|x| x * x).sum()]);
                 r.clocks.push(e.own_clock_states());
                 r.audio.extend(o);
             }
             other => panic!("unknown op {other}"),
         }
+        r.names.push(
+            e.instruments()
+                .into_iter()
+                .map(|(i, _, n)| (i, n))
+                .collect(),
+        );
     }
     r
 }
@@ -292,4 +337,8 @@ pub fn assert_engine_run(r: &EngineRun, blob: &Blob, label: &str) {
     }
     let rets: Vec<bool> = serde_json::from_value(m["returns"].clone()).unwrap();
     assert_eq!(r.returns, rets, "{label} returns");
+    if let Some(names) = m.get("names") {
+        let names: Vec<Vec<(u32, String)>> = serde_json::from_value(names.clone()).unwrap();
+        assert_eq!(r.names, names, "{label} names");
+    }
 }

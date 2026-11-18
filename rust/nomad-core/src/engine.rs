@@ -92,10 +92,32 @@ impl Inst {
             s.advance_sequencer(n);
         }
     }
+
+    /// Silence on close: Synth = stop its clock + panic; Drums = `stop_all`.
+    fn close_now(&mut self) {
+        match &mut self.body {
+            Body::Synth(s) => {
+                self.clock.stop();
+                s.panic();
+            }
+            Body::Drums(d) => d.stop_all(&mut self.clock),
+        }
+    }
+
+    /// Handover: copy tempo, position and transport from `src`.
+    fn take_clock(&mut self, src: &Clock) {
+        self.clock.bpm = src.bpm;
+        self.clock.pos = src.pos;
+        self.clock.running = src.running;
+    }
 }
 
 pub struct Engine {
     sr: f64,
+    max_voices: usize,
+    next_id: InstrumentId,
+    /// Instances created per kind (Synth, Drums), for the `NN` in the names.
+    counters: [usize; 2],
     /// Mix order: live instances, then the closing ones.
     insts: Vec<Inst>,
     target_synth: InstrumentId,
@@ -126,6 +148,9 @@ impl Engine {
         ];
         Engine {
             sr,
+            max_voices,
+            next_id: 3,
+            counters: [1, 1],
             insts,
             target_synth: 1,
             master_sm: Smoother::new(spec.to_norm(spec.default), sr, spec.smooth_ms),
@@ -196,6 +221,120 @@ impl Engine {
                 1.0
             };
         }
+    }
+
+    /// New instance with the next id, named `"<Label> NN"`; it joins the mix before
+    /// the closing ones. Allocates (caller thread only).
+    pub fn add_instrument(&mut self, kind: Kind) -> InstrumentId {
+        let (k, label) = match kind {
+            Kind::Synth => (0, "Synth"),
+            Kind::Drums => (1, "Machine Drum"),
+        };
+        self.counters[k] += 1;
+        let id = self.next_id;
+        self.next_id += 1;
+        let name = format!("{label} {:02}", self.counters[k]);
+        let body = match kind {
+            Kind::Synth => Body::Synth(Box::new(Synth::new(self.sr, self.max_voices))),
+            Kind::Drums => Body::Drums(Box::new(DrumMachine::new(self.sr))),
+        };
+        let at = self
+            .insts
+            .iter()
+            .position(|i| i.closing)
+            .unwrap_or(self.insts.len());
+        self.insts.insert(at, Inst::new(id, name, body, self.sr));
+        id
+    }
+
+    /// Live instances `(id, kind, name)` in mix order (allocates: tests and GUI).
+    pub fn instruments(&self) -> Vec<(InstrumentId, Kind, String)> {
+        self.insts
+            .iter()
+            .filter(|i| !i.closing)
+            .map(|i| (i.id, i.kind(), i.name.clone()))
+            .collect()
+    }
+
+    fn live_index(&self, id: InstrumentId) -> Option<usize> {
+        self.index(id).filter(|&i| !self.insts[i].closing)
+    }
+
+    pub fn source_of(&self, id: InstrumentId) -> Option<InstrumentId> {
+        self.index(id).and_then(|i| self.insts[i].source)
+    }
+
+    /// Live instances that follow `id`, in mix order (allocates: tests and GUI).
+    pub fn followers_of(&self, id: InstrumentId) -> Vec<InstrumentId> {
+        self.insts
+            .iter()
+            .filter(|i| !i.closing && i.source == Some(id))
+            .map(|i| i.id)
+            .collect()
+    }
+
+    /// `src = None` is Internal. False (and no change) if the graph rules reject it:
+    /// unknown or self source, a source that is itself a follower (chain), or an
+    /// instance that others follow. Going back to Internal hands the old source's
+    /// tempo, position and transport over to the own clock.
+    pub fn set_source(&mut self, id: InstrumentId, src: Option<InstrumentId>) -> bool {
+        let Some(i) = self.live_index(id) else {
+            return false;
+        };
+        if src == Some(id) {
+            return false;
+        }
+        if let Some(s) = src {
+            match self.live_index(s) {
+                Some(j) if self.insts[j].source.is_none() => {}
+                _ => return false, // dead, or itself a follower: would be a chain
+            }
+            if self
+                .insts
+                .iter()
+                .any(|x| !x.closing && x.source == Some(id))
+            {
+                return false; // others follow id: it cannot become a follower
+            }
+        }
+        if src == self.insts[i].source {
+            return true;
+        }
+        let old = self.insts[i].source;
+        self.insts[i].source = src;
+        if let (None, Some(o)) = (src, old) {
+            let from = self.insts[self.index(o).unwrap()].clock.clone();
+            self.insts[i].take_clock(&from);
+        }
+        true
+    }
+
+    /// Close `id`: its followers go Internal with a handover, THEN it is silenced
+    /// (`close_now`) and keeps rendering its fade until `drop_closed`.
+    pub fn remove_instrument(&mut self, id: InstrumentId) -> bool {
+        let Some(i) = self.live_index(id) else {
+            return false;
+        };
+        let from = self.insts[i].clock.clone();
+        for f in self
+            .insts
+            .iter_mut()
+            .filter(|x| !x.closing && x.source == Some(id))
+        {
+            f.source = None;
+            f.take_clock(&from);
+        }
+        let mut inst = self.insts.remove(i);
+        inst.source = None;
+        inst.closing = true;
+        inst.close_now();
+        self.insts.push(inst);
+        true
+    }
+
+    /// Release the closed instances (the GUI's 100 ms timer in Python).
+    pub fn drop_closed(&mut self) {
+        self.insts.retain(|i| !i.closing);
     }
 
     pub fn name(&self, id: InstrumentId) -> Option<&str> {
