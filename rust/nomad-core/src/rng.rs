@@ -1,6 +1,12 @@
 //! Bit-exact port of `numpy.random.default_rng(seed)` for non-negative integer
 //! seeds: `SeedSequence(seed)` -> `generate_state(4, uint64)` -> PCG64 (XSL-RR
-//! 128/64) -> `Generator.random()`.
+//! 128/64) -> `Generator.random()` and `Generator.standard_normal()` (256-layer
+//! ziggurat with numpy's own tables, see `ziggurat.rs`).
+
+use crate::ziggurat::{FI_BITS, KI, WI_BITS};
+
+const ZIGGURAT_NOR_R: f64 = 3.654_152_885_361_009;
+const ZIGGURAT_NOR_INV_R: f64 = 0.273_661_237_329_758_3;
 
 const INIT_A: u32 = 0x43b0_d7e5;
 const MULT_A: u32 = 0x931e_8875;
@@ -106,5 +112,44 @@ impl NumpyRng {
     /// `Generator.random()`: a double in [0, 1) from the top 53 bits.
     pub fn random(&mut self) -> f64 {
         (self.next_u64() >> 11) as f64 * (1.0 / 9_007_199_254_740_992.0)
+    }
+
+    /// `Generator.standard_normal()`: numpy's `random_standard_normal` (distributions.c).
+    pub fn standard_normal(&mut self) -> f64 {
+        loop {
+            let mut r = self.next_u64();
+            let idx = (r & 0xff) as usize;
+            r >>= 8;
+            let sign = r & 0x1;
+            let rabs = (r >> 1) & 0x000f_ffff_ffff_ffff;
+            let mut x = rabs as f64 * f64::from_bits(WI_BITS[idx]);
+            if sign & 0x1 != 0 {
+                x = -x;
+            }
+            if rabs < KI[idx] {
+                return x; // 99.3% of the time
+            }
+            if idx == 0 {
+                // Tail: 1 - U avoids log(0) (numpy GH 13361).
+                loop {
+                    let xx = -ZIGGURAT_NOR_INV_R * (-self.random()).ln_1p();
+                    let yy = -(-self.random()).ln_1p();
+                    if yy + yy > xx * xx {
+                        return if (rabs >> 8) & 0x1 != 0 {
+                            -(ZIGGURAT_NOR_R + xx)
+                        } else {
+                            ZIGGURAT_NOR_R + xx
+                        };
+                    }
+                }
+            }
+            let (f0, f1) = (
+                f64::from_bits(FI_BITS[idx - 1]),
+                f64::from_bits(FI_BITS[idx]),
+            );
+            if (f0 - f1) * self.random() + f1 < (-0.5 * x * x).exp() {
+                return x;
+            }
+        }
     }
 }

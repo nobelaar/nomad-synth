@@ -12,3 +12,4 @@ pub mod smoother;
 pub mod synth;
 pub mod voice;
 pub mod voice_manager;
+mod ziggurat;
