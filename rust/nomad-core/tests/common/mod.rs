@@ -214,3 +214,82 @@ pub fn assert_checksums(full: &[f64], meta: &serde_json::Value, what: &str) {
         );
     }
 }
+
+/// Interpreter for mixer/topology operation lists shared by engine.rs and
+/// topology.rs. Returns the full audio, per-render checksums, own-clock states
+/// after each render and the boolean returns of commands that report one.
+pub struct EngineRun {
+    pub audio: Vec<f64>,
+    pub sums: Vec<[f64; 2]>,
+    pub clocks: Vec<Vec<[f64; 3]>>,
+    pub returns: Vec<bool>,
+}
+
+pub fn run_engine_ops(
+    e: &mut nomad_core::engine::Engine,
+    commands: &serde_json::Value,
+) -> EngineRun {
+    use nomad_core::params::SYNTH_PARAMS;
+    let mut r = EngineRun {
+        audio: Vec::new(),
+        sums: Vec::new(),
+        clocks: Vec::new(),
+        returns: Vec::new(),
+    };
+    for c in commands.as_array().unwrap() {
+        let c = c.as_array().unwrap();
+        let id = |k: usize| c[k].as_u64().unwrap() as u32;
+        match c[0].as_str().unwrap() {
+            "note_on" => e.note_on(c[1].as_i64().unwrap(), num(&c[2])),
+            "note_off" => e.note_off(c[1].as_i64().unwrap()),
+            "start" => r.returns.push(e.start(id(1))),
+            "stop" => r.returns.push(e.stop(id(1))),
+            "bpm" => r.returns.push(e.set_bpm(id(1), num(&c[2]))),
+            "mute" => e.set_mute(id(1), c[2].as_bool().unwrap()),
+            "level" => e.set_level(id(1), num(&c[2])),
+            "master" => e.set_master_volume(num(&c[1])),
+            "param" => {
+                let name = c[1].as_str().unwrap();
+                let p = SYNTH_PARAMS.iter().position(|s| s.name == name).unwrap();
+                e.set_param(p, num(&c[2]));
+            }
+            "render" => {
+                let mut o = vec![0.0; c[1].as_u64().unwrap() as usize];
+                e.render(&mut o);
+                r.sums.push([o.iter().sum(), o.iter().map(|x| x * x).sum()]);
+                r.clocks.push(e.own_clock_states());
+                r.audio.extend(o);
+            }
+            other => panic!("unknown op {other}"),
+        }
+    }
+    r
+}
+
+/// Compare an `EngineRun` against a reference entry (decimated audio, checksums, clocks).
+pub fn assert_engine_run(r: &EngineRun, blob: &Blob, label: &str) {
+    let m = blob.meta(label);
+    let decim = m["decim"].as_u64().unwrap() as usize;
+    let got: Vec<f64> = r.audio.iter().copied().step_by(decim).collect();
+    assert_close(&got, blob.get(label), label);
+    let sums: Vec<Vec<f64>> = serde_json::from_value(m["sums"].clone()).unwrap();
+    assert_eq!(sums.len(), r.sums.len(), "{label}");
+    for (g, w) in r.sums.iter().zip(&sums) {
+        for k in 0..2 {
+            assert!(
+                (g[k] - w[k]).abs() <= 1e-6 + 1e-9 * w[k].abs(),
+                "{label} checksum {g:?} vs {w:?}"
+            );
+        }
+    }
+    let clocks: Vec<Vec<Vec<f64>>> = serde_json::from_value(m["clocks"].clone()).unwrap();
+    assert_eq!(clocks.len(), r.clocks.len(), "{label}");
+    for (g, w) in r.clocks.iter().zip(&clocks) {
+        assert_eq!(g.len(), w.len(), "{label} instances");
+        for (gc, wc) in g.iter().zip(w) {
+            assert_close(gc, wc, &format!("{label} clock"));
+        }
+    }
+    let rets: Vec<bool> = serde_json::from_value(m["returns"].clone()).unwrap();
+    assert_eq!(r.returns, rets, "{label} returns");
+}

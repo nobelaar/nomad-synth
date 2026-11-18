@@ -1,6 +1,7 @@
 pub mod clock;
 pub mod drum_synth;
 pub mod drums;
+pub mod engine;
 pub mod envelope;
 pub mod filter;
 pub mod lfo;
