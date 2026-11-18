@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from nomad.engine import drums  # noqa: E402
 from nomad.engine.params import REGISTRY, Smoother, clamp, from_norm, to_norm  # noqa: E402
-from tools import ref_envelope, ref_filter, ref_lfo, ref_modmatrix, ref_oscillator, ref_voice  # noqa: E402
+from tools import ref_envelope, ref_filter, ref_lfo, ref_modmatrix, ref_oscillator, ref_voice, ref_voice_manager  # noqa: E402
 
 FROM_NORM_IN = [-0.5, 0.0, 0.25, 0.5, 1.0, 1.5]
 SMOOTHER_CASES = [
@@ -79,6 +79,7 @@ def write(out_dir: Path) -> None:
     ref_lfo.write(out_dir)
     ref_modmatrix.write(out_dir)
     ref_voice.write(out_dir)
+    ref_voice_manager.write(out_dir)
 
 
 def main() -> None:

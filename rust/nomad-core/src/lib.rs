@@ -8,3 +8,4 @@ pub mod params;
 pub mod rng;
 pub mod smoother;
 pub mod voice;
+pub mod voice_manager;
