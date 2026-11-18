@@ -1,0 +1,1361 @@
+{
+ "scenarios": {
+  "learn_binds_next_cc": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     64,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     127,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      616.2857506883131
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      18000.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "learn_disarms": {
+   "ops": [
+    [
+     "arm",
+     "filt_reso"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     22,
+     10,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     23,
+     10,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_reso"
+    },
+    {
+     "result": [
+      "filt_reso",
+      0.07874015748031496
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       22,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       22,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "fallback_other_port": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     64,
+     "cc"
+    ],
+    [
+     "event",
+     "OTHER:OTHER MIDI 2 28:0",
+     0,
+     21,
+     100,
+     "cc"
+    ],
+    [
+     "event",
+     "OTHER:OTHER MIDI 2 28:0",
+     1,
+     21,
+     100,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      616.2857506883131
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      4238.431805541052
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "exact_beats_fallback": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     0,
+     "cc"
+    ],
+    [
+     "arm",
+     "filt_reso"
+    ],
+    [
+     "event",
+     "OTHER:OTHER MIDI 2 28:0",
+     0,
+     21,
+     0,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     127,
+     "cc"
+    ],
+    [
+     "event",
+     "OTHER:OTHER MIDI 2 28:0",
+     0,
+     21,
+     127,
+     "cc"
+    ],
+    [
+     "event",
+     "X",
+     0,
+     21,
+     127,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      20.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": "filt_reso"
+    },
+    {
+     "result": [
+      "filt_reso",
+      0.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       0,
+       21,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      18000.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       0,
+       21,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_reso",
+      1.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       0,
+       21,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      18000.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       0,
+       21,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "relearn_drops_old": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     5,
+     "cc"
+    ],
+    [
+     "arm",
+     "filt_reso"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     23,
+     5,
+     "cc"
+    ],
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     22,
+     5,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     5,
+     "cc"
+    ],
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     23,
+     99,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     23,
+     99,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      26.141996722952644
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": "filt_reso"
+    },
+    {
+     "result": [
+      "filt_reso",
+      0.03937007874015748
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_reso"
+      ]
+     ],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      26.141996722952644
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_reso"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       22,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_reso"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       22,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_reso"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       22,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      4017.38494657755
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      4017.38494657755
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       23,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "discrete_rounded": {
+   "ops": [
+    [
+     "arm",
+     "osc1_wave"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     30,
+     80,
+     "cc"
+    ],
+    [
+     "arm",
+     "polyphony"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     31,
+     127,
+     "cc"
+    ],
+    [
+     "arm",
+     "lfo1_wave"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     32,
+     64,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     32,
+     95,
+     "cc"
+    ],
+    [
+     "arm",
+     "mod0_dst"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     33,
+     64,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "osc1_wave"
+    },
+    {
+     "result": [
+      "osc1_wave",
+      2.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ]
+     ],
+     "learning": "polyphony"
+    },
+    {
+     "result": [
+      "polyphony",
+      8.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       31,
+       "polyphony"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       31,
+       "polyphony"
+      ]
+     ],
+     "learning": "lfo1_wave"
+    },
+    {
+     "result": [
+      "lfo1_wave",
+      2.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       31,
+       "polyphony"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       32,
+       "lfo1_wave"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "lfo1_wave",
+      3.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       31,
+       "polyphony"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       32,
+       "lfo1_wave"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       31,
+       "polyphony"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       32,
+       "lfo1_wave"
+      ]
+     ],
+     "learning": "mod0_dst"
+    },
+    {
+     "result": [
+      "mod0_dst",
+      4.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       30,
+       "osc1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       31,
+       "polyphony"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       32,
+       "lfo1_wave"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       33,
+       "mod0_dst"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "unknown_cc_none": {
+   "ops": [
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     50,
+     64,
+     "cc"
+    ],
+    [
+     "arm",
+     null
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     50,
+     64,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [],
+     "learning": null
+    }
+   ]
+  },
+  "non_cc_keeps_armed": {
+   "ops": [
+    [
+     "arm",
+     "filt_reso"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     60,
+     100,
+     "note_on"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     40,
+     64,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_reso"
+    },
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_reso"
+    },
+    {
+     "result": [
+      "filt_reso",
+      0.5039370078740157
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       40,
+       "filt_reso"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "unbind": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     64,
+     "cc"
+    ],
+    [
+     "unbind",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     64,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      616.2857506883131
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [],
+     "learning": null
+    }
+   ]
+  },
+  "continuous_exp": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     0,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     64,
+     "cc"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     127,
+     "cc"
+    ],
+    [
+     "arm",
+     "amp_attack"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     22,
+     32,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      20.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      616.2857506883131
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      18000.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": "amp_attack"
+    },
+    {
+     "result": [
+      "amp_attack",
+      8.55113845044563
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       22,
+       "amp_attack"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  },
+  "save_load_roundtrip": {
+   "ops": [
+    [
+     "arm",
+     "filt_cutoff"
+    ],
+    [
+     "event",
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     1,
+     "cc"
+    ],
+    [
+     "arm",
+     "glide"
+    ],
+    [
+     "event",
+     "OTHER:OTHER MIDI 2 28:0",
+     3,
+     7,
+     1,
+     "cc"
+    ],
+    [
+     "save"
+    ],
+    [
+     "load"
+    ],
+    [
+     "event",
+     "OTHER:OTHER MIDI 2 28:0",
+     3,
+     7,
+     127,
+     "cc"
+    ]
+   ],
+   "steps": [
+    {
+     "result": null,
+     "bindings": [],
+     "learning": "filt_cutoff"
+    },
+    {
+     "result": [
+      "filt_cutoff",
+      21.1004514723032
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ]
+     ],
+     "learning": "glide"
+    },
+    {
+     "result": [
+      "glide",
+      7.874015748031496
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       3,
+       7,
+       "glide"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       3,
+       7,
+       "glide"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": null,
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       3,
+       7,
+       "glide"
+      ]
+     ],
+     "learning": null
+    },
+    {
+     "result": [
+      "glide",
+      1000.0
+     ],
+     "bindings": [
+      [
+       "TEST:TEST MIDI 1 24:0",
+       0,
+       21,
+       "filt_cutoff"
+      ],
+      [
+       "OTHER:OTHER MIDI 2 28:0",
+       3,
+       7,
+       "glide"
+      ]
+     ],
+     "learning": null
+    }
+   ]
+  }
+ },
+ "files": {
+  "bad_entries.json": {
+   "bindings": [
+    [
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     "filt_reso"
+    ],
+    [
+     "OTHER:OTHER MIDI 2 28:0",
+     2,
+     24,
+     "glide"
+    ]
+   ],
+   "error": false
+  },
+  "bindings_not_list.json": {
+   "bindings": [],
+   "error": true
+  },
+  "corrupt.json": {
+   "bindings": [],
+   "error": true
+  },
+  "no_version.json": {
+   "bindings": [],
+   "error": true
+  },
+  "real_shape.json": {
+   "bindings": [
+    [
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     "filt_cutoff"
+    ],
+    [
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     22,
+     "filt_reso"
+    ]
+   ],
+   "error": false
+  },
+  "saved_after_learn.json": {
+   "bindings": [
+    [
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     "filt_cutoff"
+    ],
+    [
+     "OTHER:OTHER MIDI 2 28:0",
+     3,
+     7,
+     "glide"
+    ]
+   ],
+   "error": false
+  },
+  "unknown_param.json": {
+   "bindings": [
+    [
+     "TEST:TEST MIDI 1 24:0",
+     0,
+     21,
+     "master_volume"
+    ]
+   ],
+   "error": false
+  },
+  "wrong_version.json": {
+   "bindings": [],
+   "error": true
+  }
+ }
+}
