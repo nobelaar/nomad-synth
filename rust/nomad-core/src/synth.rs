@@ -185,6 +185,16 @@ impl Synth {
         self.sequencer.advance(n, &mut self.vm, &self.live);
     }
 
+    /// Held keys (voice manager), as a 128-bit mask.
+    pub fn held_mask(&self) -> u128 {
+        self.vm.held_mask()
+    }
+
+    /// Voices currently sounding.
+    pub fn active_voices(&self) -> usize {
+        self.vm.active_voices()
+    }
+
     /// Parameter targets as last set (not the smoothed values).
     pub fn values(&self) -> &ParamValues {
         &self.values

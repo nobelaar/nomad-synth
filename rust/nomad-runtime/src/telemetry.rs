@@ -18,6 +18,10 @@ pub struct Telemetry {
     pub midi_events: AtomicU64,
     pub midi_errors: AtomicU64,
     pub midi_dropped: AtomicU64,
+    /// Peak of the last callback's output (f32 bits).
+    pub peak: AtomicU32,
+    /// Voices sounding over all synths.
+    pub voices_total: AtomicU32,
     pub scope: ScopeRing,
 }
 
@@ -39,6 +43,8 @@ impl Telemetry {
             midi_events: AtomicU64::new(0),
             midi_errors: AtomicU64::new(0),
             midi_dropped: AtomicU64::new(0),
+            peak: AtomicU32::new(0),
+            voices_total: AtomicU32::new(0),
             scope: ScopeRing::new((2.0 * sample_rate) as usize),
         }
     }

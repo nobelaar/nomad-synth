@@ -8,9 +8,13 @@
 //! topology before each instance's own commands at the next render; callers that
 //! mix both in one gap get call order here.
 
+use std::sync::Arc;
+use std::sync::atomic::Ordering::Relaxed;
+
 use crate::clock::Clock;
 use crate::drum_synth::render_one_shot;
 use crate::drums::{DrumMachine, ValueEffect};
+use crate::mirror::InstrumentShared;
 use crate::params::{SYNTH_PARAMS, pid};
 use crate::smoother::Smoother;
 use crate::synth::{CONTROL_BLOCK, Synth};
@@ -34,6 +38,8 @@ enum Body {
 /// One instrument instance with its own clock and mix state. Built off the audio
 /// thread with [`build_instance`] and moved into the engine with `insert_instance`.
 pub struct Instance {
+    /// What the UI reads about this instance (published by `Engine::publish_mirrors`).
+    pub shared: Arc<InstrumentShared>,
     id: InstrumentId,
     name: String,
     body: Body,
@@ -53,7 +59,12 @@ impl Instance {
         if let Body::Drums(d) = &body {
             clock.bpm = d.values[18];
         }
+        let kind = match body {
+            Body::Synth(_) => Kind::Synth,
+            Body::Drums(_) => Kind::Drums,
+        };
         Instance {
+            shared: Arc::new(InstrumentShared::new(id, kind)),
             id,
             name,
             body,
@@ -499,6 +510,92 @@ impl Engine {
             .and_then(|s| self.index(s))
             .unwrap_or(i);
         Some(&self.insts[owner].clock)
+    }
+
+    /// The mirror of instance `id` (an `Arc` clone: no allocation).
+    pub fn shared(&self, id: InstrumentId) -> Option<Arc<InstrumentShared>> {
+        self.index(id).map(|i| Arc::clone(&self.insts[i].shared))
+    }
+
+    /// Read-only visit of every instance, in mix order.
+    pub fn instances_for_each(&self, mut f: impl FnMut(&Instance)) {
+        for inst in &self.insts {
+            f(inst);
+        }
+    }
+
+    /// Store the current state of every instance into its mirror (relaxed atomic
+    /// stores only: safe on the audio thread). Returns the voices sounding in total.
+    pub fn publish_mirrors(&self) -> usize {
+        let mut voices = 0;
+        for i in 0..self.insts.len() {
+            let (eff, _) = self.eff(i);
+            let inst = &self.insts[i];
+            let m = &inst.shared;
+            m.source.store(inst.source.unwrap_or(0), Relaxed);
+            m.clock_running.store(inst.clock.running, Relaxed);
+            m.clock_bpm.set(inst.clock.bpm);
+            m.clock_pos.set(inst.clock.pos);
+            m.eff_running.store(eff.running, Relaxed);
+            m.eff_bpm.set(eff.bpm);
+            m.eff_pos.set(eff.pos);
+            m.level.set(inst.level);
+            m.muted.store(inst.muted, Relaxed);
+            m.closing.store(inst.closing, Relaxed);
+            match &inst.body {
+                Body::Synth(s) => {
+                    let sq = &s.sequencer;
+                    let step = if eff.running {
+                        sq.position(&eff) as i32
+                    } else {
+                        -1
+                    };
+                    m.step.store(step, Relaxed);
+                    for (a, &v) in m.params.iter().zip(s.values().iter()) {
+                        a.set(v);
+                    }
+                    for k in 0..sq.on.len() {
+                        m.seq_on[k].store(sq.on[k], Relaxed);
+                        m.seq_note[k].store(sq.note[k], Relaxed);
+                        m.seq_vel[k].store(sq.vel[k], Relaxed);
+                        for (a, &x) in m.seq_extra[k].iter().zip(&sq.extra[k]) {
+                            a.store(x, Relaxed);
+                        }
+                    }
+                    m.seq_gate.set(sq.gate());
+                    m.seq_division.set(sq.grid.division);
+                    m.seq_swing.set(sq.grid.swing);
+                    m.seq_length.store(sq.grid.length as u8, Relaxed);
+                    m.seq_enabled.store(sq.enabled, Relaxed);
+                    m.seq_rec.store(sq.rec, Relaxed);
+                    m.seq_rec_step.store(sq.rec_step as u8, Relaxed);
+                    let held = s.held_mask();
+                    m.active_notes[0].store(held as u64, Relaxed);
+                    m.active_notes[1].store((held >> 64) as u64, Relaxed);
+                    let v = s.active_voices();
+                    m.voices.store(v as u8, Relaxed);
+                    voices += v;
+                }
+                Body::Drums(d) => {
+                    let step = if eff.running {
+                        d.position(&eff) as i32
+                    } else {
+                        -1
+                    };
+                    m.step.store(step, Relaxed);
+                    for (a, &v) in m.values.iter().zip(d.values.iter()) {
+                        a.set(v);
+                    }
+                    for (row, src) in m.steps.iter().zip(&d.steps) {
+                        for (a, &x) in row.iter().zip(src) {
+                            a.store(x, Relaxed);
+                        }
+                    }
+                    m.playing.store(eff.running, Relaxed);
+                }
+            }
+        }
+        voices
     }
 
     /// `[pos, bpm, running]` of every instance's own clock, in mix order (tests).

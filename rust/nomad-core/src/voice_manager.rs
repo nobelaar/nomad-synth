@@ -138,6 +138,20 @@ impl VoiceManager {
         buf[..n].to_vec()
     }
 
+    /// Held keys as a 128-bit mask (no allocation; for the UI mirrors).
+    pub fn held_mask(&self) -> u128 {
+        (0..self.voices.len())
+            .filter(|&i| self.is_held(i))
+            .map(|i| self.voices[i].note)
+            .filter(|n| (0..128).contains(n))
+            .fold(0u128, |m, n| m | (1u128 << n))
+    }
+
+    /// Voices currently sounding (held, releasing or fading).
+    pub fn active_voices(&self) -> usize {
+        self.voices.iter().filter(|v| v.is_active()).count()
+    }
+
     /// Held keys in voice order, written into `out`; returns how many.
     pub fn fill_active_notes(&self, out: &mut [i32; 128]) -> usize {
         let mut n = 0;

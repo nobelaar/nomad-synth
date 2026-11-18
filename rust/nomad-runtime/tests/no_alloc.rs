@@ -252,3 +252,40 @@ fn audio_core_render_is_allocation_free() {
 fn counter_detects_allocation() {
     assert_no_alloc("self-test", || drop(std::hint::black_box(vec![1u8; 10])));
 }
+
+/// Publishing the UI mirrors at the end of each callback is stores only.
+#[test]
+fn mirror_updates_do_not_allocate() {
+    let e = Engine::new(SR, 8);
+    let shared = e.shared(SYNTH).unwrap();
+    let (mut core, mut ctl) = create(e, SR);
+    for c in [
+        Command::Start(SYNTH),
+        Command::Start(DRUMS),
+        Command::SeqEnabled {
+            id: SYNTH,
+            enabled: true,
+        },
+        Command::SeqSetStep {
+            id: SYNTH,
+            step: 0,
+            on: true,
+            note: Some(60),
+            vel: None,
+        },
+        Command::NoteOn {
+            note: 64,
+            velocity: 0.8,
+        },
+    ] {
+        ctl.send(c);
+    }
+    let mut out = vec![0.0f32; 512 * 2];
+    core.render_stereo(&mut out, 2);
+    assert_no_alloc("render with mirrors", || {
+        for _ in 0..200 {
+            core.render_stereo(&mut out, 2);
+        }
+    });
+    assert!(shared.active_note(64));
+}

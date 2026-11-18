@@ -7,6 +7,11 @@ mod command;
 mod core;
 mod telemetry;
 
+/// Audio-to-UI state mirrors (defined in `nomad-core`, where instances carry them).
+pub mod mirror {
+    pub use nomad_core::mirror::*;
+}
+
 pub use command::{Command, Garbage};
 pub use core::{AudioCore, ControlHandle, MidiSender, create};
 pub use telemetry::{ScopeRing, Telemetry};

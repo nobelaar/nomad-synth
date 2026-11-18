@@ -208,6 +208,12 @@ impl AudioCore {
         }
         self.telemetry
             .render_time(start.elapsed().as_nanos() as u64);
+        let peak = out.iter().fold(0.0f32, |m, x| m.max(x.abs()));
+        self.telemetry.peak.store(peak.to_bits(), Ordering::Relaxed);
+        let voices = self.engine.publish_mirrors();
+        self.telemetry
+            .voices_total
+            .store(voices as u32, Ordering::Relaxed);
     }
 
     fn apply(&mut self, cmd: Command) {
