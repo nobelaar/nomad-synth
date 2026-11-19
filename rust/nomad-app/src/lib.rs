@@ -60,6 +60,7 @@ impl Args {
 }
 pub mod bench;
 pub mod header;
+pub mod keyboard;
 pub mod model;
 pub mod param_sync;
 pub mod seq_view;

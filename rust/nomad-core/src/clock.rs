@@ -12,7 +12,7 @@ pub const FAR: i64 = 1 << 30;
 pub const EPS: f64 = 1e-9;
 
 /// CPython's float floor division (`float_floor_div`), so `step_at` matches exactly.
-fn py_floordiv(vx: f64, wx: f64) -> f64 {
+pub fn py_floordiv(vx: f64, wx: f64) -> f64 {
     let m = vx % wx;
     let mut div = (vx - m) / wx;
     if m != 0.0 && ((wx < 0.0) != (m < 0.0)) {
