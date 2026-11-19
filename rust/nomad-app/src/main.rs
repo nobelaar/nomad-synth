@@ -13,6 +13,7 @@ use nomad_runtime::output::{AudioOutput, list_output_devices, negotiate};
 use nomad_runtime::{ControlHandle, Telemetry, create};
 
 const USAGE: &str = "usage: nomad [gui]
+       nomad --version
        nomad devices
        nomad midi  [--port TEXT] [--seconds 20]
        nomad demo  [--device N] [--seconds S] [--midi [TEXT]] [--midi-map PATH]
@@ -23,6 +24,10 @@ fn main() -> ExitCode {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let result = match argv.first().map(String::as_str) {
         None | Some("gui") => gui(),
+        Some("--version" | "-V") => {
+            println!("nomad {}", env!("CARGO_PKG_VERSION"));
+            Ok(ExitCode::SUCCESS)
+        }
         Some("devices") => devices(),
         Some("midi") => Args::parse(&argv[1..]).and_then(|a| midi(&a)),
         Some("demo") => Args::parse(&argv[1..]).and_then(|a| demo(&a)),

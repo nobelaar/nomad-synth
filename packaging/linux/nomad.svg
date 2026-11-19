@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <!-- NOMAD knob: 270° arc from the lower left, value at about two thirds. -->
+  <rect width="256" height="256" rx="40" fill="#101310"/>
+  <path d="M 72.4 183.6 A 78.6 78.6 0 1 1 183.6 183.6" fill="none" stroke="#29342b" stroke-width="22" stroke-linecap="round"/>
+  <path d="M 72.4 183.6 A 78.6 78.6 0 1 1 204.9 112.0" fill="none" stroke="#55e69a" stroke-width="22" stroke-linecap="round"/>
+  <line x1="128" y1="128" x2="181" y2="117" stroke="#55e69a" stroke-width="16" stroke-linecap="round"/>
+  <circle cx="128" cy="128" r="12" fill="#55e69a"/>
+</svg>
