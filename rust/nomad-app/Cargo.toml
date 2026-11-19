@@ -1,0 +1,23 @@
+[package]
+name = "nomad-app"
+version = "0.1.0"
+edition.workspace = true
+
+[[bin]]
+name = "nomad"
+path = "src/main.rs"
+
+[dependencies]
+eframe = "0.37"
+egui = { version = "0.37", features = ["monochrome_emoji_fonts"] }
+nomad-core = { path = "../nomad-core" }
+nomad-runtime = { path = "../nomad-runtime" }
+# Key order and exact float parsing: presets are written byte for byte like Python's json.
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+
+[dev-dependencies]
+egui_kittest = "0.37"
+
+[features]
+# Only for rendering screenshots in tests (pulls in wgpu): `--features shots`.
+shots = ["egui_kittest/wgpu", "egui_kittest/snapshot"]

@@ -1,0 +1,127 @@
+{
+ "entries": {
+  "topo/follow_master": {
+   "offset": 0,
+   "len": 13500,
+   "meta": {
+    "commands": [
+     [
+      "hats",
+      2
+     ],
+     [
+      "seq_on",
+      1
+     ],
+     [
+      "bpm",
+      2,
+      128.0
+     ],
+     [
+      "source",
+      1,
+      2
+     ],
+     [
+      "start",
+      2
+     ],
+     [
+      "render",
+      270000
+     ]
+    ],
+    "decim": 20,
+    "call": 4096,
+    "sums": [
+     [
+      0.4503049107468661,
+      3197.120138028776
+     ]
+    ],
+    "clocks": [
+     [
+      [
+       0.0,
+       110.0,
+       0.0
+      ],
+      [
+       12.000000000000002,
+       128.0,
+       1.0
+      ]
+     ]
+    ],
+    "returns": [
+     true,
+     true,
+     true
+    ],
+    "names": [
+     [
+      [
+       1,
+       "Synth 01"
+      ],
+      [
+       2,
+       "Machine Drum 01"
+      ]
+     ],
+     [
+      [
+       1,
+       "Synth 01"
+      ],
+      [
+       2,
+       "Machine Drum 01"
+      ]
+     ],
+     [
+      [
+       1,
+       "Synth 01"
+      ],
+      [
+       2,
+       "Machine Drum 01"
+      ]
+     ],
+     [
+      [
+       1,
+       "Synth 01"
+      ],
+      [
+       2,
+       "Machine Drum 01"
+      ]
+     ],
+     [
+      [
+       1,
+       "Synth 01"
+      ],
+      [
+       2,
+       "Machine Drum 01"
+      ]
+     ],
+     [
+      [
+       1,
+       "Synth 01"
+      ],
+      [
+       2,
+       "Machine Drum 01"
+      ]
+     ]
+    ]
+   }
+  }
+ }
+}

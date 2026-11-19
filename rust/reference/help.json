@@ -1,0 +1,475 @@
+{
+ "texts": {
+  "polyphony": [
+   "Polifonía",
+   "Cuántas notas pueden sonar a la vez, de 1 a 8. Con 1 es monofónico.\nSi tocás más notas que voces, se roba la más vieja (primero las que están en release)."
+  ],
+  "glide": [
+   "GLIDE: portamento",
+   "Tiempo que tarda cada nota en deslizarse desde la anterior (0 = apagado, hasta 1 s). Con acordes, cada voz barre desde la última nota hasta la suya. En mono (polifonía 1) y con una tecla apretada es legato: la nota nueva se desliza sin reiniciar las envolventes."
+  ],
+  "master_volume": [
+   "Volumen general",
+   "Volumen de salida. Pasa por un limitador suave: arriba de cierto punto no sube más, satura (comprime y agrega armónicos)."
+  ],
+  "osc1_wave": [
+   "Forma de onda — OSC1",
+   "La forma básica del sonido del oscilador.\n• SIN: puro, sin armónicos (flauta, sub-bajo).\n• TRI: suave, pocos armónicos impares.\n• SAW: brillante, todos los armónicos (cuerdas, bajos, leads).\n• SQR: hueco, armónicos impares (clarinete). Es la única onda en la que actúa PW."
+  ],
+  "osc1_mode": [
+   "Modo de afinación — OSC1",
+   "Decide de dónde sale la frecuencia del oscilador.\n• KEY: sigue la tecla que tocás. Afinás con COARSE y FINE; el pitch bend también actúa. HZ no hace nada.\n• FREE: frecuencia fija en hercios, la pone HZ. Ignora la tecla, COARSE y el pitch bend; FINE y la matrix (PIT y P1/P2) siguen actuando.\nFREE sirve para drones, efectos y FM con una frecuencia fija."
+  ],
+  "osc1_coarse": [
+   "Coarse (semitonos) — OSC1",
+   "Transpone el oscilador en semitonos, de −24 a +24 (dos octavas). +12 es una octava arriba, +7 una quinta.\nSolo actúa en modo KEY. En FREE no hace nada: ahí manda HZ.\nSi muestra −0 o +0 está apenas corrido de cero (el valor es continuo); doble click lo deja en 0 exacto."
+  ],
+  "osc1_hz": [
+   "Hz (frecuencia libre) — OSC1",
+   "Frecuencia fija del oscilador, de 20 Hz a 8 kHz.\nSolo actúa en modo FREE: el oscilador suena siempre a esa frecuencia, toques la tecla que toques. En KEY no hace nada.\nLa perilla es logarítmica: el mismo giro sube la misma cantidad de octavas en todo el recorrido."
+  ],
+  "osc1_fine": [
+   "Fine (cents) — OSC1",
+   "Desafinación fina en cents, de −50 a +50 (un semitono = 100 cents).\nActúa en KEY y en FREE. Desafinar un poco un oscilador contra el otro da batido y un sonido más ancho (unos 5 a 10 cents)."
+  ],
+  "osc1_pw": [
+   "Ancho de pulso (PW) — OSC1",
+   "Proporción de la onda cuadrada que queda arriba, del 5 % al 95 %. El 50 % es la cuadrada hueca; hacia los extremos suena más fina y nasal.\nSolo actúa con la onda SQR.\nModularlo con un LFO lento desde la matrix (destino PW1/PW2) da el clásico PWM que suena a coro."
+  ],
+  "osc1_level": [
+   "Nivel en el mixer — OSC1",
+   "Volumen del oscilador antes del filtro. Los dos niveles se suman y van juntos al filtro.\nCon los dos altos, el filtro y el limitador de salida saturan más."
+  ],
+  "osc2_wave": [
+   "Forma de onda — OSC2",
+   "La forma básica del sonido del oscilador.\n• SIN: puro, sin armónicos (flauta, sub-bajo).\n• TRI: suave, pocos armónicos impares.\n• SAW: brillante, todos los armónicos (cuerdas, bajos, leads).\n• SQR: hueco, armónicos impares (clarinete). Es la única onda en la que actúa PW."
+  ],
+  "osc2_mode": [
+   "Modo de afinación — OSC2",
+   "Decide de dónde sale la frecuencia del oscilador.\n• KEY: sigue la tecla que tocás. Afinás con COARSE y FINE; el pitch bend también actúa. HZ no hace nada.\n• FREE: frecuencia fija en hercios, la pone HZ. Ignora la tecla, COARSE y el pitch bend; FINE y la matrix (PIT y P1/P2) siguen actuando.\nFREE sirve para drones, efectos y FM con una frecuencia fija."
+  ],
+  "osc2_coarse": [
+   "Coarse (semitonos) — OSC2",
+   "Transpone el oscilador en semitonos, de −24 a +24 (dos octavas). +12 es una octava arriba, +7 una quinta.\nSolo actúa en modo KEY. En FREE no hace nada: ahí manda HZ.\nSi muestra −0 o +0 está apenas corrido de cero (el valor es continuo); doble click lo deja en 0 exacto."
+  ],
+  "osc2_hz": [
+   "Hz (frecuencia libre) — OSC2",
+   "Frecuencia fija del oscilador, de 20 Hz a 8 kHz.\nSolo actúa en modo FREE: el oscilador suena siempre a esa frecuencia, toques la tecla que toques. En KEY no hace nada.\nLa perilla es logarítmica: el mismo giro sube la misma cantidad de octavas en todo el recorrido."
+  ],
+  "osc2_fine": [
+   "Fine (cents) — OSC2",
+   "Desafinación fina en cents, de −50 a +50 (un semitono = 100 cents).\nActúa en KEY y en FREE. Desafinar un poco un oscilador contra el otro da batido y un sonido más ancho (unos 5 a 10 cents)."
+  ],
+  "osc2_pw": [
+   "Ancho de pulso (PW) — OSC2",
+   "Proporción de la onda cuadrada que queda arriba, del 5 % al 95 %. El 50 % es la cuadrada hueca; hacia los extremos suena más fina y nasal.\nSolo actúa con la onda SQR.\nModularlo con un LFO lento desde la matrix (destino PW1/PW2) da el clásico PWM que suena a coro."
+  ],
+  "osc2_level": [
+   "Nivel en el mixer — OSC2",
+   "Volumen del oscilador antes del filtro. Los dos niveles se suman y van juntos al filtro.\nCon los dos altos, el filtro y el limitador de salida saturan más."
+  ],
+  "osc2_sync": [
+   "Hard sync",
+   "Con SYNC, el oscilador 2 vuelve a empezar su ciclo cada vez que el oscilador 1 empieza el suyo. El 2 queda atado a la afinación del 1 y su propia frecuencia cambia el timbre en lugar de la nota.\nPara el sonido típico: OSC2 más agudo que OSC1 y moverlo con P2 en la matrix (por ejemplo desde ENV2)."
+  ],
+  "filt_cutoff": [
+   "Cutoff del filtro",
+   "Frecuencia de corte del filtro pasa-bajos (ladder de 4 polos, 24 dB/oct), de 20 Hz a 18 kHz. Abajo de eso deja pasar, arriba recorta: bajarlo oscurece el sonido.\nLo mueven también ENV AMT (con FILT ENV) y CUT en la matrix."
+  ],
+  "filt_reso": [
+   "Resonancia",
+   "Realza las frecuencias justo en el corte, de 0 a 100 %. Medio = sonido más «chillón»; alto = silbido que casi suena solo.\nCon resonancia alta el volumen puede subir mucho; el limitador de salida lo contiene."
+  ],
+  "filt_env_amt": [
+   "Env amt del filtro",
+   "Cuánto mueve FILT ENV al cutoff en cada nota, de −100 % a +100 %. Al 100 % la envolvente sube el corte hasta 5 octavas; negativo lo baja.\nEn 0 la envolvente del filtro no actúa sobre el corte (igual puede usarse como ENV2 en la matrix)."
+  ],
+  "amp_attack": [
+   "Attack — AMP ENV",
+   "AMP ENV: la envolvente del volumen de cada nota.\nTiempo que tarda en subir de 0 al máximo cuando apretás la tecla, de 1 ms a 5 s. Corto = golpe; largo = entra de a poco (pads)."
+  ],
+  "amp_decay": [
+   "Decay — AMP ENV",
+   "AMP ENV: la envolvente del volumen de cada nota.\nTiempo que tarda en bajar del máximo al nivel de SUSTAIN mientras mantenés la tecla, de 1 ms a 5 s."
+  ],
+  "amp_sustain": [
+   "Sustain — AMP ENV",
+   "AMP ENV: la envolvente del volumen de cada nota.\nNivel en el que se queda mientras mantenés la tecla, de 0 a 100 %. Es un nivel, no un tiempo. En 0, el sonido muere después del decay aunque sigas apretando."
+  ],
+  "amp_release": [
+   "Release — AMP ENV",
+   "AMP ENV: la envolvente del volumen de cada nota.\nTiempo que tarda en apagarse cuando soltás la tecla, de 5 ms a 8 s. Largo = cola que sigue sonando."
+  ],
+  "filt_attack": [
+   "Attack — FILT ENV",
+   "FILT ENV: la envolvente que mueve el cutoff (según ENV AMT) y que la matrix usa como ENV2.\nTiempo que tarda en subir de 0 al máximo cuando apretás la tecla, de 1 ms a 5 s. Corto = golpe; largo = entra de a poco (pads)."
+  ],
+  "filt_decay": [
+   "Decay — FILT ENV",
+   "FILT ENV: la envolvente que mueve el cutoff (según ENV AMT) y que la matrix usa como ENV2.\nTiempo que tarda en bajar del máximo al nivel de SUSTAIN mientras mantenés la tecla, de 1 ms a 5 s."
+  ],
+  "filt_sustain": [
+   "Sustain — FILT ENV",
+   "FILT ENV: la envolvente que mueve el cutoff (según ENV AMT) y que la matrix usa como ENV2.\nNivel en el que se queda mientras mantenés la tecla, de 0 a 100 %. Es un nivel, no un tiempo. En 0, el sonido muere después del decay aunque sigas apretando."
+  ],
+  "filt_release": [
+   "Release — FILT ENV",
+   "FILT ENV: la envolvente que mueve el cutoff (según ENV AMT) y que la matrix usa como ENV2.\nTiempo que tarda en apagarse cuando soltás la tecla, de 5 ms a 8 s. Largo = cola que sigue sonando."
+  ],
+  "lfo1_rate": [
+   "Velocidad del LFO — LFO1",
+   "Cuántos ciclos por segundo hace, de 0,02 Hz (uno cada 50 s) a 40 Hz.\nDebajo de 1 Hz da movimientos lentos y barridos; de 4 a 7 Hz, vibrato; arriba de 20 Hz empieza a ensuciar el timbre."
+  ],
+  "lfo1_wave": [
+   "Forma del LFO — LFO1",
+   "Cómo se mueve la modulación en el tiempo.\n• SIN / TRI: ida y vuelta suave (vibrato, trémolo).\n• SAW: rampa que sube y salta abajo.\n• SQR: salta entre dos valores (trinos).\n• S&H: un valor al azar nuevo en cada ciclo (efecto «computadora»)."
+  ],
+  "lfo1_depth": [
+   "Profundidad del LFO — LFO1",
+   "Cuánto se mueve la salida del LFO, de 0 a 100 %. Por defecto está en 0: el LFO no hace nada hasta que subís esto Y lo ruteás en la matrix.\nSe multiplica con AMT del slot de la matrix."
+  ],
+  "lfo1_phase": [
+   "Fase del LFO — LFO1",
+   "Corre el punto del ciclo en el que está el LFO, de 0 a 1 ciclo.\nEl LFO es uno solo para todas las voces y corre siempre: no vuelve a empezar con cada nota. Sirve para desfasar LFO1 contra LFO2 cuando tienen la misma velocidad."
+  ],
+  "lfo2_rate": [
+   "Velocidad del LFO — LFO2",
+   "Cuántos ciclos por segundo hace, de 0,02 Hz (uno cada 50 s) a 40 Hz.\nDebajo de 1 Hz da movimientos lentos y barridos; de 4 a 7 Hz, vibrato; arriba de 20 Hz empieza a ensuciar el timbre."
+  ],
+  "lfo2_wave": [
+   "Forma del LFO — LFO2",
+   "Cómo se mueve la modulación en el tiempo.\n• SIN / TRI: ida y vuelta suave (vibrato, trémolo).\n• SAW: rampa que sube y salta abajo.\n• SQR: salta entre dos valores (trinos).\n• S&H: un valor al azar nuevo en cada ciclo (efecto «computadora»)."
+  ],
+  "lfo2_depth": [
+   "Profundidad del LFO — LFO2",
+   "Cuánto se mueve la salida del LFO, de 0 a 100 %. Por defecto está en 0: el LFO no hace nada hasta que subís esto Y lo ruteás en la matrix.\nSe multiplica con AMT del slot de la matrix."
+  ],
+  "lfo2_phase": [
+   "Fase del LFO — LFO2",
+   "Corre el punto del ciclo en el que está el LFO, de 0 a 1 ciclo.\nEl LFO es uno solo para todas las voces y corre siempre: no vuelve a empezar con cada nota. Sirve para desfasar LFO1 contra LFO2 cuando tienen la misma velocidad."
+  ],
+  "mod0_src": [
+   "Fuente de modulación — slot 1",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod0_dst": [
+   "Destino de modulación — slot 1",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod0_amt": [
+   "Cantidad de modulación (AMT) — slot 1",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod1_src": [
+   "Fuente de modulación — slot 2",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod1_dst": [
+   "Destino de modulación — slot 2",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod1_amt": [
+   "Cantidad de modulación (AMT) — slot 2",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod2_src": [
+   "Fuente de modulación — slot 3",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod2_dst": [
+   "Destino de modulación — slot 3",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod2_amt": [
+   "Cantidad de modulación (AMT) — slot 3",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod3_src": [
+   "Fuente de modulación — slot 4",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod3_dst": [
+   "Destino de modulación — slot 4",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod3_amt": [
+   "Cantidad de modulación (AMT) — slot 4",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod4_src": [
+   "Fuente de modulación — slot 5",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod4_dst": [
+   "Destino de modulación — slot 5",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod4_amt": [
+   "Cantidad de modulación (AMT) — slot 5",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod5_src": [
+   "Fuente de modulación — slot 6",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod5_dst": [
+   "Destino de modulación — slot 6",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod5_amt": [
+   "Cantidad de modulación (AMT) — slot 6",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod6_src": [
+   "Fuente de modulación — slot 7",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod6_dst": [
+   "Destino de modulación — slot 7",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod6_amt": [
+   "Cantidad de modulación (AMT) — slot 7",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "mod7_src": [
+   "Fuente de modulación — slot 8",
+   "Qué señal mueve este slot.\n• -: slot apagado.\n• LFO1 / LFO2: los LFOs (necesitan DEPTH arriba de 0). Son globales: mueven todas las voces juntas.\n• MW: la rueda de modulación del controlador MIDI.\n• VEL: la fuerza con la que tocaste cada nota (por voz).\n• ENV2: la envolvente del filtro de cada voz (FILT ENV), como fuente extra."
+  ],
+  "mod7_dst": [
+   "Destino de modulación — slot 8",
+   "Qué parámetro mueve este slot.\n• -: slot apagado.\n• PIT: afinación de los DOS osciladores juntos (vibrato).\n• P1: afinación solo del oscilador 1.\n• P2: afinación solo del oscilador 2.\n• AMP: volumen (trémolo).\n• CUT: corte del filtro (barridos, «wah»).\n• PW1 / PW2: ancho de pulso de cada oscilador (solo con onda SQR)."
+  ],
+  "mod7_amt": [
+   "Cantidad de modulación (AMT) — slot 8",
+   "Cuánto y hacia dónde mueve la fuente al destino, de −100 % a +100 %. Negativo invierte la modulación.\nAl 100 % con la fuente al máximo: PIT/P1/P2 mueven una octava, CUT dos octavas, PW1/PW2 un 45 % de ancho y AMP duplica o apaga el volumen.\nPara vibrato sutil alcanzan valores chicos (2 a 5 %).\nSi varios slots van al mismo destino, se suman."
+  ],
+  "bend_range": [
+   "Rango de pitch bend",
+   "Cuántos semitonos mueve la rueda de pitch bend del controlador al extremo, de 1 a 12. 2 es lo habitual; 12 = una octava.\nNo actúa sobre un oscilador en modo FREE."
+  ],
+  "kick_tune": [
+   "Afinación del tambor — KICK",
+   "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\nEn bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el carácter, de más opaco a más filoso."
+  ],
+  "kick_decay": [
+   "Duración del golpe — KICK",
+   "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola larga).\nEn el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el patrón; es parte del sonido."
+  ],
+  "kick_level": [
+   "Nivel del tambor — KICK",
+   "Volumen de este instrumento en la mezcla, de 0 a 100 %.\nLa batería se suma a las voces del sintetizador y pasa por el mismo master y limitador: si un patrón lleno satura, bajá el bombo o la caja."
+  ],
+  "snare_tune": [
+   "Afinación del tambor — SNARE",
+   "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\nEn bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el carácter, de más opaco a más filoso."
+  ],
+  "snare_decay": [
+   "Duración del golpe — SNARE",
+   "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola larga).\nEn el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el patrón; es parte del sonido."
+  ],
+  "snare_level": [
+   "Nivel del tambor — SNARE",
+   "Volumen de este instrumento en la mezcla, de 0 a 100 %.\nLa batería se suma a las voces del sintetizador y pasa por el mismo master y limitador: si un patrón lleno satura, bajá el bombo o la caja."
+  ],
+  "clap_tune": [
+   "Afinación del tambor — CLAP",
+   "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\nEn bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el carácter, de más opaco a más filoso."
+  ],
+  "clap_decay": [
+   "Duración del golpe — CLAP",
+   "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola larga).\nEn el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el patrón; es parte del sonido."
+  ],
+  "clap_level": [
+   "Nivel del tambor — CLAP",
+   "Volumen de este instrumento en la mezcla, de 0 a 100 %.\nLa batería se suma a las voces del sintetizador y pasa por el mismo master y limitador: si un patrón lleno satura, bajá el bombo o la caja."
+  ],
+  "tom_tune": [
+   "Afinación del tambor — TOM",
+   "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\nEn bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el carácter, de más opaco a más filoso."
+  ],
+  "tom_decay": [
+   "Duración del golpe — TOM",
+   "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola larga).\nEn el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el patrón; es parte del sonido."
+  ],
+  "tom_level": [
+   "Nivel del tambor — TOM",
+   "Volumen de este instrumento en la mezcla, de 0 a 100 %.\nLa batería se suma a las voces del sintetizador y pasa por el mismo master y limitador: si un patrón lleno satura, bajá el bombo o la caja."
+  ],
+  "chat_tune": [
+   "Afinación del tambor — CHAT",
+   "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\nEn bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el carácter, de más opaco a más filoso."
+  ],
+  "chat_decay": [
+   "Duración del golpe — CHAT",
+   "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola larga).\nEn el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el patrón; es parte del sonido."
+  ],
+  "chat_level": [
+   "Nivel del tambor — CHAT",
+   "Volumen de este instrumento en la mezcla, de 0 a 100 %.\nLa batería se suma a las voces del sintetizador y pasa por el mismo master y limitador: si un patrón lleno satura, bajá el bombo o la caja."
+  ],
+  "ohat_tune": [
+   "Afinación del tambor — OHAT",
+   "Mueve la frecuencia base del instrumento, de −100 % a +100 %.\nEn bombo y tom cambia la nota del golpe; en caja, clap y hi-hats cambia el carácter, de más opaco a más filoso."
+  ],
+  "ohat_decay": [
+   "Duración del golpe — OHAT",
+   "Largo de la caída del instrumento, de 0 % (corto y seco) a 100 % (cola larga).\nEn el hi-hat abierto, subirlo lo deja sonando varios pasos y emborrona el patrón; es parte del sonido."
+  ],
+  "ohat_level": [
+   "Nivel del tambor — OHAT",
+   "Volumen de este instrumento en la mezcla, de 0 a 100 %.\nLa batería se suma a las voces del sintetizador y pasa por el mismo master y limitador: si un patrón lleno satura, bajá el bombo o la caja."
+  ],
+  "bpm": [
+   "Tempo de la batería",
+   "Velocidad del secuenciador en negras por minuto, de 60 a 180. Cada paso es una semicorchea: los 16 pasos del patrón son un compás de 4/4.\nCambiarlo mientras suena re-temporiza el resto del paso en curso, sin repetir el golpe."
+  ],
+  "swing": [
+   "Swing de la batería",
+   "Retrasa los pasos impares y acorta los pares, de 0 % (recto) a 60 % (muy shuffle).\nEl golpe fuerte sigue en el pulso; el débil se corre hacia atrás como en el jazz o el funk."
+  ],
+  "help": [
+   "Modo ayuda",
+   "Pasá el mouse por encima de cualquier control para ver qué hace. Mientras está prendido, los controles no responden.\nSalís con este botón, F1 o Escape."
+  ],
+  "learn": [
+   "MIDI learn",
+   "Arma el último control que tocaste: el próximo CC que muevas en el controlador queda asignado a ese parámetro. Click de nuevo para cancelar.\nMás cómodo: click derecho en el control → MIDI learn."
+  ],
+  "audio": [
+   "Salida de audio",
+   "Dispositivo de audio en el que suena el synth. Cada click pasa al siguiente."
+  ],
+  "midi": [
+   "Entrada MIDI",
+   "Puerto MIDI del que llegan las notas y los CC. Cada click vuelve a buscar puertos y pasa al siguiente (sirve si enchufaste el teclado después)."
+  ],
+  "voices": [
+   "Voces activas",
+   "Cuántas teclas están apretadas ahora. No cuenta las notas que se están apagando en release."
+  ],
+  "xruns": [
+   "Xruns",
+   "Cortes de audio: veces que el motor no llegó a tiempo. Si sube, bajá la polifonía o cerrá otros programas."
+  ],
+  "keyboard": [
+   "Teclado en pantalla",
+   "Click para tocar; arrastrando hacés glissando. Se ilumina con las notas que llegan por MIDI. Toca con fuerza (VEL) fija."
+  ],
+  "scope": [
+   "Osciloscopio",
+   "La forma de onda real que sale del synth, ya filtrada. Se dispara en un cruce por cero para que la imagen quede quieta."
+  ],
+  "synth_view": [
+   "Vista del sintetizador",
+   "Vuelve al panel de perillas del synth: osciladores, filtro, envolventes, LFOs y matriz.\nLa batería sigue sonando si estaba en PLAY."
+  ],
+  "drums_view": [
+   "Vista de la batería",
+   "Cambia a la drum machine: seis instrumentos, patrón de 16 pasos, tempo y swing.\nEl scope y la sección global de la derecha no cambian; el teclado en pantalla se esconde."
+  ],
+  "drum_steps": [
+   "Pasos del secuenciador",
+   "Click prende o apaga el paso; shift+click lo marca como acento (suena más fuerte).\nLa columna iluminada es el paso que está sonando."
+  ],
+  "drum_transport": [
+   "Transporte de la batería",
+   "PLAY/STOP y BPM están en la barra de arriba. SWING cambia el groove en vivo; CLEAR borra todos los pasos."
+  ],
+  "clock_source": [
+   "Fuente de reloj",
+   "Internal: este instrumento marca su propio tempo. Si elegís otro instrumento, hereda su BPM, su posición y su PLAY/STOP, y ya no podés editarlos aquí. Cambiar de fuente es inmediato: puede saltarse o repetirse un paso. Un instrumento que otros siguen no puede seguir a otro."
+  ],
+  "inst_mute": [
+   "MUTE",
+   "Silencia este instrumento con un fade corto, sin detenerlo: sigue su reloj y conserva su estado. Es independiente del PLAY."
+  ],
+  "inst_level": [
+   "LEVEL del instrumento",
+   "Volumen de este instrumento dentro de la mezcla (0 a 100 %). No es el volumen general: ese es MASTER, que afecta a todo."
+  ],
+  "inst_bpm": [
+   "BPM del instrumento",
+   "Tempo de este instrumento mientras usa su reloj Internal (20 a 300; escribí el número y Enter, o usá las flechas; TAP lo marca a mano). Si sigue a otro, muestra el tempo de la fuente y queda bloqueado."
+  ],
+  "tab_select": [
+   "Pestaña de instrumento",
+   "Cada pestaña es un instrumento independiente que sigue sonando aunque no esté seleccionada. Click elige cuál editás; el teclado en pantalla y el MIDI van al Synth seleccionado."
+  ],
+  "tab_close": [
+   "Cerrar instrumento",
+   "Cierra este instrumento: sus notas se apagan con un fade corto. Los instrumentos que lo seguían como reloj pasan a reloj propio y continúan desde el mismo punto."
+  ],
+  "tab_new": [
+   "Nuevo instrumento",
+   "Abre un menú para crear otro Synth o una Machine Drum. Cada instancia tiene sus propios parámetros, patrón y estado."
+  ],
+  "seq_toggle": [
+   "SEQ: secuenciador del synth",
+   "Prende o apaga el secuenciador de este synth. Toca sus notas con el mismo motor que el teclado, así que podés tocar encima a la vez.\nAl apagarlo se sueltan sus notas."
+  ],
+  "inst_play": [
+   "PLAY / STOP",
+   "Arranca o para el reloj de este instrumento: su secuencia (Synth) o su patrón (Machine Drum). Cada instrumento tiene el suyo; si sigue a otro, el PLAY es el de su fuente y queda bloqueado."
+  ],
+  "seq_steps": [
+   "Pasos de la secuencia",
+   "Click prende o apaga el paso; shift+click lo marca como acento.\nLa rueda del mouse cambia la nota (shift: una octava). El paso iluminado es el que suena."
+  ],
+  "seq_rec": [
+   "REC: grabar notas en la secuencia",
+   "Armalo y tocá el teclado (MIDI o el de pantalla). Con el reloj parado graba por pasos: cada nota se escribe en el paso marcado y avanza al siguiente; si mantenés varias teclas apretadas, el paso guarda el acorde (hasta 6 notas). Con la secuencia sonando graba en vivo, cuantizada al paso más cercano. Volvé a tocarlo para salir."
+  ],
+  "seq_rest": [
+   "REST: silencio en grabación por pasos",
+   "Deja el paso marcado vacío y pasa al siguiente. Solo con REC y el reloj parado."
+  ],
+  "seq_div": [
+   "DIV: duración de cada paso",
+   "De 1/16 a un compás entero por paso. Con 1 compás y LEN 4, cuatro acordes son una progresión de 4 compases en loop. Subí GATE al máximo para que los acordes queden pegados."
+  ],
+  "seq_len": [
+   "LEN: cantidad de pasos",
+   "Cuántos pasos recorre la secuencia antes de volver al primero (1 a 16). Los pasos fuera del largo se ven apagados."
+  ],
+  "preset_menu": [
+   "PRESET: sonidos y patrones",
+   "Carga un preset en este instrumento: perillas, matriz y secuencia (o el patrón de la batería). Primero los de fábrica, después los tuyos. No cambia el tempo ni el reloj, y no prende el secuenciador: apretá SEQ y PLAY."
+  ],
+  "preset_save": [
+   "SAVE: guardar tu preset",
+   "Guarda el estado actual de este instrumento con el nombre que elijas, en ~/.config/nomad-synth/presets. No se puede usar el nombre de uno de fábrica."
+  ],
+  "seq_gate": [
+   "GATE: duración de las notas",
+   "Cuánto dura cada nota respecto de su paso: poco es staccato, al máximo las notas se pegan (legato)."
+  ],
+  "drum_kick": [
+   "KICK: audición",
+   "Click para escuchar este instrumento suelto, con el nivel y la afinación que tiene ahora.\nSirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso."
+  ],
+  "drum_snare": [
+   "SNARE: audición",
+   "Click para escuchar este instrumento suelto, con el nivel y la afinación que tiene ahora.\nSirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso."
+  ],
+  "drum_clap": [
+   "CLAP: audición",
+   "Click para escuchar este instrumento suelto, con el nivel y la afinación que tiene ahora.\nSirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso."
+  ],
+  "drum_tom": [
+   "TOM: audición",
+   "Click para escuchar este instrumento suelto, con el nivel y la afinación que tiene ahora.\nSirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso."
+  ],
+  "drum_chat": [
+   "CHAT: audición",
+   "Click para escuchar este instrumento suelto, con el nivel y la afinación que tiene ahora.\nSirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso."
+  ],
+  "drum_ohat": [
+   "OHAT: audición",
+   "Click para escuchar este instrumento suelto, con el nivel y la afinación que tiene ahora.\nSirve para ajustar tune y decay sin esperar a que el patrón pase por ese paso."
+  ]
+ },
+ "missing": [
+  "osc1_sync"
+ ]
+}

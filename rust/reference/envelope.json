@@ -1,0 +1,38 @@
+{
+ "entries": {
+  "adsr/basic": {
+   "offset": 0,
+   "len": 18000,
+   "meta": {
+    "commands": [
+     [
+      "params",
+      0.01,
+      0.1,
+      0.7,
+      0.2
+     ],
+     [
+      "on"
+     ],
+     [
+      "run",
+      2000
+     ],
+     [
+      "run",
+      6000
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      10000
+     ]
+    ],
+    "idle_end": true
+   }
+  }
+ }
+}

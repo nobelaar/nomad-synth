@@ -1,0 +1,438 @@
+{
+ "entries": {
+  "sync/0/0.5": {
+   "offset": 0,
+   "len": 491,
+   "meta": {
+    "wave": 0,
+    "slave_hz": 300.0,
+    "master_hz": 150.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/0/1.37": {
+   "offset": 491,
+   "len": 491,
+   "meta": {
+    "wave": 0,
+    "slave_hz": 300.0,
+    "master_hz": 411.00000000000006,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.1490419708029201
+   }
+  },
+  "sync/0/2.0": {
+   "offset": 982,
+   "len": 491,
+   "meta": {
+    "wave": 0,
+    "slave_hz": 300.0,
+    "master_hz": 600.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/0/3.9": {
+   "offset": 1473,
+   "len": 491,
+   "meta": {
+    "wave": 0,
+    "slave_hz": 300.0,
+    "master_hz": 1170.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.24823717948717974
+   }
+  },
+  "sync/1/0.5": {
+   "offset": 1964,
+   "len": 491,
+   "meta": {
+    "wave": 1,
+    "slave_hz": 300.0,
+    "master_hz": 150.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/1/1.37": {
+   "offset": 2455,
+   "len": 491,
+   "meta": {
+    "wave": 1,
+    "slave_hz": 300.0,
+    "master_hz": 411.00000000000006,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.1490419708029201
+   }
+  },
+  "sync/1/2.0": {
+   "offset": 2946,
+   "len": 491,
+   "meta": {
+    "wave": 1,
+    "slave_hz": 300.0,
+    "master_hz": 600.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/1/3.9": {
+   "offset": 3437,
+   "len": 491,
+   "meta": {
+    "wave": 1,
+    "slave_hz": 300.0,
+    "master_hz": 1170.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.24823717948717974
+   }
+  },
+  "sync/2/0.5": {
+   "offset": 3928,
+   "len": 491,
+   "meta": {
+    "wave": 2,
+    "slave_hz": 300.0,
+    "master_hz": 150.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/2/1.37": {
+   "offset": 4419,
+   "len": 491,
+   "meta": {
+    "wave": 2,
+    "slave_hz": 300.0,
+    "master_hz": 411.00000000000006,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.1490419708029201
+   }
+  },
+  "sync/2/2.0": {
+   "offset": 4910,
+   "len": 491,
+   "meta": {
+    "wave": 2,
+    "slave_hz": 300.0,
+    "master_hz": 600.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/2/3.9": {
+   "offset": 5401,
+   "len": 491,
+   "meta": {
+    "wave": 2,
+    "slave_hz": 300.0,
+    "master_hz": 1170.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.24823717948717974
+   }
+  },
+  "sync/3/0.5": {
+   "offset": 5892,
+   "len": 491,
+   "meta": {
+    "wave": 3,
+    "slave_hz": 300.0,
+    "master_hz": 150.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/3/1.37": {
+   "offset": 6383,
+   "len": 491,
+   "meta": {
+    "wave": 3,
+    "slave_hz": 300.0,
+    "master_hz": 411.00000000000006,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.1490419708029201
+   }
+  },
+  "sync/3/2.0": {
+   "offset": 6874,
+   "len": 491,
+   "meta": {
+    "wave": 3,
+    "slave_hz": 300.0,
+    "master_hz": 600.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.06875
+   }
+  },
+  "sync/3/3.9": {
+   "offset": 7365,
+   "len": 491,
+   "meta": {
+    "wave": 3,
+    "slave_hz": 300.0,
+    "master_hz": 1170.0,
+    "blocks": [
+     64,
+     64,
+     100,
+     7,
+     256
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.24823717948717974
+   }
+  },
+  "sync/boundary": {
+   "offset": 7856,
+   "len": 512,
+   "meta": {
+    "wave": 2,
+    "slave_hz": 300.0,
+    "master_hz": 750.0,
+    "blocks": [
+     64,
+     64,
+     64,
+     64,
+     64,
+     64,
+     64,
+     64
+    ],
+    "synced": [
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true,
+     true
+    ],
+    "phase_end": 0.4
+   }
+  },
+  "sync/after_free": {
+   "offset": 8368,
+   "len": 192,
+   "meta": {
+    "wave": 2,
+    "slave_hz": 300.0,
+    "master_hz": 750.0,
+    "blocks": [
+     64,
+     64,
+     64
+    ],
+    "synced": [
+     true,
+     false,
+     true
+    ],
+    "phase_end": 0.20000000000000018
+   }
+  }
+ }
+}

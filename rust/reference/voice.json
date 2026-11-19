@@ -1,0 +1,254 @@
+{
+ "entries": {
+  "basic/saw": {
+   "offset": 0,
+   "len": 1800,
+   "meta": {
+    "params": {},
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "basic/sine_tri_sq": {
+   "offset": 1800,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "osc1_wave": 0.0,
+     "osc2_wave": 3.0,
+     "osc2_level": 0.7,
+     "osc2_coarse": -12.0
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "sync": {
+   "offset": 3600,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "osc2_sync": 1.0,
+     "osc2_coarse": 7.0,
+     "osc1_level": 0.2
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "free_mode": {
+   "offset": 5400,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "osc1_mode": 1.0,
+     "osc1_hz": 330.0
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "filter_env": {
+   "offset": 7200,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "filt_env_amt": 0.8,
+     "filt_reso": 0.6,
+     "filt_cutoff": 400.0
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 256,
+    "active_end": true
+   }
+  },
+  "filter_hi_reso": {
+   "offset": 9000,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "filt_reso": 0.9,
+     "filt_cutoff": 800.0,
+     "filt_env_amt": 0.5
+    },
+    "mods": {},
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 256,
+    "active_end": true
+   }
+  },
+  "mods": {
+   "offset": 10800,
+   "len": 1800,
+   "meta": {
+    "params": {
+     "osc1_wave": 3.0
+    },
+    "mods": {
+     "pitch": 0.5,
+     "pitch1": -1.2,
+     "cutoff": 0.3,
+     "pw1": 0.2,
+     "amp": -0.3,
+     "bend": 2.0
+    },
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      1200
+     ],
+     [
+      "off"
+     ],
+     [
+      "run",
+      600
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  },
+  "mods_extreme": {
+   "offset": 12600,
+   "len": 800,
+   "meta": {
+    "params": {},
+    "mods": {
+     "pitch": 1000.0,
+     "cutoff": "nan",
+     "amp": -5.0
+    },
+    "commands": [
+     [
+      "on",
+      60,
+      0.8
+     ],
+     [
+      "run",
+      800
+     ]
+    ],
+    "block": 16,
+    "active_end": true
+   }
+  }
+ }
+}

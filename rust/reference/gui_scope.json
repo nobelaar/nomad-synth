@@ -1,0 +1,304 @@
+{
+ "entries": {
+  "sig/sine_440": {
+   "offset": 0,
+   "len": 2000,
+   "meta": {}
+  },
+  "pts/sine_440/250x126": {
+   "offset": 2000,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/sine_440",
+    "width": 250,
+    "height": 126,
+    "trigger": 1964
+   }
+  },
+  "pts/sine_440/37x50": {
+   "offset": 3000,
+   "len": 148,
+   "meta": {
+    "signal": "sig/sine_440",
+    "width": 37,
+    "height": 50,
+    "trigger": 1964
+   }
+  },
+  "sig/sine_55": {
+   "offset": 3148,
+   "len": 2000,
+   "meta": {}
+  },
+  "pts/sine_55/250x126": {
+   "offset": 5148,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/sine_55",
+    "width": 250,
+    "height": 126,
+    "trigger": 1607
+   }
+  },
+  "pts/sine_55/37x50": {
+   "offset": 6148,
+   "len": 148,
+   "meta": {
+    "signal": "sig/sine_55",
+    "width": 37,
+    "height": 50,
+    "trigger": 1607
+   }
+  },
+  "sig/sine_3k": {
+   "offset": 6296,
+   "len": 2000,
+   "meta": {}
+  },
+  "pts/sine_3k/250x126": {
+   "offset": 8296,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/sine_3k",
+    "width": 250,
+    "height": 126,
+    "trigger": 1985
+   }
+  },
+  "pts/sine_3k/37x50": {
+   "offset": 9296,
+   "len": 148,
+   "meta": {
+    "signal": "sig/sine_3k",
+    "width": 37,
+    "height": 50,
+    "trigger": 1985
+   }
+  },
+  "sig/noise": {
+   "offset": 9444,
+   "len": 2000,
+   "meta": {}
+  },
+  "pts/noise/250x126": {
+   "offset": 11444,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/noise",
+    "width": 250,
+    "height": 126,
+    "trigger": 1997
+   }
+  },
+  "pts/noise/37x50": {
+   "offset": 12444,
+   "len": 148,
+   "meta": {
+    "signal": "sig/noise",
+    "width": 37,
+    "height": 50,
+    "trigger": 1997
+   }
+  },
+  "sig/noise_dc": {
+   "offset": 12592,
+   "len": 2000,
+   "meta": {}
+  },
+  "pts/noise_dc/250x126": {
+   "offset": 14592,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/noise_dc",
+    "width": 250,
+    "height": 126,
+    "trigger": 0
+   }
+  },
+  "pts/noise_dc/37x50": {
+   "offset": 15592,
+   "len": 148,
+   "meta": {
+    "signal": "sig/noise_dc",
+    "width": 37,
+    "height": 50,
+    "trigger": 0
+   }
+  },
+  "sig/empty": {
+   "offset": 15740,
+   "len": 0,
+   "meta": {}
+  },
+  "pts/empty/250x126": {
+   "offset": 15740,
+   "len": 4,
+   "meta": {
+    "signal": "sig/empty",
+    "width": 250,
+    "height": 126,
+    "trigger": 0
+   }
+  },
+  "pts/empty/37x50": {
+   "offset": 15744,
+   "len": 4,
+   "meta": {
+    "signal": "sig/empty",
+    "width": 37,
+    "height": 50,
+    "trigger": 0
+   }
+  },
+  "sig/constant": {
+   "offset": 15748,
+   "len": 1000,
+   "meta": {}
+  },
+  "pts/constant/250x126": {
+   "offset": 16748,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/constant",
+    "width": 250,
+    "height": 126,
+    "trigger": 0
+   }
+  },
+  "pts/constant/37x50": {
+   "offset": 17748,
+   "len": 148,
+   "meta": {
+    "signal": "sig/constant",
+    "width": 37,
+    "height": 50,
+    "trigger": 0
+   }
+  },
+  "sig/neg_zero": {
+   "offset": 17896,
+   "len": 6,
+   "meta": {}
+  },
+  "pts/neg_zero/250x126": {
+   "offset": 17902,
+   "len": 12,
+   "meta": {
+    "signal": "sig/neg_zero",
+    "width": 250,
+    "height": 126,
+    "trigger": 5
+   }
+  },
+  "pts/neg_zero/37x50": {
+   "offset": 17914,
+   "len": 12,
+   "meta": {
+    "signal": "sig/neg_zero",
+    "width": 37,
+    "height": 50,
+    "trigger": 5
+   }
+  },
+  "sig/with_nan": {
+   "offset": 17926,
+   "len": 2000,
+   "meta": {}
+  },
+  "pts/with_nan/250x126": {
+   "offset": 19926,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/with_nan",
+    "width": 250,
+    "height": 126,
+    "trigger": 1921
+   }
+  },
+  "pts/with_nan/37x50": {
+   "offset": 20926,
+   "len": 148,
+   "meta": {
+    "signal": "sig/with_nan",
+    "width": 37,
+    "height": 50,
+    "trigger": 1921
+   }
+  },
+  "sig/with_inf": {
+   "offset": 21074,
+   "len": 500,
+   "meta": {}
+  },
+  "pts/with_inf/250x126": {
+   "offset": 21574,
+   "len": 1000,
+   "meta": {
+    "signal": "sig/with_inf",
+    "width": 250,
+    "height": 126,
+    "trigger": 481
+   }
+  },
+  "pts/with_inf/37x50": {
+   "offset": 22574,
+   "len": 148,
+   "meta": {
+    "signal": "sig/with_inf",
+    "width": 37,
+    "height": 50,
+    "trigger": 481
+   }
+  },
+  "sig/short": {
+   "offset": 22722,
+   "len": 1,
+   "meta": {}
+  },
+  "pts/short/250x126": {
+   "offset": 22723,
+   "len": 4,
+   "meta": {
+    "signal": "sig/short",
+    "width": 250,
+    "height": 126,
+    "trigger": 0
+   }
+  },
+  "pts/short/37x50": {
+   "offset": 22727,
+   "len": 4,
+   "meta": {
+    "signal": "sig/short",
+    "width": 37,
+    "height": 50,
+    "trigger": 0
+   }
+  },
+  "sig/tiny_saw": {
+   "offset": 22731,
+   "len": 300,
+   "meta": {}
+  },
+  "pts/tiny_saw/250x126": {
+   "offset": 23031,
+   "len": 600,
+   "meta": {
+    "signal": "sig/tiny_saw",
+    "width": 250,
+    "height": 126,
+    "trigger": 275
+   }
+  },
+  "pts/tiny_saw/37x50": {
+   "offset": 23631,
+   "len": 148,
+   "meta": {
+    "signal": "sig/tiny_saw",
+    "width": 37,
+    "height": 50,
+    "trigger": 275
+   }
+  }
+ }
+}

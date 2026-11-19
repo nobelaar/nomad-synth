@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "bindings": [
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": 0,
+      "cc": 21,
+      "param": "filt_cutoff"
+    },
+    {
+      "port": 5,
+      "channel": 0,
+      "cc": 22,
+      "param": "filt_reso"
+    },
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": 16,
+      "cc": 22,
+      "param": "filt_reso"
+    },
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": 0,
+      "cc": 128,
+      "param": "filt_reso"
+    },
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": true,
+      "cc": 22,
+      "param": "filt_reso"
+    },
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": 0,
+      "cc": 22.0,
+      "param": "filt_reso"
+    },
+    "not a dict",
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": 0,
+      "cc": 23,
+      "param": "nope"
+    },
+    {
+      "port": "OTHER:OTHER MIDI 2 28:0",
+      "channel": 2,
+      "cc": 24,
+      "param": "glide"
+    },
+    {
+      "port": "TEST:TEST MIDI 1 24:0",
+      "channel": 0,
+      "cc": 21,
+      "param": "filt_reso"
+    }
+  ]
+}
