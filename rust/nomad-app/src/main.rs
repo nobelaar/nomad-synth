@@ -305,6 +305,7 @@ fn gui() -> Result<ExitCode, String> {
     let model = AppModel::new(ctl, f64::from(rate), views);
     let mut app = NomadApp::new(model, output, midi, map, telemetry);
     app.sample_rate = f64::from(rate);
+    app.presets = nomad_app::presets::PresetStore::new(Some(default_config_dir().join("presets")));
     app.status = status.join("  ");
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()

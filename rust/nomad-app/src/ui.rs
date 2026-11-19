@@ -17,6 +17,7 @@ use nomad_runtime::output::AudioOutput;
 use crate::drums_view::{DrumViewState, drums_view_ui};
 use crate::keyboard::{KeyboardState, keyboard_ui};
 use crate::model::AppModel;
+use crate::presets::{Origin, PresetStore};
 use crate::seq_view::seq_view_ui;
 use crate::synth_panel::{SynthPanelState, synth_sections_ui, voice_ui};
 use crate::widgets::knob::knob;
@@ -32,6 +33,14 @@ pub struct NomadApp {
     pub status: String,
     pub audio_device: Option<usize>,
     pub sample_rate: f64,
+    /// Factory only until the caller points it at `<config>/presets` (tests use a temp dir).
+    pub presets: PresetStore,
+    /// Name shown on each instrument's PRESET button.
+    pub preset_names: HashMap<InstrumentId, String>,
+    /// The PRESET menu's list while it is open.
+    pub preset_items: Option<Vec<(String, Origin)>>,
+    /// Open SAVE dialog: instrument and the name typed so far.
+    pub save_dialog: Option<(InstrumentId, String)>,
     scope_ms: f64,
     master: KnobModel,
     closed: bool,
@@ -68,6 +77,10 @@ impl NomadApp {
             status: String::new(),
             audio_device: None,
             sample_rate: 48000.0,
+            presets: PresetStore::new(None),
+            preset_names: HashMap::new(),
+            preset_items: None,
+            save_dialog: None,
             scope_ms: 10.0,
             master: KnobModel::new(spec, spec.default),
             closed: false,
@@ -116,11 +129,13 @@ impl NomadApp {
         let live: Vec<InstrumentId> = self.model.instruments().iter().map(|v| v.id).collect();
         self.synth_panels.retain(|id, _| live.contains(id));
         self.drum_panels.retain(|id, _| live.contains(id));
+        self.preset_names.retain(|id, _| live.contains(id));
         self.keyboards.retain(|id, _| live.contains(id));
         self.rec_intent.retain(|id, _| live.contains(id));
 
         Panel::top("header").show(ui, |ui| crate::header::header(ui, self));
         Panel::top("transport").show(ui, |ui| crate::transport::transport(ui, self));
+        crate::transport::save_dialog(&ui.ctx().clone(), self);
         let selected = self
             .model
             .selected()
