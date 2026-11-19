@@ -9,6 +9,7 @@ use nomad_core::sequencer::NONE;
 use nomad_runtime::Command;
 use nomad_runtime::mirror::SeqSnapshot;
 
+use crate::help::reg;
 use crate::model::{AppModel, InstrumentView};
 use crate::theme::{ACCENT, BG, GREEN, GREY, PLAYHEAD, TROUGH};
 use crate::widgets::knob::wheel_notches;
@@ -174,45 +175,44 @@ pub fn seq_view_ui(
     let rec = *rec_intent;
     let mut send = Vec::new();
     ui.horizontal_wrapped(|ui| {
-        if flat(ui, "SEQ", snap.enabled, GREEN).clicked() {
+        let b = flat(ui, "SEQ", snap.enabled, GREEN);
+        if reg(b, "seq_toggle").clicked() {
             send.push(Command::SeqEnabled {
                 id,
                 enabled: !snap.enabled,
             });
         }
-        if flat(ui, rec_label(rec, playing), rec, ACCENT).clicked() {
+        let b = flat(ui, rec_label(rec, playing), rec, ACCENT);
+        if reg(b, "seq_rec").clicked() {
             *rec_intent = !rec;
             send.push(Command::SeqArm { id, on: !rec });
         }
-        if ui
-            .add_enabled(rest_enabled(rec, playing), Button::new("REST").fill(TROUGH))
-            .clicked()
-        {
+        let b = ui.add_enabled(rest_enabled(rec, playing), Button::new("REST").fill(TROUGH));
+        if reg(b, "seq_rest").clicked() {
             send.push(Command::SeqRest(id));
         }
         ui.add_space(12.0);
-        if ui
-            .button(format!("DIV {}", division_label(snap.division)))
-            .clicked()
-        {
+        let b = ui.button(format!("DIV {}", division_label(snap.division)));
+        if reg(b, "seq_div").clicked() {
             send.push(Command::SeqDivision {
                 id,
                 division: next_division(snap.division),
             });
         }
-        if ui.button(format!("LEN {}", snap.length)).clicked() {
+        let b = ui.button(format!("LEN {}", snap.length));
+        if reg(b, "seq_len").clicked() {
             send.push(Command::SeqLength {
                 id,
                 length: next_length(snap.length),
             });
         }
         ui.add_space(12.0);
-        let gate_label = ui.label("GATE");
+        let gate_label = reg(ui.label("GATE"), "seq_gate");
         let mut gate = (snap.gate * 100.0).round();
         let r = ui
             .add(Slider::new(&mut gate, 5.0..=100.0).show_value(false))
             .labelled_by(gate_label.id);
-        if r.changed() {
+        if reg(r, "seq_gate").changed() {
             send.push(Command::SeqGate {
                 id,
                 gate: gate / 100.0,
@@ -257,7 +257,7 @@ pub fn seq_view_ui(
             .fill(fill)
             .stroke(stroke)
             .min_size(egui::vec2(40.0, 34.0));
-            let r = ui.add(b);
+            let r = reg(ui.add(b), "seq_steps");
             if r.clicked() {
                 let accent = ui.input(|i| i.modifiers.shift);
                 send.push(click_command(id, &snap, s, accent));

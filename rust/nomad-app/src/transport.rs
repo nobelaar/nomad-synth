@@ -8,6 +8,7 @@ use egui::{Button, DragValue, RichText, Slider};
 
 use nomad_core::engine::InstrumentId;
 
+use crate::help::reg;
 use crate::model::InstrumentView;
 use crate::presets::{Origin, PresetKind, apply_commands, capture};
 use crate::theme::{BG, GREEN, GREY, TROUGH, sym};
@@ -112,18 +113,16 @@ pub fn transport(ui: &mut egui::Ui, app: &mut NomadApp) {
             .size(16.0)
             .color(if running { BG } else { GREEN });
         let fill = if running { GREEN } else { TROUGH };
-        if ui
-            .add_enabled(
-                !following,
-                Button::new(play)
-                    .fill(fill)
-                    .min_size(egui::vec2(70.0, 28.0)),
-            )
-            .clicked()
-        {
+        let b = ui.add_enabled(
+            !following,
+            Button::new(play)
+                .fill(fill)
+                .min_size(egui::vec2(70.0, 28.0)),
+        );
+        if reg(b, "inst_play").clicked() {
             app.model.toggle_play(id);
         }
-        let bpm_label = ui.label("BPM");
+        let bpm_label = reg(ui.label("BPM"), "inst_bpm");
         let mut bpm = m.eff_bpm.get();
         let r = ui
             .add_enabled(
@@ -134,16 +133,19 @@ pub fn transport(ui: &mut egui::Ui, app: &mut NomadApp) {
                     .fixed_decimals(0),
             )
             .labelled_by(bpm_label.id);
-        if r.changed() {
+        if reg(r, "inst_bpm").changed() {
             app.model.set_bpm(id, bpm);
         }
-        if ui.add_enabled(!following, Button::new("-")).clicked() {
+        let b = ui.add_enabled(!following, Button::new("-"));
+        if reg(b, "inst_bpm").clicked() {
             app.model.set_bpm(id, (bpm - 1.0).round());
         }
-        if ui.add_enabled(!following, Button::new("+")).clicked() {
+        let b = ui.add_enabled(!following, Button::new("+"));
+        if reg(b, "inst_bpm").clicked() {
             app.model.set_bpm(id, (bpm + 1.0).round());
         }
-        if ui.add_enabled(!following, Button::new("TAP")).clicked() {
+        let b = ui.add_enabled(!following, Button::new("TAP"));
+        if reg(b, "inst_bpm").clicked() {
             app.model.tap_bpm(id, Instant::now());
         }
         let src = v
@@ -151,7 +153,8 @@ pub fn transport(ui: &mut egui::Ui, app: &mut NomadApp) {
             .and_then(|s| app.model.view(s))
             .map_or("Internal".to_string(), |s| s.name.clone());
         let clock: String = format!("CLOCK: {src}").chars().take(26).collect();
-        if ui.button(clock).clicked() && !app.model.cycle_source(id) {
+        let b = ui.button(clock);
+        if reg(b, "clock_source").clicked() && !app.model.cycle_source(id) {
             app.status = "CLOCK: no se puede sincronizar con esa fuente".into();
         }
         let text = button_text(app.preset_names.get(&id).map_or("PRESET", String::as_str));
@@ -175,29 +178,28 @@ pub fn transport(ui: &mut egui::Ui, app: &mut NomadApp) {
             }
             picked
         });
+        reg(menu.response, "preset_menu");
         match menu.inner {
             Some(Some(name)) => load_preset(app, &v, &name),
             Some(None) => {}
             None => app.preset_items = None,
         }
-        if ui.button("SAVE").clicked() {
+        let b = ui.button("SAVE");
+        if reg(b, "preset_save").clicked() {
             ask_save(app, id);
         }
         let muted = app.model.muted(id);
         let mute = RichText::new("MUTE").color(if muted { BG } else { GREY });
-        if ui
-            .add(Button::new(mute).fill(if muted { GREEN } else { TROUGH }))
-            .clicked()
-        {
+        let b = ui.add(Button::new(mute).fill(if muted { GREEN } else { TROUGH }));
+        if reg(b, "inst_mute").clicked() {
             app.model.toggle_mute(id);
         }
-        let level_label = ui.label("LEVEL");
+        let level_label = reg(ui.label("LEVEL"), "inst_level");
         let mut level = m.level.get();
-        if ui
+        let r = ui
             .add(Slider::new(&mut level, 0.0..=1.0).show_value(false))
-            .labelled_by(level_label.id)
-            .changed()
-        {
+            .labelled_by(level_label.id);
+        if reg(r, "inst_level").changed() {
             app.model.set_level(id, level);
         }
     });

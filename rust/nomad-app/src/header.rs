@@ -8,6 +8,7 @@ use nomad_core::engine::Kind;
 use nomad_runtime::midi::input::list_input_ports;
 use nomad_runtime::output::list_output_devices;
 
+use crate::help::reg;
 use crate::theme::{BG, GREEN, GREY, TROUGH, sym};
 use crate::ui::NomadApp;
 
@@ -33,16 +34,12 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
             let active = app.model.selected() == Some(id);
             let fill = if active { GREEN } else { TROUGH };
             let fg = if active { BG } else { GREY };
-            if ui
-                .add(Button::new(RichText::new(text).color(fg)).fill(fill))
-                .clicked()
-            {
+            let tab = ui.add(Button::new(RichText::new(text).color(fg)).fill(fill));
+            if reg(tab, "tab_select").clicked() {
                 select = Some(id);
             }
-            if ui
-                .add(Button::new(RichText::new(sym::CLOSE).color(GREY)).fill(TROUGH))
-                .clicked()
-            {
+            let x = ui.add(Button::new(RichText::new(sym::CLOSE).color(GREY)).fill(TROUGH));
+            if reg(x, "tab_close").clicked() {
                 close = Some(id);
             }
         }
@@ -52,7 +49,7 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
         if let Some(id) = close {
             app.model.close_instrument(id);
         }
-        ui.menu_button("+", |ui| {
+        let new = ui.menu_button("+", |ui| {
             for (label, kind) in [("Synth", Kind::Synth), ("Machine Drum", Kind::Drums)] {
                 if ui.button(label).clicked() {
                     if app.model.add_instrument(kind).is_none() {
@@ -63,7 +60,8 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
             }
         });
         ui.separator();
-        ui.menu_button(format!("AUDIO {}", sym::DROPDOWN), |ui| {
+        reg(new.response, "tab_new");
+        let audio = ui.menu_button(format!("AUDIO {}", sym::DROPDOWN), |ui| {
             let devices = list_output_devices();
             if devices.is_empty() {
                 ui.label("(sin salidas)");
@@ -77,7 +75,8 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
                 }
             }
         });
-        ui.menu_button(format!("MIDI {}", sym::DROPDOWN), |ui| {
+        reg(audio.response, "audio");
+        let midi = ui.menu_button(format!("MIDI {}", sym::DROPDOWN), |ui| {
             let ports = list_input_ports();
             if ports.is_empty() {
                 ui.label("(sin puertos)");
@@ -94,17 +93,23 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
             }
         });
         let t = &app.telemetry;
-        ui.label(format!("VOICES {}", t.voices_total.load(Relaxed)));
-        ui.label(format!("XRUNS {}", t.xruns.load(Relaxed)));
+        reg(midi.response, "midi");
+        let voices = ui.label(format!("VOICES {}", t.voices_total.load(Relaxed)));
+        reg(voices, "voices");
+        let xruns = ui.label(format!("XRUNS {}", t.xruns.load(Relaxed)));
+        reg(xruns, "xruns");
         let armed = app.learn.armed_by_us.is_some();
         let learn = RichText::new("LEARN").color(if armed { BG } else { GREY });
-        if ui
-            .add(Button::new(learn).fill(if armed { GREEN } else { TROUGH }))
-            .clicked()
-        {
+        let b = ui.add(Button::new(learn).fill(if armed { GREEN } else { TROUGH }));
+        if reg(b, "learn").clicked() {
             app.status = app.learn.toggle_learn(&app.midi_map);
         }
-        ui.add_enabled(false, Button::new("?"));
+        let on = app.help.on;
+        let q = RichText::new("?").color(if on { BG } else { GREY });
+        let b = ui.add(Button::new(q).fill(if on { GREEN } else { TROUGH }));
+        if reg(b, "help").clicked() {
+            app.toggle_help();
+        }
     });
     ui.label(RichText::new(&app.status).small());
 }

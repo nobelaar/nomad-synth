@@ -9,6 +9,7 @@ use egui::{Frame, RichText, Stroke};
 use nomad_core::params::{SYNTH_PARAMS, pid};
 use nomad_runtime::Command;
 
+use crate::help::reg_rect;
 use crate::learn::LearnAction;
 use crate::model::{AppModel, InstrumentView};
 use crate::param_sync::SynthParams;
@@ -106,7 +107,9 @@ impl Ctx<'_> {
             WidgetKind::Selector => {
                 let off = selector_offset(p);
                 let index = (v.round() as i64 - off).max(0) as usize;
-                let (picked, context) = selector_with_context(ui, selector_labels(p), index);
+                let inner = ui.scope(|ui| selector_with_context(ui, selector_labels(p), index));
+                reg_rect(ui.ctx(), inner.response.rect, SYNTH_PARAMS[p].name);
+                let (picked, context) = inner.inner;
                 if let Some(i) = picked {
                     self.set(p, (i as i64 + off) as f64);
                 }
@@ -118,6 +121,7 @@ impl Ctx<'_> {
                 let mut m = KnobModel::new(&SYNTH_PARAMS[p], v);
                 let armed = self.state.armed == Some(p);
                 let r = knob_hl(ui, &mut m, short_label(p), false, armed);
+                reg_rect(ui.ctx(), r.response.interact_rect, SYNTH_PARAMS[p].name);
                 if r.changed {
                     self.set(p, m.value());
                 }

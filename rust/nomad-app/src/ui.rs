@@ -15,6 +15,7 @@ use nomad_runtime::midi::map::MidiMap;
 use nomad_runtime::output::AudioOutput;
 
 use crate::drums_view::{DrumViewState, drums_view_ui};
+use crate::help::{HelpState, reg_rect};
 use crate::keyboard::{KeyboardState, keyboard_ui};
 use crate::learn::{LearnState, bound_params};
 use crate::model::AppModel;
@@ -43,6 +44,7 @@ pub struct NomadApp {
     /// Open SAVE dialog: instrument and the name typed so far.
     pub save_dialog: Option<(InstrumentId, String)>,
     pub learn: LearnState,
+    pub help: HelpState,
     scope_ms: f64,
     master: KnobModel,
     closed: bool,
@@ -84,6 +86,7 @@ impl NomadApp {
             preset_items: None,
             save_dialog: None,
             learn: LearnState::default(),
+            help: HelpState::default(),
             scope_ms: 10.0,
             master: KnobModel::new(spec, spec.default),
             closed: false,
@@ -109,10 +112,13 @@ impl NomadApp {
         now: Instant,
     ) {
         let t = Arc::clone(&self.telemetry);
-        scope(ui, &t.scope, &mut self.scope_ms, self.sample_rate);
+        let sc = ui.scope(|ui| scope(ui, &t.scope, &mut self.scope_ms, self.sample_rate));
+        reg_rect(ui.ctx(), sc.response.rect, "scope");
         ui.separator();
         ui.horizontal_wrapped(|ui| {
-            if knob(ui, &mut self.master, "MASTER", false).changed {
+            let r = knob(ui, &mut self.master, "MASTER", false);
+            reg_rect(ui.ctx(), r.response.interact_rect, "master_volume");
+            if r.changed {
                 self.model.set_master(self.master.value());
                 self.learn.touch(pid::MASTER_VOLUME);
             }
@@ -129,6 +135,16 @@ impl NomadApp {
     pub fn ui(&mut self, ui: &mut egui::Ui) {
         self.model.tick();
         let now = Instant::now();
+        crate::help::clear(ui.ctx());
+        let (f1, esc) = ui.input(|i| {
+            (
+                i.key_pressed(egui::Key::F1),
+                i.key_pressed(egui::Key::Escape),
+            )
+        });
+        if f1 || (esc && self.help.on) {
+            self.toggle_help();
+        }
         // Forget the UI state of closed tabs.
         let live: Vec<InstrumentId> = self.model.instruments().iter().map(|v| v.id).collect();
         self.synth_panels.retain(|id, _| live.contains(id));
@@ -156,7 +172,9 @@ impl NomadApp {
             Panel::bottom("keyboard").show(ui, |ui| {
                 let kb = self.keyboards.entry(inst.id).or_default();
                 let shared = Arc::clone(&inst.shared);
-                keyboard_ui(ui, kb, &|n| shared.active_note(n), &mut self.model);
+                let r =
+                    ui.scope(|ui| keyboard_ui(ui, kb, &|n| shared.active_note(n), &mut self.model));
+                reg_rect(ui.ctx(), r.response.rect, "keyboard");
             });
         }
         let wide = ui.available_width() >= WIDE;
@@ -172,11 +190,14 @@ impl NomadApp {
                 .show(ui, |ui| {
                     match &synth {
                         Some(inst) => {
-                            let rec = self.rec_intent.entry(inst.id).or_insert(false);
-                            seq_view_ui(ui, inst, &mut self.model, rec);
-                            ui.separator();
-                            let st = self.synth_panels.entry(inst.id).or_default();
-                            synth_sections_ui(ui, st, inst, &mut self.model, now);
+                            let panel = ui.scope(|ui| {
+                                let rec = self.rec_intent.entry(inst.id).or_insert(false);
+                                seq_view_ui(ui, inst, &mut self.model, rec);
+                                ui.separator();
+                                let st = self.synth_panels.entry(inst.id).or_default();
+                                synth_sections_ui(ui, st, inst, &mut self.model, now);
+                            });
+                            reg_rect(ui.ctx(), panel.response.rect, "synth_view");
                         }
                         None => {
                             if let Some(inst) = selected.as_ref() {
@@ -202,8 +223,21 @@ impl NomadApp {
         if let Some(msg) = self.learn.poll(&self.midi_map) {
             self.status = msg;
         }
+        if self.help.on && crate::help::help_ui(ui.ctx(), &mut self.help, now) {
+            self.toggle_help();
+        }
         ui.ctx()
             .request_repaint_after(std::time::Duration::from_millis(33));
+    }
+
+    /// Help mode on/off (`?`, F1; Esc only turns it off).
+    pub fn toggle_help(&mut self) {
+        self.help.toggle();
+        self.status = if self.help.on {
+            crate::help::STATUS.to_string()
+        } else {
+            String::new()
+        };
     }
 
     /// Stop audio and MIDI and release held keys; safe to call twice.

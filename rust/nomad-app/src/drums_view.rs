@@ -12,6 +12,7 @@ use nomad_core::params::{DRUM_PARAMS, INSTRUMENTS};
 use nomad_runtime::Command;
 use nomad_runtime::mirror::DrumSnapshot;
 
+use crate::help::{reg, reg_rect};
 use crate::model::{AppModel, InstrumentView};
 use crate::param_sync::SynthParams;
 use crate::theme::{ACCENT, BG, GREEN, GREY, PLAYHEAD, TROUGH};
@@ -121,6 +122,7 @@ impl Ctx<'_> {
         let v = self.state.values.ui_value(p, self.snap.values[p], self.now);
         let mut m = KnobModel::new(&DRUM_PARAMS[p], v);
         let r = knob(ui, &mut m, short(p), false);
+        reg_rect(ui.ctx(), r.response.interact_rect, DRUM_PARAMS[p].name);
         if r.changed {
             self.set(p, m.value());
         }
@@ -139,6 +141,7 @@ impl Ctx<'_> {
                 }
                 let level = self.snap.steps[t][s];
                 let (rect, r) = ui.allocate_exact_size(Vec2::new(22.0, 20.0), Sense::click());
+                let r = reg(r, "drum_steps");
                 let name = format!("{} {}", INSTRUMENTS[t], s + 1);
                 r.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, &name));
                 let fill = match level {
@@ -170,14 +173,12 @@ impl Ctx<'_> {
     fn row(&mut self, ui: &mut egui::Ui, t: usize, wide: bool, playhead: i32) {
         let head = |c: &mut Self, ui: &mut egui::Ui| {
             let name = RichText::new(INSTRUMENTS[t].to_uppercase()).color(GREY);
-            if ui
-                .add(
-                    egui::Button::new(name)
-                        .fill(TROUGH)
-                        .min_size(Vec2::new(52.0, 20.0)),
-                )
-                .clicked()
-            {
+            let b = ui.add(
+                egui::Button::new(name)
+                    .fill(TROUGH)
+                    .min_size(Vec2::new(52.0, 20.0)),
+            );
+            if reg(b, &format!("drum_{}", INSTRUMENTS[t])).clicked() {
                 c.send.push(Command::DrumTrigger {
                     id: c.inst.id,
                     track: t as u8,
@@ -245,16 +246,20 @@ pub fn drums_view_ui(
         send: Vec::new(),
         now,
     };
-    ui.horizontal(|ui| {
-        c.knob(ui, SWING);
-        ui.add_space(8.0);
-        if ui.add(egui::Button::new("CLEAR").fill(TROUGH)).clicked() {
-            c.send.push(Command::DrumClear(inst.id));
+    let panel = ui.scope(|ui| {
+        let top = ui.horizontal(|ui| {
+            c.knob(ui, SWING);
+            ui.add_space(8.0);
+            if ui.add(egui::Button::new("CLEAR").fill(TROUGH)).clicked() {
+                c.send.push(Command::DrumClear(inst.id));
+            }
+        });
+        reg_rect(ui.ctx(), top.response.rect, "drum_transport");
+        for t in 0..TRACKS {
+            c.row(ui, t, wide, playhead);
         }
     });
-    for t in 0..TRACKS {
-        c.row(ui, t, wide, playhead);
-    }
+    reg_rect(ui.ctx(), panel.response.rect, "drums_view");
     c.context_menu(ui);
     // Values first, then the shots rendered from them (the local values: the mirror lags).
     let sr = model.sample_rate();
