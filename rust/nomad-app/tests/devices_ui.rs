@@ -17,6 +17,7 @@ use nomad_runtime::{AudioCore, Command, create};
 
 const SR: f64 = 48000.0;
 const BAD: usize = 9;
+const LONG: usize = 10;
 
 type Slot = Rc<RefCell<Option<AudioCore>>>;
 
@@ -60,6 +61,11 @@ fn app() -> (NomadApp, Slot, Rc<RefCell<Vec<Option<usize>>>>) {
         log.borrow_mut().push(index);
         if index == Some(BAD) {
             return Err(("Could not open the audio device: busy".into(), core));
+        }
+        if index == Some(LONG) {
+            let e =
+                "Could not open the audio device: Buffer size 512 is not in the supported range";
+            return Err((e.into(), core));
         }
         *s.borrow_mut() = Some(core);
         Ok(Box::new(Fake(Rc::clone(&s))) as Box<dyn OutputDevice>)
@@ -124,4 +130,17 @@ fn midi_switch_without_sender_reports() {
     let (mut app, _slot, _) = app();
     app.switch_midi("nothing");
     assert_eq!(app.status, "MIDI: no se puede abrir otro puerto");
+}
+
+#[test]
+fn long_error_keeps_the_fallback_suffix() {
+    let (mut app, _slot, _) = app();
+    app.switch_audio(LONG);
+    assert!(
+        app.status.ends_with(" (sigue el anterior)"),
+        "{}",
+        app.status
+    );
+    assert!(app.status.starts_with("AUDIO: Could not open"));
+    assert!(app.status.chars().count() <= 80, "still one short line");
 }
