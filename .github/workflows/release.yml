@@ -1,0 +1,47 @@
+name: release
+
+# Only a pushed version tag (v0.1.0, ...) builds and publishes; normal pushes never do.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    # Oldest supported runner: the binary then runs on distros with glibc >= 2.35.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: ALSA headers (cpal)
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Rust gate
+        working-directory: rust
+        run: |
+          cargo fmt --all -- --check
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+      - name: Third-party licenses
+        run: python3 tools/third_party_notices.py --check
+      - name: Tag matches the Cargo version
+        run: |
+          version="$(sed -n 's/^version = "\(.*\)"$/\1/p' rust/nomad-app/Cargo.toml | head -n 1)"
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "tag ${GITHUB_REF_NAME} does not match nomad-app version ${version}" >&2
+            exit 1
+          fi
+      - name: Build AppImage and tarball
+        run: packaging/linux/build.sh
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --generate-notes \
+            rust/target/dist/NOMAD-*-x86_64.AppImage \
+            rust/target/dist/nomad-*-x86_64-linux.tar.gz \
+            rust/target/dist/SHA256SUMS

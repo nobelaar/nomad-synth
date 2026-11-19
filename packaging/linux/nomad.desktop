@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=NOMAD Synth
+Comment=Sintetizador de inspiración analógica
+Exec=nomad
+Icon=nomad
+Categories=AudioVideo;Audio;Music;
+Terminal=false

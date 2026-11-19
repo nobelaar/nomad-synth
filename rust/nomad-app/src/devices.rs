@@ -66,7 +66,13 @@ impl NomadApp {
             Err((e, core)) => match (self.opener)(core, previous) {
                 Ok(o) => {
                     self.output = Some(o);
-                    self.status = cut(format!("AUDIO: {e} (sigue el anterior)"));
+                    // Cut the error, not the suffix: the user must see it went back.
+                    const BACK: &str = " (sigue el anterior)";
+                    let head: String = format!("AUDIO: {e}")
+                        .chars()
+                        .take(80 - BACK.chars().count())
+                        .collect();
+                    self.status = format!("{head}{BACK}");
                 }
                 Err((_, core)) => {
                     self.parked_core = Some(core);
