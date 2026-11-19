@@ -282,29 +282,45 @@ fn gui() -> Result<ExitCode, String> {
         status.push(format!("MIDI map: {e}"));
     }
     let map = Arc::new(Mutex::new(map));
+    // A port or device that does not open hands back its sender/core: the header
+    // menus can then open another one without restarting.
+    let mut parked_midi = None;
     let midi = match ctl
         .midi_sender()
-        .map(|s| MidiInput::open(None, s, Arc::clone(&map)))
+        .map(|s| MidiInput::open_or_return(None, s, Arc::clone(&map)))
     {
         Some(Ok(m)) => Some(m),
-        Some(Err(e)) => {
+        Some(Err((e, s))) => {
             status.push(format!("MIDI: {e}"));
+            parked_midi = Some(s);
             None
         }
         None => None,
     };
-    let output = match negotiated
-        .and_then(|(index, rate)| AudioOutput::start(core, Some(index), rate, 512))
-    {
-        Ok(o) => Some(o),
+    let mut parked_core = None;
+    let device = negotiated.as_ref().ok().map(|&(i, _)| i);
+    let output = match negotiated {
+        Ok((index, rate)) => match AudioOutput::start_or_return(core, Some(index), rate, 512) {
+            Ok(o) => Some(o),
+            Err((e, core)) => {
+                status.push(format!("AUDIO: {e}"));
+                parked_core = Some(core);
+                None
+            }
+        },
         Err(e) => {
             status.push(format!("AUDIO: {e}"));
+            parked_core = Some(core);
             None
         }
     };
     let model = AppModel::new(ctl, f64::from(rate), views);
     let mut app = NomadApp::new(model, output, midi, map, telemetry);
     app.sample_rate = f64::from(rate);
+    app.opener = nomad_app::devices::real_opener(rate);
+    app.audio_device = device;
+    app.parked_core = parked_core;
+    app.parked_midi = parked_midi;
     app.presets = nomad_app::presets::PresetStore::new(Some(default_config_dir().join("presets")));
     app.status = status.join("  ");
     let options = eframe::NativeOptions {

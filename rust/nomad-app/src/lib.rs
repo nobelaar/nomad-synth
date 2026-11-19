@@ -59,6 +59,7 @@ impl Args {
     }
 }
 pub mod bench;
+pub mod devices;
 pub mod drums_view;
 pub mod header;
 pub mod help;

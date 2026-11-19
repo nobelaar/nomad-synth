@@ -6,8 +6,8 @@
 //! exposes its graph through the default ALSA device, which is what gets picked.
 //! `pick_device` still applies the Python rule for hosts named "JACK".
 
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{
@@ -183,8 +183,39 @@ impl LateTracker {
     }
 }
 
+/// The audio-thread core, shared by the device callback and whoever closes the
+/// stream, so the engine (and every pattern in it) survives a device change.
+#[derive(Clone)]
+pub struct CoreSlot(Arc<Mutex<Option<AudioCore>>>);
+
+impl CoreSlot {
+    pub fn new(core: AudioCore) -> CoreSlot {
+        CoreSlot(Arc::new(Mutex::new(Some(core))))
+    }
+
+    /// The callback's access: `None` (play silence) while the control side holds it.
+    // shortcut: try_lock in the callback; only contended during a device change.
+    pub fn try_core(&self) -> Option<MutexGuard<'_, Option<AudioCore>>> {
+        self.0.try_lock().ok().filter(|g| g.is_some())
+    }
+
+    /// Render `out` like `AudioCore::render_stereo`, or silence when unavailable.
+    pub fn render_stereo(&self, out: &mut [f32], channels: usize) {
+        match self.try_core() {
+            Some(mut g) => g.as_mut().expect("filtered").render_stereo(out, channels),
+            None => out.fill(0.0),
+        }
+    }
+
+    /// Take the core out (blocking; control side only).
+    pub fn take(&self) -> Option<AudioCore> {
+        self.0.lock().unwrap_or_else(|p| p.into_inner()).take()
+    }
+}
+
 pub struct AudioOutput {
     stream: cpal::Stream,
+    slot: CoreSlot,
     sample_rate: u32,
     channels: u16,
     device_lost: Arc<AtomicBool>,
@@ -196,6 +227,29 @@ impl AudioOutput {
     /// must have been built for `sample_rate` (see [`negotiate`]).
     pub fn start(
         core: AudioCore,
+        device: Option<usize>,
+        sample_rate: u32,
+        block: u32,
+    ) -> Result<AudioOutput, String> {
+        Self::start_or_return(core, device, sample_rate, block).map_err(|(e, _)| e)
+    }
+
+    /// `start`, but a device that does not open hands the core back with the error.
+    // The core comes back by value on purpose (rare call: a device change).
+    #[allow(clippy::result_large_err)]
+    pub fn start_or_return(
+        core: AudioCore,
+        device: Option<usize>,
+        sample_rate: u32,
+        block: u32,
+    ) -> Result<AudioOutput, (String, AudioCore)> {
+        let slot = CoreSlot::new(core);
+        Self::open(slot.clone(), device, sample_rate, block)
+            .map_err(|e| (e, slot.take().expect("the core is still in the slot")))
+    }
+
+    fn open(
+        slot: CoreSlot,
         device: Option<usize>,
         sample_rate: u32,
         block: u32,
@@ -222,7 +276,10 @@ impl AudioOutput {
             SupportedBufferSize::Unknown => false,
         });
         let device_lost = Arc::new(AtomicBool::new(false));
-        let telemetry = core.telemetry();
+        let telemetry = slot
+            .try_core()
+            .and_then(|g| g.as_ref().map(AudioCore::telemetry))
+            .ok_or("audio core unavailable")?;
         // No retry with another buffer size: a failed build consumes the core.
         let buffer_size = if fixed {
             BufferSize::Fixed(block)
@@ -236,10 +293,10 @@ impl AudioOutput {
         };
         let lost = Arc::clone(&device_lost);
         let stream = match format {
-            SampleFormat::F32 => stream::<f32>(&d, cfg, core, telemetry, lost),
-            SampleFormat::I16 => stream::<i16>(&d, cfg, core, telemetry, lost),
-            SampleFormat::I32 => stream::<i32>(&d, cfg, core, telemetry, lost),
-            SampleFormat::U16 => stream::<u16>(&d, cfg, core, telemetry, lost),
+            SampleFormat::F32 => stream::<f32>(&d, cfg, slot.clone(), telemetry, lost),
+            SampleFormat::I16 => stream::<i16>(&d, cfg, slot.clone(), telemetry, lost),
+            SampleFormat::I32 => stream::<i32>(&d, cfg, slot.clone(), telemetry, lost),
+            SampleFormat::U16 => stream::<u16>(&d, cfg, slot.clone(), telemetry, lost),
             other => Err(format!(
                 "Unsupported sample format {other} on {}",
                 info.name
@@ -250,6 +307,7 @@ impl AudioOutput {
             .map_err(|e| format!("Could not start audio on {}: {e}", info.name))?;
         Ok(AudioOutput {
             stream,
+            slot,
             sample_rate,
             channels,
             device_lost,
@@ -272,12 +330,21 @@ impl AudioOutput {
     pub fn stop(&mut self) {
         let _ = self.stream.pause();
     }
+
+    /// Stop and drop the stream and return the core with all its state.
+    pub fn close(self) -> AudioCore {
+        let _ = self.stream.pause();
+        drop(self.stream); // the callback no longer runs after this
+        self.slot
+            .take()
+            .expect("the core lives in the slot until close")
+    }
 }
 
 fn stream<T>(
     d: &cpal::Device,
     cfg: StreamConfig,
-    mut core: AudioCore,
+    slot: CoreSlot,
     tel: Arc<Telemetry>,
     lost: Arc<AtomicBool>,
 ) -> Result<cpal::Stream, String>
@@ -300,7 +367,10 @@ where
         tel_cb
             .late_us_max
             .fetch_max((ev.late_ms.max(0.0) * 1000.0) as u64, Ordering::Relaxed);
-        write(&mut core, out, channels, &mut scratch);
+        match slot.try_core() {
+            Some(mut g) => write(g.as_mut().expect("filtered"), out, channels, &mut scratch),
+            None => out.fill(T::EQUILIBRIUM),
+        }
     };
     let errors = move |e: cpal::Error| {
         match e.kind() {

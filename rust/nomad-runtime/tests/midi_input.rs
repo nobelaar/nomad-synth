@@ -165,3 +165,31 @@ fn reset_releases_held_keys() {
         "held keys were released"
     );
 }
+
+#[test]
+#[ignore = "requires ALSA sequencer"]
+fn close_returns_sender_and_releases_keys() {
+    use midir::os::unix::VirtualOutput;
+    let (mut core, mut ctl) = create(Engine::new(SR, 8), SR);
+    let mut out = midir::MidiOutput::new("nomad-test3")
+        .unwrap()
+        .create_virtual("nomad-virtual-close")
+        .unwrap();
+    std::thread::sleep(Duration::from_millis(200));
+    let map = Arc::new(Mutex::new(MidiMap::new(None)));
+    let input = MidiInput::open(
+        Some("nomad-virtual-close"),
+        ctl.midi_sender().unwrap(),
+        Arc::clone(&map),
+    )
+    .unwrap();
+    out.send(&[0x90, 60, 100]).unwrap();
+    std::thread::sleep(Duration::from_millis(300));
+    render(&mut core, 4800);
+    let sender = input.close().expect("the sender comes back");
+    render(&mut core, 48000);
+    assert_eq!(peak(&render(&mut core, 2048)), 0.0, "held key released");
+    // The same sender opens the port again.
+    let again = MidiInput::open(Some("nomad-virtual-close"), sender, map).unwrap();
+    assert!(again.is_alive());
+}

@@ -61,6 +61,7 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
         });
         ui.separator();
         reg(new.response, "tab_new");
+        let (mut switch, mut port) = (None, None);
         let audio = ui.menu_button(format!("AUDIO {}", sym::DROPDOWN), |ui| {
             let devices = list_output_devices();
             if devices.is_empty() {
@@ -69,8 +70,7 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
             for d in devices {
                 let current = app.audio_device == Some(d.index);
                 if ui.selectable_label(current, &d.name).clicked() {
-                    app.audio_device = Some(d.index);
-                    app.status = "AUDIO: el cambio de dispositivo se aplica al reiniciar".into();
+                    switch = Some(d.index);
                     ui.close();
                 }
             }
@@ -81,19 +81,29 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
             if ports.is_empty() {
                 ui.label("(sin puertos)");
             }
-            let open = app.midi.as_ref().map(|m| m.port_name().to_string());
+            let open = app
+                .midi
+                .borrow()
+                .as_ref()
+                .map(|m| m.port_name().to_string());
             for p in ports {
                 if ui
                     .selectable_label(open.as_deref() == Some(p.as_str()), &p)
                     .clicked()
                 {
-                    app.status = "MIDI: el cambio de puerto se aplica al reiniciar".into();
+                    port = Some(p.clone());
                     ui.close();
                 }
             }
         });
-        let t = &app.telemetry;
+        let t = std::sync::Arc::clone(&app.telemetry);
         reg(midi.response, "midi");
+        if let Some(i) = switch {
+            app.switch_audio(i);
+        }
+        if let Some(p) = port {
+            app.switch_midi(&p);
+        }
         let voices = ui.label(format!("VOICES {}", t.voices_total.load(Relaxed)));
         reg(voices, "voices");
         let xruns = ui.label(format!("XRUNS {}", t.xruns.load(Relaxed)));

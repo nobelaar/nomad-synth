@@ -145,6 +145,11 @@ impl MidiHandler {
         self.router.handle(&e, &mut sink);
     }
 
+    /// Give back the MIDI sender (to open another port).
+    pub fn into_sender(self) -> MidiSender {
+        self.sender
+    }
+
     /// Release every held key and the pedal.
     pub fn reset(&mut self) {
         let mut sink = Sink {
@@ -168,6 +173,14 @@ pub fn list_input_ports() -> Vec<String> {
         .collect()
 }
 
+fn take_sender(h: Arc<Mutex<MidiHandler>>) -> Option<MidiSender> {
+    Arc::try_unwrap(h).ok().map(|m| {
+        m.into_inner()
+            .unwrap_or_else(|p| p.into_inner())
+            .into_sender()
+    })
+}
+
 pub struct MidiInput {
     _conn: midir::MidiInputConnection<()>,
     handler: Arc<Mutex<MidiHandler>>,
@@ -183,8 +196,19 @@ impl MidiInput {
         sender: MidiSender,
         map: Arc<Mutex<MidiMap>>,
     ) -> Result<MidiInput, String> {
-        let mut mi =
-            midir::MidiInput::new("NOMAD").map_err(|e| format!("MIDI unavailable: {e}"))?;
+        Self::open_or_return(port, sender, map).map_err(|(e, _)| e)
+    }
+
+    /// `open`, but a port that does not open hands the sender back with the error.
+    pub fn open_or_return(
+        port: Option<&str>,
+        sender: MidiSender,
+        map: Arc<Mutex<MidiMap>>,
+    ) -> Result<MidiInput, (String, MidiSender)> {
+        let mut mi = match midir::MidiInput::new("NOMAD") {
+            Ok(mi) => mi,
+            Err(e) => return Err((format!("MIDI unavailable: {e}"), sender)),
+        };
         mi.ignore(midir::Ignore::All);
         let ports = mi.ports();
         let names: Vec<String> = ports
@@ -196,21 +220,30 @@ impl MidiInput {
             None => names.iter().position(|n| !n.contains("Midi Through")),
         };
         let Some(i) = pick else {
-            return Err(format!("no matching MIDI input port; available: {names:?}"));
+            let e = format!("no matching MIDI input port; available: {names:?}");
+            return Err((e, sender));
         };
         let port_name = names[i].clone();
         let port_id = ports[i].id();
         let tel = Arc::clone(sender.telemetry());
         let handler = Arc::new(Mutex::new(MidiHandler::new(sender, map, port_name.clone())));
         let h = Arc::clone(&handler);
-        let conn = mi
-            .connect(
-                &ports[i],
-                "nomad-in",
-                move |_stamp, bytes, _| contain(&tel, || lock(&h).feed(bytes)),
-                (),
-            )
-            .map_err(|e| format!("cannot open MIDI port {port_name:?}: {e}"))?;
+        let conn = match mi.connect(
+            &ports[i],
+            "nomad-in",
+            move |_stamp, bytes, _| contain(&tel, || lock(&h).feed(bytes)),
+            (),
+        ) {
+            Ok(c) => c,
+            Err(e) => {
+                let msg = format!("cannot open MIDI port {port_name:?}: {e}");
+                // The failed connection dropped its handler clone: ours is the last.
+                return match take_sender(handler) {
+                    Some(s) => Err((msg, s)),
+                    None => unreachable!("no other owner of the MIDI handler"),
+                };
+            }
+        };
         Ok(MidiInput {
             _conn: conn,
             handler,
@@ -221,6 +254,14 @@ impl MidiInput {
 
     pub fn port_name(&self) -> &str {
         &self.port_name
+    }
+
+    /// Release held keys, close the port and give back the sender for another one.
+    pub fn close(self) -> Option<MidiSender> {
+        self.reset();
+        let MidiInput { _conn, handler, .. } = self;
+        drop(_conn.close()); // drops the callback and its handler clone
+        take_sender(handler)
     }
 
     /// Release held keys and the pedal (call when the port changes or goes away).

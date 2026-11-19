@@ -1,6 +1,7 @@
 //! The NOMAD window. `NomadApp::ui` draws everything (and runs without a window
 //! in tests); state comes from the mirrors and goes out as commands.
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
@@ -9,11 +10,12 @@ use std::time::Instant;
 use egui::Panel;
 use nomad_core::engine::{InstrumentId, Kind};
 use nomad_core::params::{SYNTH_PARAMS, pid};
-use nomad_runtime::Telemetry;
 use nomad_runtime::midi::input::MidiInput;
 use nomad_runtime::midi::map::MidiMap;
 use nomad_runtime::output::AudioOutput;
+use nomad_runtime::{AudioCore, MidiSender, Telemetry};
 
+use crate::devices::{AudioOpener, OutputDevice, real_opener};
 use crate::drums_view::{DrumViewState, drums_view_ui};
 use crate::help::{HelpState, reg_rect};
 use crate::keyboard::{KeyboardState, keyboard_ui};
@@ -28,8 +30,15 @@ use crate::widgets::scope::scope;
 
 pub struct NomadApp {
     pub model: AppModel,
-    pub output: Option<AudioOutput>,
-    pub midi: Option<Rc<MidiInput>>,
+    pub output: Option<Box<dyn OutputDevice>>,
+    /// Opens the core on another device (`devices::real_opener`; tests inject a fake).
+    pub opener: AudioOpener,
+    /// The core while no device has it (startup or switch failed), for the next try.
+    pub parked_core: Option<AudioCore>,
+    /// Shared with the retarget hook, which releases held keys.
+    pub midi: Rc<RefCell<Option<MidiInput>>>,
+    /// The MIDI sender while no port is open, for the next port picked.
+    pub parked_midi: Option<MidiSender>,
     pub midi_map: Arc<Mutex<MidiMap>>,
     pub telemetry: Arc<Telemetry>,
     pub status: String,
@@ -65,17 +74,22 @@ impl NomadApp {
         midi_map: Arc<Mutex<MidiMap>>,
         telemetry: Arc<Telemetry>,
     ) -> NomadApp {
-        let midi = midi.map(Rc::new);
-        if let Some(m) = &midi {
-            // MIDI follows the selected synth: release held keys before it moves.
-            let m = Rc::clone(m);
-            model.set_on_retarget(Box::new(move || m.reset()));
-        }
+        let midi = Rc::new(RefCell::new(midi));
+        // MIDI follows the selected synth: release held keys before it moves.
+        let hook = Rc::clone(&midi);
+        model.set_on_retarget(Box::new(move || {
+            if let Some(m) = hook.borrow().as_ref() {
+                m.reset();
+            }
+        }));
         let spec = &SYNTH_PARAMS[pid::MASTER_VOLUME];
         NomadApp {
             model,
-            output,
+            output: output.map(|o| Box::new(o) as Box<dyn OutputDevice>),
+            opener: real_opener(48000),
+            parked_core: None,
             midi,
+            parked_midi: None,
             midi_map,
             telemetry,
             status: String::new(),
@@ -246,13 +260,12 @@ impl NomadApp {
             return;
         }
         self.closed = true;
-        if let Some(m) = &self.midi {
+        if let Some(m) = self.midi.borrow_mut().take() {
             m.reset();
         }
         if let Some(o) = &mut self.output {
             o.stop();
         }
-        self.midi = None;
         self.output = None;
     }
 }

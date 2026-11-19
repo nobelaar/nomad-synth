@@ -1,5 +1,5 @@
 use nomad_runtime::output::{
-    AudioOutput, DeviceInfo, LateTracker, list_output_devices, negotiate, pick_device,
+    AudioOutput, CoreSlot, DeviceInfo, LateTracker, list_output_devices, negotiate, pick_device,
 };
 
 fn dev(index: usize, host: &str, channels: u16) -> DeviceInfo {
@@ -118,4 +118,63 @@ fn plays_one_second_on_default_device() {
     assert!(t.callbacks.load(std::sync::atomic::Ordering::Relaxed) > 10);
     assert_eq!(t.errors.load(std::sync::atomic::Ordering::Relaxed), 0);
     assert!(!out.device_lost());
+}
+
+#[test]
+fn core_survives_close() {
+    use nomad_core::engine::Engine;
+    use nomad_runtime::Command;
+    let (core, mut ctl) = nomad_runtime::create(Engine::new(48000.0, 8), 48000.0);
+    let slot = CoreSlot::new(core);
+    ctl.send(Command::DrumSetStep {
+        id: 2,
+        track: 3,
+        step: 9,
+        level: 2,
+    });
+    let mut out = vec![0.0f32; 1024];
+    slot.render_stereo(&mut out, 2);
+    // While the control side holds the core the callback plays silence.
+    {
+        let _held = slot.try_core().unwrap();
+        let mut busy = vec![1.0f32; 64];
+        slot.render_stereo(&mut busy, 2);
+        assert!(busy.iter().all(|&x| x == 0.0));
+    }
+    let mut core = slot.take().expect("the same core comes back");
+    assert_eq!(core.engine_mut().drums_mut(2).unwrap().steps[3][9], 2);
+    assert!(slot.take().is_none());
+    let mut busy = vec![1.0f32; 64];
+    slot.render_stereo(&mut busy, 2);
+    assert!(busy.iter().all(|&x| x == 0.0), "empty slot: silence");
+}
+
+#[test]
+#[ignore = "requires an audio device"]
+fn switch_device_keeps_engine_state() {
+    use nomad_core::engine::Engine;
+    let (index, rate) = negotiate(None, 48000).unwrap();
+    let (core, mut ctl) = nomad_runtime::create(Engine::new(f64::from(rate), 8), f64::from(rate));
+    let out = AudioOutput::start_or_return(core, Some(index), rate, 512)
+        .ok()
+        .unwrap();
+    ctl.send(nomad_runtime::Command::DrumSetStep {
+        id: 2,
+        track: 1,
+        step: 5,
+        level: 2,
+    });
+    std::thread::sleep(std::time::Duration::from_millis(300));
+    let core = out.close();
+    let out = AudioOutput::start_or_return(core, Some(index), rate, 512)
+        .ok()
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(300));
+    let mut core = out.close();
+    assert_eq!(core.engine_mut().drums_mut(2).unwrap().steps[1][5], 2);
+    let bad = AudioOutput::start_or_return(core, Some(9999), rate, 512);
+    assert!(
+        bad.is_err_and(|(e, _core)| e.contains("9999")),
+        "the core comes back"
+    );
 }
