@@ -1,212 +1,179 @@
-# NOMAD SYNTH
+# NOMAD Synth
 
-Sintetizador polifónico de inspiración analógica, pensado como un instrumento: 8 voces, 2
-osciladores por voz, filtro escalera de 4 polos con resonancia, 2 envolventes ADSR, 2 LFOs, matriz
-de modulación de 8 slots, secuenciador de 16 pasos con acordes y grabación, Machine Drum de seis
-instrumentos sintetizados, pestañas con varias instancias y relojes compartidos, presets, MIDI learn
-y modo ayuda.
+[![CI](https://github.com/nobelaar/nomad-synth/actions/workflows/rust.yml/badge.svg)](https://github.com/nobelaar/nomad-synth/actions/workflows/rust.yml)
+[![Release](https://img.shields.io/github/v/release/nobelaar/nomad-synth)](https://github.com/nobelaar/nomad-synth/releases)
+[![License: GPL-3.0-or-later](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)](LICENSE)
 
-La app actual está escrita en Rust y es un solo programa: no hace falta instalar Python, numpy ni
-nada técnico. La versión anterior en Python sigue más abajo.
+**Sintetizador polifónico de inspiración analógica, con secuenciador de acordes y caja de ritmos, pensado para tocarse como un instrumento.**
 
-## Descargar y abrir (Linux)
+Perillas en vez de menús, un secuenciador de pasos como el de los sintes de hardware, varias
+instancias sonando a la vez con relojes compartidos, y un motor de audio en tiempo real escrito en
+Rust que no asigna memoria en el hilo de audio. Es un solo programa: lo bajás y lo abrís.
 
-1. Bajá `NOMAD-<versión>-x86_64.AppImage` de la página
-   [Releases](https://github.com/nobelaar/nomad-synth/releases).
-2. Dale permiso de ejecución y abrilo:
+![NOMAD Synth](docs/images/nomad.png)
 
-   ```bash
-   chmod +x NOMAD-0.1.0-x86_64.AppImage
-   ./NOMAD-0.1.0-x86_64.AppImage
-   ```
+## Características
 
-   Si tu sistema no tiene FUSE, agregá `--appimage-extract-and-run`.
+**Sintetizador**
+- 8 voces, 2 osciladores por voz (seno, triángulo, sierra y cuadrada con PWM), sin alias gracias a PolyBLEP, con hard sync y modo de frecuencia libre.
+- Filtro escalera de 4 polos con resonancia que autooscila.
+- 2 envolventes ADSR (amplitud y filtro) y 2 LFOs (con sample & hold).
+- Matriz de modulación de 8 slots (LFOs, rueda, velocidad y envolvente hacia afinación, filtro, amplitud y PWM).
+- Glide (portamento) en todas las voces y legato en modo mono.
 
-También hay un `nomad-<versión>-x86_64-linux.tar.gz` con el binario suelto, y `SHA256SUMS` para
-verificar las descargas (`sha256sum -c SHA256SUMS`).
+**Secuenciador**
+- 16 pasos con acordes de hasta 6 notas por paso.
+- Grabación por pasos (cada tecla escribe y avanza; varias teclas juntas graban un acorde) y en vivo, cuantizada al paso más cercano.
+- División de 1/16 a un compás por paso, largo de 1 a 16 pasos, gate y swing.
 
-**Requisitos del sistema:** Linux x86_64 con glibc 2.35 o más nuevo (Ubuntu 22.04, Debian 12, Fedora
-36 o posteriores), audio por ALSA o PipeWire, y gráficos con OpenGL o Vulkan. El AppImage usa la
-biblioteca de audio y los drivers de video del sistema.
+**Machine Drum**
+- Seis instrumentos sintetizados: bombo, caja, clap, tom y hi-hats cerrado y abierto. No usa samples.
+- 16 pasos con acentos, swing, y afinación, caída y nivel por instrumento.
+
+**Sesión**
+- Pestañas: tantos Synths y Machine Drums como quieras, todos sonando y mezclados.
+- Relojes: cada instrumento marca su tempo o sigue el de otro, que le pasa el BPM, la posición y el PLAY.
+- Presets de fábrica y propios, con el sonido y el patrón.
+- MIDI: notas, velocidad, pitch bend, rueda, pedal de sustain y **MIDI learn** para asignar cualquier perilla a un CC.
+- Modo ayuda: pasás el mouse por un control y te explica qué hace.
+- Osciloscopio, teclado en pantalla y cambio de dispositivo de audio o puerto MIDI sin cortar el sonido.
+
+## Descargar
+
+**Linux (x86_64):** bajá el AppImage de la [última versión](https://github.com/nobelaar/nomad-synth/releases/latest), dale permiso de ejecución y abrilo:
+
+```bash
+chmod +x NOMAD-*-x86_64.AppImage
+./NOMAD-*-x86_64.AppImage
+```
+
+Si tu sistema no tiene FUSE, agregá `--appimage-extract-and-run`. En la misma página hay un
+`.tar.gz` con el binario suelto y un `SHA256SUMS` para verificar las descargas
+(`sha256sum -c SHA256SUMS`).
+
+**Requisitos:** glibc 2.35 o más nuevo (Ubuntu 22.04, Debian 12, Fedora 36 o posteriores), audio
+por ALSA o PipeWire, y gráficos con OpenGL o Vulkan.
+
+**Windows y macOS:** todavía no hay instaladores. El código compila y pasa el CI en las dos
+plataformas, pero falta probar el audio y el MIDI con hardware real. Si podés ayudar a probarlo,
+[abrí un issue](https://github.com/nobelaar/nomad-synth/issues).
+
+## Primeros pasos
+
+1. Abrí NOMAD. Arranca con un **Synth** y una **Machine Drum**, cada uno en su pestaña.
+2. Tocá el teclado en pantalla, o conectá un teclado MIDI y elegilo en el menú `MIDI`.
+3. En la barra de arriba, `PRESET` carga un sonido. Probá **Pad de acordes** en el Synth y **4x4** en la batería.
+4. `PLAY` arranca el instrumento de la pestaña elegida. Para que el Synth y la batería vayan juntos, en el Synth elegí `CLOCK: Machine Drum 01`.
+5. Para grabar acordes: `REC` con el reloj parado, mantené apretadas las teclas del acorde y soltalas; el cursor pasa al paso siguiente. Con `DIV 1 bar` y `LEN 4` tenés una progresión de cuatro compases en loop.
+
+## Controles
+
+| Gesto | Efecto |
+|---|---|
+| Arrastrar una perilla hacia arriba o abajo | Cambia el valor (200 px es el recorrido completo) |
+| `Shift` + arrastrar, o la rueda del mouse | Ajuste fino / por pasos |
+| Doble clic en una perilla | Vuelve al valor por defecto |
+| Clic derecho en un control | **Valor por defecto**, **MIDI learn** y **Quitar MIDI** |
+| `LEARN` | Arma MIDI learn sobre el último control que tocaste; después mové una perilla del controlador |
+| `?` o `F1` | Modo ayuda: pasá el mouse por un control para ver qué hace (`Esc` para salir) |
+| Clic en un paso | Lo prende o lo apaga |
+| `Shift` + clic en un paso | Lo acentúa |
+| Rueda sobre un paso del Synth | Transpone el paso entero (con `Shift`, una octava) |
+| `REC` / `REST` | Graba notas en la secuencia / deja un paso en silencio al grabar por pasos |
+| `DIV` / `LEN` / `GATE` | Duración de cada paso / cantidad de pasos / duración de las notas |
+| Nombre de un instrumento de la batería | Lo dispara para escucharlo |
+| `BPM`, `-`, `+`, `TAP` | Tempo: arrastrando, de a uno, o marcándolo a mano |
+| `CLOCK` | Reloj propio o el de otro instrumento |
+| `MUTE` / `LEVEL` / `MASTER` | Silencio y nivel de cada instrumento / volumen general |
+| `+` y `×` en las pestañas | Agregar o cerrar instrumentos |
+
+## MIDI
+
+- Notas con velocidad, pitch bend (rango con la perilla `bend`), rueda de modulación (fuente `MW` de la matriz), pedal de sustain (CC64) y CC120/CC123 para apagar todo.
+- El teclado y el MIDI tocan el Synth de la pestaña elegida. Los CC asignados con MIDI learn también actúan sobre ese Synth.
+- Las asignaciones se guardan por puerto y canal. Si cambiás de puerto, vale la asignación del mismo canal y CC.
 
 ## Configuración
 
-NOMAD guarda sus archivos en `~/.config/nomad-synth/` (o `$XDG_CONFIG_HOME/nomad-synth/`), los
-mismos que usa la versión de Python:
+NOMAD guarda sus archivos en `~/.config/nomad-synth/` (o en `$XDG_CONFIG_HOME/nomad-synth/`):
 
-* `midi-map.json`: los CC asignados con MIDI learn.
-* `presets/synth/` y `presets/drums/`: los presets guardados con `SAVE`.
+- `midi-map.json`: las asignaciones de MIDI learn.
+- `presets/synth/` y `presets/drums/`: tus presets, en JSON.
 
-## Compilar desde el código fuente
+## Línea de comandos
 
-Hace falta Rust (`rustup`) y las cabeceras de ALSA (`libasound2-dev` en Debian/Ubuntu,
-`alsa-lib` en Arch).
+```
+nomad                 abre la ventana
+nomad --version       muestra la versión
+nomad devices         lista las salidas de audio
+nomad demo            toca una escena de demo sin ventana (--device N, --seconds S, --midi)
+nomad midi            muestra lo que llega por MIDI (--port TEXTO, --seconds 20)
+nomad bench           mide el costo del motor sin dispositivo (--voices 8, --synths 2, --block 512)
+nomad soak            prueba larga con audio real y cuenta xruns (--minutes 10)
+```
+
+## Compilar desde el código
+
+Necesitás [Rust](https://rustup.rs) estable y las cabeceras de ALSA (`libasound2-dev` en
+Debian/Ubuntu, `alsa-lib` en Arch, `alsa-lib-devel` en Fedora).
 
 ```bash
-cd rust
+git clone https://github.com/nobelaar/nomad-synth.git
+cd nomad-synth/rust
 cargo build --release -p nomad-app
 ./target/release/nomad
 ```
 
-Para armar el AppImage y el tarball en `rust/target/dist/`: `packaging/linux/build.sh`.
+El AppImage y el tarball se arman con `packaging/linux/build.sh` y quedan en `rust/target/dist/`.
 
-## Comandos
+## Arquitectura
 
+El código de Rust vive en `rust/`, en tres crates:
+
+| Crate | Qué hace |
+|---|---|
+| `nomad-core` | El motor: osciladores, filtro, envolventes, LFOs, matriz, voces, secuenciador, relojes, batería y mezclador. Sin dependencias de audio ni de interfaz. |
+| `nomad-runtime` | Tiempo real: el hilo de audio es dueño del motor y recibe comandos por colas sin bloqueo. Incluye la salida con `cpal`, la entrada MIDI con `midir`, MIDI learn y la telemetría. |
+| `nomad-app` | La interfaz con `egui`, el modelo de la app, los presets y la línea de comandos. |
+
+Decisiones de diseño:
+
+- **El hilo de audio no asigna, no libera y no se bloquea.** Lo verifican tests con un asignador que cuenta asignaciones. Lo que hay que crear o destruir (instrumentos, sonidos de batería) se arma y se libera fuera de ese hilo.
+- **La interfaz nunca toca el motor directamente.** Lee espejos atómicos que el hilo de audio publica y escribe solo por comandos.
+- **El motor está verificado contra audio de referencia** (`rust/reference/`), muestra a muestra con una tolerancia de 1e-9.
+
+## Rendimiento
+
+Medido con `nomad bench` en un Intel Core i5-4300M (2014), con bloques de 512 muestras a 48 kHz:
+
+| Escena | Promedio | Peor bloque |
+|---|---|---|
+| 1 Synth de 8 voces + batería | 1,5 % | 5,1 % |
+| 2 Synths de 8 voces + batería | 3,1 % | 6,8 % |
+
+El porcentaje es la parte del tiempo de cada bloque que usa el motor. Corré `nomad bench` en tu máquina para ver el tuyo.
+
+## Hoja de ruta
+
+- Instaladores para Windows y macOS, una vez probados con hardware real.
+- SLIDE por paso en el secuenciador, estilo 303.
+- Sincronía con reloj MIDI externo.
+
+## Contribuir
+
+Los issues y pull requests son bienvenidos. Antes de mandar un cambio, corré lo mismo que corre el CI:
+
+```bash
+cd rust
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
 ```
-nomad                 abre la ventana (igual que `nomad gui`)
-nomad --version       muestra la versión
-nomad devices         lista las salidas de audio
-nomad demo            toca una demo por consola (--device N, --seconds S, --midi)
-nomad midi            muestra lo que llega por MIDI (--port TEXT, --seconds 20)
-nomad bench           mide el costo del motor (--voices 8, --synths 2, --block 512)
-nomad soak            prueba larga de audio y cuenta xruns (--minutes 10)
-```
+
+Si el cambio toca audio, agregá un test. Si toca el hilo de audio, que siga pasando `no_alloc`.
 
 ## Licencia
 
-NOMAD se distribuye bajo **GPL-3.0-or-later** (ver `LICENSE`). Los componentes de terceros y sus
-licencias están en `THIRD_PARTY_NOTICES.md`, que se genera con `tools/third_party_notices.py`.
-
-## Versión anterior (Python)
-
-La app original en Python queda como referencia (los tests de la versión en Rust comparan contra
-ella) y sigue funcionando.
-
-Sintetizador polifónico de estilo analógico en Python, pensado como un instrumento (perillas
-continuas, sin menús desplegables, sin presets): 8 voces, 2 osciladores por voz, filtro
-escalera de 4 polos con resonancia, 2 envolventes ADSR, 2 LFOs y una matriz de modulación de 8 slots.
-
-### Instalar
-
-```bash
-python -m venv .venv
-.venv/bin/pip install -r requirements.txt
-```
-
-Hace falta Tkinter del sistema (`tk` en Arch, `python3-tk` en Debian/Ubuntu).
-`python-rtmidi` se compila desde el código fuente (~40 s) y necesita las cabeceras de ALSA/JACK.
-`numba` es **opcional**: compila el filtro y las envolventes y baja el uso de CPU a ~25–30 % con
-8 voces. Sin `numba` todo funciona (con `NOMAD_NO_NUMBA=1` se fuerza ese camino), pero con 8 voces
-y resonancia alta el procesador va justo: bajá la polifonía o la resonancia.
-
-### Correr
-
-```bash
-.venv/bin/python -m nomad.main                 # app completa
-.venv/bin/python -m nomad.main --no-midi       # sin entrada MIDI
-.venv/bin/python -m nomad.main --device 6 --volume 0.3 --demo-note 60
-.venv/bin/python -m nomad.render --demo chord out.wav   # chord | sweep | lfo | poly, WAV mono 16 bit
-.venv/bin/python -m pytest                     # tests
-```
-
-La primera vez se compilan los kernels de `numba` (unos 2 s); después quedan en caché.
-
-### Controles
-
-| Gesto | Efecto |
-|---|---|
-| Botones `SYNTH` / `DRUMS` del encabezado | Cambian la vista: panel del sintetizador o drum machine. La batería sigue sonando al volver a SYNTH |
-| Arrastrar una perilla (vertical) | Cambia el valor continuamente (200 px = recorrido completo) |
-| Shift + arrastrar | Ajuste fino (10x) |
-| Rueda del mouse | Pasos |
-| Doble click | Vuelve al valor por defecto |
-| Click derecho / central en una perilla o selector | Menú: **Valor por defecto**, **MIDI learn** (después mové un CC del controlador; si ya está armado, **Cancelar learn**) y **Quitar MIDI** si el parámetro tiene un CC asignado |
-| Botón `LEARN` | Arma el último control tocado |
-| Botón `?` / `F1` | **Modo ayuda**: cursor de pregunta; al pasar el mouse por un control se abre una ventanita que explica qué es, cómo suena y con qué interactúa. Los controles no responden mientras está prendido. Se sale con `?`, `F1` o `Escape` |
-| Teclado en pantalla | Click/arrastre toca notas (glissando); se ilumina con las notas MIDI |
-
-En la vista DRUMS:
-
-| Gesto | Efecto |
-|---|---|
-| Click en un paso de la grilla | Prende o apaga ese paso del patrón |
-| Shift + click en un paso | Marca el paso como acento (suena más fuerte) |
-| Click en el nombre del instrumento | Audiciona ese tambor suelto |
-| `PLAY/STOP` | Arranca o para el patrón; STOP vuelve al paso 1 |
-| Perillas `BPM` / `SWING` | Tempo (60–180) y shuffle (0–60 %), en vivo |
-| `CLEAR` | Borra todos los pasos |
-| Perillas `tune` / `decay` / `level` | Afinación, largo y volumen de cada instrumento |
-
-### Drum machine
-
-Seis instrumentos sintetizados (bombo, caja, clap, tom, hi-hat cerrado y abierto) en un patrón de
-16 pasos (un compás de 4/4). No usa samples ni archivos: cada golpe se genera con osciladores y
-ruido y se pre-renderiza al arrancar; mover `tune` o `decay` lo regenera al instante.
-El patrón vive en memoria (no se guarda en disco) y arranca con un ritmo básico de bombo, caja y
-hats. La batería se suma a las voces del sintetizador antes del master, así que comparten volumen,
-limitador y osciloscopio.
-
-Las ondas, modos, fuentes y destinos de modulación son selectores segmentados. El osciloscopio
-muestra la señal real de salida con trigger; los botones de 5/10/20/50 ms cambian la escala.
-
-### Secuenciador del synth
-
-En la vista SYNTH, debajo de la matriz, `SEQ` activa un secuenciador de 16 pasos que toca notas con
-el mismo motor (voces, envolventes, filtro) que el teclado, así que podés tocar encima a la vez por
-MIDI. Click prende un paso, shift+click lo acentúa, la rueda del mouse cambia la nota (shift: una
-octava) y `GATE` fija la duración. `PLAY` arranca solo la secuencia; la batería tiene su propio
-PLAY y las dos comparten el BPM (la perilla está en la vista DRUMS). Si las arrancás en momentos
-distintos no quedan alineadas entre sí. El patrón no se guarda en disco.
-
-### Pestañas, instancias y reloj compartido
-
-Cada pestaña del encabezado es una **instancia real** de un instrumento (Synth o Machine Drum), con sus
-propios parámetros, patrón y estado. `+` crea otra (menú con los tipos disponibles) y `×` cierra la
-pestaña. Cambiar de pestaña solo cambia qué instrumento editás: **todos siguen sonando** y se mezclan en
-el master. El teclado en pantalla y el MIDI van al Synth seleccionado; al cambiar de pestaña se sueltan las
-notas que quedaban sostenidas en el anterior. Los CC mapeados con LEARN también actúan sobre el Synth
-seleccionado.
-
-* **Volumen:** `MASTER` (columna derecha) es el volumen de toda la mezcla, como siempre. `LEVEL`, de cada
-  instrumento, es su volumen individual (0–100 %, por defecto 100 %). `MUTE` silencia con un fade corto sin
-  detener el instrumento.
-* **Reloj:** `CLOCK:` elige la fuente. `Internal` = tempo propio. Elegir otro instrumento en Internal lo
-  hace *seguidor*: hereda BPM, posición y PLAY/STOP, y su BPM y PLAY quedan bloqueados. Una fuente puede
-  tener varios seguidores; no hay cadenas (un seguidor no puede ser fuente). La pestaña de la fuente
-  muestra `●` y la del seguidor `⇄ nombre`.
-* **Cambio de fuente:** es inmediato, sin cuantizar. Puede saltarse o repetirse un paso en el instante del
-  cambio; los patrones no se reinician. Si la fuente se cierra, sus seguidores pasan a Internal conservando
-  BPM y posición y siguen desde ahí; si la fuente se detiene, los seguidores también.
-* El reloj no comparte patrones: cada instrumento mantiene su secuencia, longitud y subdivisión.
-
-#### Límites conocidos (medidos con `tools/stream_stress.py` en esta máquina)
-* **CPU:** un Synth con 8 voces ya ocupa ~3.4 ms de los 10.7 ms que dura un bloque de 512 frames (máx. 10.5).
-  Cinco instrumentos con secuencias y batería suenan sin xruns, pero sumar 8 voces sostenidas encima genera
-  xruns (63 en 10 s en la medición). Con 4 voces sostenidas, 5.
-* **Crear / cambiar pestañas** con el audio sonando puede causar un xrun ocasional (3 en 12 creaciones): mostrar
-  un panel por primera vez cuesta 40–90 ms del hilo de Tk. Los paneles se arman por secciones para repartir
-  el costo, pero no se eliminó.
-
-### Audio y MIDI
-
-* **Dispositivo de audio:** el botón `AUDIO:` del encabezado cicla las salidas. Por defecto se usa
-  la primera salida estéreo de JACK/PipeWire; si no hay, la del sistema.
-* **MIDI:** el botón `MIDI:` cicla los puertos (los reales antes que `Midi Through`). Soporta notas,
-  velocidad, pitch bend (rango en la perilla `bend_range`), rueda de modulación (CC1, 0..1 hacia la
-  matriz como fuente `MW`), pedal de sustain (CC64), CC120/CC123 (todo apagado).
-* **Mapa MIDI learn:** se guarda en `$XDG_CONFIG_HOME/nomad-synth/midi-map.json`
-  (por defecto `~/.config/nomad-synth/`), asociado a puerto y canal.
-* Si el encabezado muestra `XRUNS` creciendo, el procesador no da abasto: bajá la polifonía,
-  la resonancia o instalá `numba`.
-
-### Notas de sonido
-
-* La resonancia máxima autooscila a propósito: el estado del filtro se limita para que el
-  chirrido sea áspero pero acotado. El master es un `tanh` (no hay compensación por voz).
-* Los osciladores usan PolyBLEP (saw/square); el triángulo tiene algo de alias a frecuencias altas.
-* El modo `FREE` de cada oscilador usa su perilla `hz` (+ `fine` en cents) e ignora la tecla.
-* `osc1_sync` no se muestra: el oscilador 1 es el maestro del sync; `osc2 SYNC` lo activa.
-
-### Arquitectura
-
-```
-nomad/engine/   params, oscillator, envelope, filter, lfo, modmatrix, voice, voice_manager, engine
-nomad/audio/    stream (sounddevice), scope (buffer circular)
-nomad/midi/     midi_input (parseo, puerto, router/sustain), mapping (learn)
-nomad/gui/      knob, selector, app (panel), scope_view, keyboard
-nomad/main.py   entrypoint y cierre limpio   nomad/render.py   render offline
-```
-
-El motor no importa GUI ni MIDI: se maneja con `note_on/note_off`, `set_param`, `set_control` y
-`render(out)`, por una cola sin locks, así que puede reemplazarse por una extensión en C sin tocar el resto.
-`oscillator.py` en la raíz es el prototipo original y no forma parte del producto.
+NOMAD es software libre bajo la licencia [GPL-3.0-or-later](LICENSE). Las licencias de los
+componentes de terceros (incluidas las fuentes de `egui` y las tablas del zigurat de numpy) están en
+[`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
