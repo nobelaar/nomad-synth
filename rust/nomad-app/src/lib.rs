@@ -63,6 +63,7 @@ pub mod header;
 pub mod model;
 pub mod param_sync;
 pub mod synth_layout;
+pub mod synth_panel;
 pub mod tap;
 pub mod theme;
 pub mod transport;
