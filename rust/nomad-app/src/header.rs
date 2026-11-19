@@ -96,7 +96,14 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
         let t = &app.telemetry;
         ui.label(format!("VOICES {}", t.voices_total.load(Relaxed)));
         ui.label(format!("XRUNS {}", t.xruns.load(Relaxed)));
-        ui.add_enabled(false, Button::new("LEARN"));
+        let armed = app.learn.armed_by_us.is_some();
+        let learn = RichText::new("LEARN").color(if armed { BG } else { GREY });
+        if ui
+            .add(Button::new(learn).fill(if armed { GREEN } else { TROUGH }))
+            .clicked()
+        {
+            app.status = app.learn.toggle_learn(&app.midi_map);
+        }
         ui.add_enabled(false, Button::new("?"));
     });
     ui.label(RichText::new(&app.status).small());

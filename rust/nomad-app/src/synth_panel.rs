@@ -9,13 +9,14 @@ use egui::{Frame, RichText, Stroke};
 use nomad_core::params::{SYNTH_PARAMS, pid};
 use nomad_runtime::Command;
 
+use crate::learn::LearnAction;
 use crate::model::{AppModel, InstrumentView};
 use crate::param_sync::SynthParams;
 use crate::synth_layout::{
     SECTIONS, Section, WidgetKind, selector_labels, selector_offset, short_label, widget_kind,
 };
 use crate::theme::{GREEN, TROUGH, sym};
-use crate::widgets::knob::knob;
+use crate::widgets::knob::knob_hl;
 use crate::widgets::knob_model::KnobModel;
 use crate::widgets::selector::selector_with_context;
 
@@ -29,6 +30,14 @@ pub struct SynthPanelState {
     params: SynthParams,
     /// Parameter whose context menu is open, and where.
     context: Option<(usize, egui::Pos2)>,
+    /// Set by the caller each frame: the parameter armed for MIDI learn...
+    pub armed: Option<usize>,
+    /// ...and the parameters that have a CC.
+    pub bound: Vec<usize>,
+    /// Out: the last parameter the user moved this frame.
+    pub touched: Option<usize>,
+    /// Out: a learn action picked in the context menu.
+    pub learn: Option<LearnAction>,
 }
 
 impl Default for SynthPanelState {
@@ -38,6 +47,10 @@ impl Default for SynthPanelState {
             matrix_open: false,
             params: SynthParams::new(&defaults),
             context: None,
+            armed: None,
+            bound: Vec::new(),
+            touched: None,
+            learn: None,
         }
     }
 }
@@ -74,6 +87,7 @@ impl Ctx<'_> {
     }
 
     fn set(&mut self, p: usize, v: f64) {
+        self.state.touched = Some(p);
         self.state.params.user_set(p, v, self.now);
         if self.model.send(Command::SetParam {
             id: self.inst.id,
@@ -102,7 +116,8 @@ impl Ctx<'_> {
             }
             WidgetKind::Knob => {
                 let mut m = KnobModel::new(&SYNTH_PARAMS[p], v);
-                let r = knob(ui, &mut m, short_label(p), false);
+                let armed = self.state.armed == Some(p);
+                let r = knob_hl(ui, &mut m, short_label(p), false, armed);
                 if r.changed {
                     self.set(p, m.value());
                 }
@@ -202,7 +217,19 @@ impl Ctx<'_> {
                     self.set(p, SYNTH_PARAMS[p].default);
                     close = true;
                 }
-                ui.add_enabled(false, egui::Button::new("MIDI learn"));
+                if self.state.armed == Some(p) {
+                    if ui.button("Cancelar learn").clicked() {
+                        self.state.learn = Some(LearnAction::Arm(None));
+                        close = true;
+                    }
+                } else if ui.button("MIDI learn").clicked() {
+                    self.state.learn = Some(LearnAction::Arm(Some(p)));
+                    close = true;
+                }
+                if self.state.bound.contains(&p) && ui.button("Quitar MIDI").clicked() {
+                    self.state.learn = Some(LearnAction::Unbind(p));
+                    close = true;
+                }
             });
         });
         let clicked_elsewhere =
@@ -259,5 +286,5 @@ pub fn voice_ui(
     };
     let s = section("global");
     c.section_ui(ui, s, s.title);
-    c.context_menu(ui);
+    // Its context menu is drawn by `synth_sections_ui` (one menu per panel state).
 }

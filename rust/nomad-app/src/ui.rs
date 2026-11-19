@@ -16,6 +16,7 @@ use nomad_runtime::output::AudioOutput;
 
 use crate::drums_view::{DrumViewState, drums_view_ui};
 use crate::keyboard::{KeyboardState, keyboard_ui};
+use crate::learn::{LearnState, bound_params};
 use crate::model::AppModel;
 use crate::presets::{Origin, PresetStore};
 use crate::seq_view::seq_view_ui;
@@ -41,6 +42,7 @@ pub struct NomadApp {
     pub preset_items: Option<Vec<(String, Origin)>>,
     /// Open SAVE dialog: instrument and the name typed so far.
     pub save_dialog: Option<(InstrumentId, String)>,
+    pub learn: LearnState,
     scope_ms: f64,
     master: KnobModel,
     closed: bool,
@@ -81,6 +83,7 @@ impl NomadApp {
             preset_names: HashMap::new(),
             preset_items: None,
             save_dialog: None,
+            learn: LearnState::default(),
             scope_ms: 10.0,
             master: KnobModel::new(spec, spec.default),
             closed: false,
@@ -111,6 +114,7 @@ impl NomadApp {
         ui.horizontal_wrapped(|ui| {
             if knob(ui, &mut self.master, "MASTER", false).changed {
                 self.model.set_master(self.master.value());
+                self.learn.touch(pid::MASTER_VOLUME);
             }
             if let Some(inst) = synth {
                 let st = self.synth_panels.entry(inst.id).or_default();
@@ -133,6 +137,12 @@ impl NomadApp {
         self.keyboards.retain(|id, _| live.contains(id));
         self.rec_intent.retain(|id, _| live.contains(id));
 
+        // Learn state the synth panels draw from; their requests are applied below.
+        let bound = bound_params(&self.midi_map);
+        for st in self.synth_panels.values_mut() {
+            st.armed = self.learn.armed_by_us;
+            st.bound.clone_from(&bound);
+        }
         Panel::top("header").show(ui, |ui| crate::header::header(ui, self));
         Panel::top("transport").show(ui, |ui| crate::transport::transport(ui, self));
         crate::transport::save_dialog(&ui.ctx().clone(), self);
@@ -181,6 +191,17 @@ impl NomadApp {
                     }
                 });
         });
+        for st in self.synth_panels.values_mut() {
+            if let Some(p) = st.touched.take() {
+                self.learn.touch(p);
+            }
+            if let Some(a) = st.learn.take() {
+                self.status = self.learn.apply(&self.midi_map, a);
+            }
+        }
+        if let Some(msg) = self.learn.poll(&self.midi_map) {
+            self.status = msg;
+        }
         ui.ctx()
             .request_repaint_after(std::time::Duration::from_millis(33));
     }

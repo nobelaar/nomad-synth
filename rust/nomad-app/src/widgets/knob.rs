@@ -48,7 +48,25 @@ pub fn wheel_notches(ui: &egui::Ui) -> i32 {
     })
 }
 
+/// Label and value colors: green while armed for MIDI learn (`Knob.highlight`),
+/// the label also green on hover.
+pub fn knob_colors(hovered: bool, highlight: bool) -> (egui::Color32, egui::Color32) {
+    let label = if hovered || highlight { GREEN } else { GREY };
+    (label, if highlight { GREEN } else { GREY })
+}
+
 pub fn knob(ui: &mut egui::Ui, model: &mut KnobModel, label: &str, locked: bool) -> KnobResponse {
+    knob_hl(ui, model, label, locked, false)
+}
+
+/// `knob`, drawn highlighted when `highlight` (armed for MIDI learn).
+pub fn knob_hl(
+    ui: &mut egui::Ui,
+    model: &mut KnobModel,
+    label: &str,
+    locked: bool,
+    highlight: bool,
+) -> KnobResponse {
     let (rect, response) = ui.allocate_exact_size(Vec2::new(W, H), Sense::click_and_drag());
     let enabled = !locked;
     let name = format!("{label} {}", model.format_value());
@@ -82,13 +100,14 @@ pub fn knob(ui: &mut egui::Ui, model: &mut KnobModel, label: &str, locked: bool)
     }
     if ui.is_rect_visible(rect) {
         let p = ui.painter();
+        let (label_color, value_color) = knob_colors(hovered, highlight);
         let small = FontId::proportional(10.0);
         p.text(
             Pos2::new(rect.center().x, rect.top() + 8.0),
             Align2::CENTER_CENTER,
             label,
             small.clone(),
-            if hovered { GREEN } else { GREY },
+            label_color,
         );
         let c = Pos2::new(rect.center().x, rect.top() + 14.0 + R + 4.0);
         let end = START_DEG + SWEEP_DEG;
@@ -114,7 +133,7 @@ pub fn knob(ui: &mut egui::Ui, model: &mut KnobModel, label: &str, locked: bool)
             Align2::CENTER_CENTER,
             model.format_value(),
             small,
-            GREEN,
+            value_color,
         );
     }
     KnobResponse {

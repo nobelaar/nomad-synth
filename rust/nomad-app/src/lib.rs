@@ -62,6 +62,7 @@ pub mod bench;
 pub mod drums_view;
 pub mod header;
 pub mod keyboard;
+pub mod learn;
 pub mod model;
 pub mod param_sync;
 pub mod presets;
