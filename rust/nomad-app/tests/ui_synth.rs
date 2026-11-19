@@ -72,7 +72,8 @@ fn drum_tab_hides_keyboard_and_synth_panel() {
     h.run_steps(3);
     assert!(h.query_by_label("teclado").is_none());
     assert!(h.query_by_label("SEQ").is_none());
-    assert!(h.query_by_label("Machine Drum (M3-C)").is_some());
+    assert!(h.query_by_label("KICK").is_some());
+    assert!(h.query_by_label("snare 16").is_some());
 }
 
 #[test]

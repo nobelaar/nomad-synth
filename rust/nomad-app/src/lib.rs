@@ -59,6 +59,7 @@ impl Args {
     }
 }
 pub mod bench;
+pub mod drums_view;
 pub mod header;
 pub mod keyboard;
 pub mod model;

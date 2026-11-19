@@ -93,6 +93,10 @@ impl SynthParams {
         }
     }
 
+    pub fn get(&self, pid: usize) -> Option<&ParamSync> {
+        self.params.get(pid)
+    }
+
     pub fn get_mut(&mut self, pid: usize) -> Option<&mut ParamSync> {
         self.params.get_mut(pid)
     }

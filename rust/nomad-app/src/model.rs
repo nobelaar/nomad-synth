@@ -111,6 +111,10 @@ impl AppModel {
         self.target
     }
 
+    pub fn sample_rate(&self) -> f64 {
+        self.sample_rate
+    }
+
     pub fn telemetry(&self) -> Arc<Telemetry> {
         self.control.telemetry()
     }

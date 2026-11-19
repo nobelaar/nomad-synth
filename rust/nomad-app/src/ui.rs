@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-use egui::{Panel, RichText};
+use egui::Panel;
 use nomad_core::engine::{InstrumentId, Kind};
 use nomad_core::params::{SYNTH_PARAMS, pid};
 use nomad_runtime::Telemetry;
@@ -14,11 +14,11 @@ use nomad_runtime::midi::input::MidiInput;
 use nomad_runtime::midi::map::MidiMap;
 use nomad_runtime::output::AudioOutput;
 
+use crate::drums_view::{DrumViewState, drums_view_ui};
 use crate::keyboard::{KeyboardState, keyboard_ui};
 use crate::model::AppModel;
 use crate::seq_view::seq_view_ui;
 use crate::synth_panel::{SynthPanelState, synth_sections_ui, voice_ui};
-use crate::theme::GREY;
 use crate::widgets::knob::knob;
 use crate::widgets::knob_model::KnobModel;
 use crate::widgets::scope::scope;
@@ -36,6 +36,7 @@ pub struct NomadApp {
     master: KnobModel,
     closed: bool,
     synth_panels: HashMap<InstrumentId, SynthPanelState>,
+    drum_panels: HashMap<InstrumentId, DrumViewState>,
     keyboards: HashMap<InstrumentId, KeyboardState>,
     rec_intent: HashMap<InstrumentId, bool>,
 }
@@ -71,6 +72,7 @@ impl NomadApp {
             master: KnobModel::new(spec, spec.default),
             closed: false,
             synth_panels: HashMap::new(),
+            drum_panels: HashMap::new(),
             keyboards: HashMap::new(),
             rec_intent: HashMap::new(),
         }
@@ -113,6 +115,7 @@ impl NomadApp {
         // Forget the UI state of closed tabs.
         let live: Vec<InstrumentId> = self.model.instruments().iter().map(|v| v.id).collect();
         self.synth_panels.retain(|id, _| live.contains(id));
+        self.drum_panels.retain(|id, _| live.contains(id));
         self.keyboards.retain(|id, _| live.contains(id));
         self.rec_intent.retain(|id, _| live.contains(id));
 
@@ -151,12 +154,10 @@ impl NomadApp {
                             synth_sections_ui(ui, st, inst, &mut self.model, now);
                         }
                         None => {
-                            let text = if selected.is_some() {
-                                "Machine Drum (M3-C)"
-                            } else {
-                                ""
-                            };
-                            ui.label(RichText::new(text).color(GREY));
+                            if let Some(inst) = selected.as_ref() {
+                                let st = self.drum_panels.entry(inst.id).or_default();
+                                drums_view_ui(ui, st, inst, &mut self.model, now);
+                            }
                         }
                     }
                     if !wide {
