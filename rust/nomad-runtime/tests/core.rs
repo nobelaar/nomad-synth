@@ -296,6 +296,7 @@ fn garbage_returns_removed_instances_and_old_shots() {
     let n = ctl.reap_with(|g| match g {
         nomad_runtime::Garbage::Shot(s) => shot_len = s.len(),
         nomad_runtime::Garbage::Instance(_) => instances += 1,
+        nomad_runtime::Garbage::Pattern(_) => {}
     });
     assert_eq!((n, instances), (2, 1));
     assert!(shot_len > 1000, "the old tom shot, intact");

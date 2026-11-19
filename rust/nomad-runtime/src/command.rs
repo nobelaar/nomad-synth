@@ -1,6 +1,8 @@
 //! Messages to the audio thread and the objects it hands back for freeing.
 
+use nomad_core::clock::STEPS;
 use nomad_core::engine::{Instance, InstrumentId};
+pub use nomad_core::sequencer::SeqPattern;
 use nomad_core::synth::Control;
 
 /// One engine operation, applied by the audio thread at the start of a callback.
@@ -91,6 +93,11 @@ pub enum Command {
         on: bool,
     },
     SeqRest(InstrumentId),
+    /// A whole pattern at once (presets); the box comes back as garbage.
+    SeqLoadPattern {
+        id: InstrumentId,
+        pattern: Box<SeqPattern>,
+    },
     DrumSetStep {
         id: InstrumentId,
         track: u8,
@@ -98,6 +105,11 @@ pub enum Command {
         level: u8,
     },
     DrumClear(InstrumentId),
+    /// A whole drum pattern at once (presets).
+    DrumLoadPattern {
+        id: InstrumentId,
+        steps: [[u8; STEPS]; 6],
+    },
     DrumTrigger {
         id: InstrumentId,
         track: u8,
@@ -128,4 +140,5 @@ pub enum Command {
 pub enum Garbage {
     Instance(Box<Instance>),
     Shot(Box<Vec<f32>>),
+    Pattern(Box<SeqPattern>),
 }

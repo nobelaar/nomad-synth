@@ -16,6 +16,32 @@ use crate::voice_manager::VoiceManager;
 pub const EXTRA: usize = 5;
 /// Empty chord slot.
 pub const NONE: u8 = 255;
+/// Allowed `division` values, as `nomad/presets.py` (`_DIVISIONS`).
+pub const DIVISIONS: [f64; 5] = [0.25, 0.5, 1.0, 2.0, 4.0];
+
+/// The nearest allowed division (the first one on a tie, like Python's `min`).
+pub fn snap_division(d: f64) -> f64 {
+    DIVISIONS.iter().copied().fold(DIVISIONS[0], |best, x| {
+        if (x - d).abs() < (best - d).abs() {
+            x
+        } else {
+            best
+        }
+    })
+}
+
+/// A whole pattern as a preset stores it (`seq` in `nomad/presets.py`).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct SeqPattern {
+    pub on: [u8; STEPS],
+    pub note: [u8; STEPS],
+    pub vel: [u8; STEPS],
+    pub extra: [[u8; EXTRA]; STEPS],
+    pub gate: f64,
+    pub division: f64,
+    pub length: u8,
+    pub swing: f64,
+}
 
 /// Where the sequencer plays its notes.
 pub trait NoteSink {
@@ -143,6 +169,24 @@ impl StepSequencer {
         for x in self.extra[step].iter_mut().filter(|x| **x != NONE) {
             *x = (*x as i64 + delta) as u8;
         }
+    }
+
+    /// Load a preset's pattern like `presets.apply`: arrays copied as they are
+    /// (an off step keeps its chord), gate/division/length/swing sanitised,
+    /// `enabled` and REC untouched. Non-finite division or swing is ignored.
+    pub fn load_pattern(&mut self, p: &SeqPattern) {
+        self.set_gate(p.gate);
+        if p.division.is_finite() {
+            self.grid.division = snap_division(p.division);
+        }
+        self.grid.length = usize::from(p.length.clamp(1, STEPS as u8));
+        if p.swing.is_finite() {
+            self.grid.swing = p.swing.clamp(0.0, 0.6);
+        }
+        self.note = p.note;
+        self.vel = p.vel;
+        self.extra = p.extra;
+        self.on = p.on;
     }
 
     pub fn clear(&mut self) {

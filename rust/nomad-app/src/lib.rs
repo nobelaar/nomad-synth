@@ -63,6 +63,7 @@ pub mod header;
 pub mod keyboard;
 pub mod model;
 pub mod param_sync;
+pub mod presets;
 pub mod seq_view;
 pub mod synth_layout;
 pub mod synth_panel;

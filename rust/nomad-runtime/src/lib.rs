@@ -12,7 +12,7 @@ pub mod mirror {
     pub use nomad_core::mirror::*;
 }
 
-pub use command::{Command, Garbage};
+pub use command::{Command, Garbage, SeqPattern};
 pub use core::{AudioCore, ControlHandle, MidiSender, create};
 pub use telemetry::{ScopeRing, Telemetry};
 pub mod midi;

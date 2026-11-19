@@ -173,6 +173,23 @@ fn audio_core_render_is_allocation_free() {
             id: SYNTH,
             on: false,
         },
+        Command::SeqLoadPattern {
+            id: SYNTH,
+            pattern: Box::new(nomad_runtime::SeqPattern {
+                on: [1; 16],
+                note: [48; 16],
+                vel: [90; 16],
+                extra: [[52, 55, 255, 255, 255]; 16],
+                gate: 0.9,
+                division: 0.4,
+                length: 12,
+                swing: 0.1,
+            }),
+        },
+        Command::DrumLoadPattern {
+            id: DRUMS,
+            steps: [[1, 0, 2, 0, 1, 0, 0, 0, 1, 0, 2, 0, 1, 0, 0, 0]; 6],
+        },
         Command::DrumSetStep {
             id: DRUMS,
             track: 2,
@@ -241,7 +258,7 @@ fn audio_core_render_is_allocation_free() {
         }
     });
     assert!(
-        ctl.reap() >= 3,
+        ctl.reap() >= 4,
         "old shots and the closed instance come back"
     );
 }

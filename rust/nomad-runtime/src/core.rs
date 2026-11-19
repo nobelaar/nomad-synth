@@ -8,6 +8,7 @@ use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use nomad_core::engine::Engine;
+use nomad_core::sequencer::snap_division;
 use rtrb::{Consumer, Producer, PushError, RingBuffer};
 
 use crate::command::{Command, Garbage};
@@ -21,8 +22,6 @@ const GARBAGE: usize = 256;
 const PENDING: usize = 64;
 /// Largest engine render per step; bigger callbacks are processed in batches.
 const BATCH: usize = 4096;
-/// Allowed division values, as `nomad/presets.py` (`_DIVISIONS`).
-const DIVISIONS: [f64; 5] = [0.25, 0.5, 1.0, 2.0, 4.0];
 
 pub struct AudioCore {
     engine: Engine,
@@ -289,14 +288,7 @@ impl AudioCore {
             Command::SeqDivision { id, division } => {
                 // Snapped to the allowed values, as presets do; non-finite is ignored.
                 if let (Some(s), true) = (e.synth_mut(id), division.is_finite()) {
-                    let d = DIVISIONS.iter().copied().fold(DIVISIONS[0], |best, d| {
-                        if (d - division).abs() < (best - division).abs() {
-                            d
-                        } else {
-                            best
-                        }
-                    });
-                    s.sequencer.grid.division = d;
+                    s.sequencer.grid.division = snap_division(division);
                 }
             }
             Command::SeqLength { id, length } => {
@@ -326,6 +318,11 @@ impl AudioCore {
                     s.rest(&clock);
                 }
             }
+            Command::SeqLoadPattern { id, pattern } => {
+                e.load_seq_pattern(id, &pattern);
+                trash(garbage, pending, Garbage::Pattern(pattern));
+            }
+            Command::DrumLoadPattern { id, steps } => e.load_drum_pattern(id, &steps),
             Command::DrumSetStep {
                 id,
                 track,

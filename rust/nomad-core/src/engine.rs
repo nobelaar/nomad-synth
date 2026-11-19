@@ -11,7 +11,7 @@
 use std::sync::Arc;
 use std::sync::atomic::Ordering::Relaxed;
 
-use crate::clock::Clock;
+use crate::clock::{Clock, STEPS};
 use crate::drum_synth::render_one_shot;
 use crate::drums::{DrumMachine, ValueEffect};
 use crate::mirror::InstrumentShared;
@@ -392,6 +392,24 @@ impl Engine {
         match self.drums_mut(id) {
             Some(d) => Ok(d.set_bank(track, shot)),
             None => Err(shot),
+        }
+    }
+
+    /// A preset's sequencer pattern on synth `id` (no allocation).
+    pub fn load_seq_pattern(&mut self, id: InstrumentId, p: &crate::sequencer::SeqPattern) {
+        if let Some(s) = self.synth_mut(id) {
+            s.sequencer.load_pattern(p);
+        }
+    }
+
+    /// A preset's drum pattern on machine `id`; levels clamped to 0..=2.
+    pub fn load_drum_pattern(&mut self, id: InstrumentId, steps: &[[u8; STEPS]; 6]) {
+        if let Some(d) = self.drums_mut(id) {
+            for (row, src) in d.steps.iter_mut().zip(steps) {
+                for (x, &v) in row.iter_mut().zip(src) {
+                    *x = v.min(2);
+                }
+            }
         }
     }
 
