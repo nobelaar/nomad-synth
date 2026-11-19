@@ -20,7 +20,7 @@ pub fn transport(ui: &mut egui::Ui, app: &mut NomadApp) {
     let following = v.source.is_some();
     let m = &v.shared;
     let running = m.eff_running.load(Relaxed);
-    ui.horizontal(|ui| {
+    ui.horizontal_wrapped(|ui| {
         let play = RichText::new(if running { "STOP" } else { "PLAY" })
             .size(16.0)
             .color(if running { BG } else { GREEN });

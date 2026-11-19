@@ -12,7 +12,8 @@ use crate::theme::{BG, GREEN, GREY, TROUGH, sym};
 use crate::ui::NomadApp;
 
 pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
-    ui.horizontal(|ui| {
+    // Wraps on narrow (tiled) windows so VOICES/XRUNS never get cut.
+    ui.horizontal_wrapped(|ui| {
         ui.label(RichText::new("NOMAD SYNTH").heading().color(GREEN));
         ui.separator();
         let ids: Vec<_> = app.model.instruments().iter().map(|v| v.id).collect();

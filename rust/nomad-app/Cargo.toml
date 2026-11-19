@@ -16,3 +16,7 @@ nomad-runtime = { path = "../nomad-runtime" }
 [dev-dependencies]
 egui_kittest = "0.37"
 serde_json = "1"
+
+[features]
+# Only for rendering screenshots in tests (pulls in wgpu): `--features shots`.
+shots = ["egui_kittest/wgpu", "egui_kittest/snapshot"]
