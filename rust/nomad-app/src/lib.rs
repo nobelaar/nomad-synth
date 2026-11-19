@@ -59,7 +59,10 @@ impl Args {
     }
 }
 pub mod bench;
+pub mod header;
 pub mod model;
 pub mod tap;
 pub mod theme;
+pub mod transport;
+pub mod ui;
 pub mod widgets;

@@ -12,7 +12,8 @@ use nomad_runtime::midi::map::{MidiMap, default_config_dir};
 use nomad_runtime::output::{AudioOutput, list_output_devices, negotiate};
 use nomad_runtime::{ControlHandle, Telemetry, create};
 
-const USAGE: &str = "usage: nomad devices
+const USAGE: &str = "usage: nomad [gui]
+       nomad devices
        nomad midi  [--port TEXT] [--seconds 20]
        nomad demo  [--device N] [--seconds S] [--midi [TEXT]] [--midi-map PATH]
        nomad bench [--voices 8] [--synths 2] [--seconds 10] [--block 512]
@@ -21,6 +22,7 @@ const USAGE: &str = "usage: nomad devices
 fn main() -> ExitCode {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let result = match argv.first().map(String::as_str) {
+        None | Some("gui") => gui(),
         Some("devices") => devices(),
         Some("midi") => Args::parse(&argv[1..]).and_then(|a| midi(&a)),
         Some("demo") => Args::parse(&argv[1..]).and_then(|a| demo(&a)),
@@ -258,4 +260,67 @@ fn soak(a: &Args) -> Result<ExitCode, String> {
     } else {
         ExitCode::FAILURE
     })
+}
+
+/// The window: engine + audio + MIDI (read-only map), as `demo --midi`; if audio
+/// or MIDI fail the window still opens and says so in its status line.
+fn gui() -> Result<ExitCode, String> {
+    use nomad_app::model::{AppModel, initial_views};
+    use nomad_app::ui::NomadApp;
+    use nomad_core::engine::Engine;
+
+    let mut status = Vec::new();
+    let negotiated = negotiate(None, 48000);
+    let rate = negotiated.as_ref().map_or(48000, |&(_, r)| r);
+    let engine = Engine::new(f64::from(rate), 8);
+    let views = initial_views(&engine);
+    let (core, mut ctl) = create(engine, f64::from(rate));
+    let telemetry = ctl.telemetry();
+    let mut map = MidiMap::new(Some(default_config_dir().join("midi-map.json")));
+    map.load();
+    if let Some(e) = &map.error {
+        status.push(format!("MIDI map: {e}"));
+    }
+    let map = Arc::new(Mutex::new(map));
+    let midi = match ctl
+        .midi_sender()
+        .map(|s| MidiInput::open(None, s, Arc::clone(&map)))
+    {
+        Some(Ok(m)) => Some(m),
+        Some(Err(e)) => {
+            status.push(format!("MIDI: {e}"));
+            None
+        }
+        None => None,
+    };
+    let output = match negotiated
+        .and_then(|(index, rate)| AudioOutput::start(core, Some(index), rate, 512))
+    {
+        Ok(o) => Some(o),
+        Err(e) => {
+            status.push(format!("AUDIO: {e}"));
+            None
+        }
+    };
+    let model = AppModel::new(ctl, f64::from(rate), views);
+    let mut app = NomadApp::new(model, output, midi, map, telemetry);
+    app.sample_rate = f64::from(rate);
+    app.status = status.join("  ");
+    let options = eframe::NativeOptions {
+        viewport: egui::ViewportBuilder::default()
+            .with_title("NOMAD SYNTH")
+            .with_inner_size([1366.0, 768.0])
+            .with_min_inner_size([1000.0, 600.0]),
+        ..Default::default()
+    };
+    eframe::run_native(
+        "NOMAD SYNTH",
+        options,
+        Box::new(move |cc| {
+            nomad_app::theme::apply(&cc.egui_ctx);
+            Ok(Box::new(app))
+        }),
+    )
+    .map_err(|e| format!("window: {e}"))?;
+    Ok(ExitCode::SUCCESS)
 }

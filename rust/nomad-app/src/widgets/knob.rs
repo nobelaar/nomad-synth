@@ -50,6 +50,9 @@ fn wheel_notches(ui: &egui::Ui) -> i32 {
 
 pub fn knob(ui: &mut egui::Ui, model: &mut KnobModel, label: &str, locked: bool) -> KnobResponse {
     let (rect, response) = ui.allocate_exact_size(Vec2::new(W, H), Sense::click_and_drag());
+    let enabled = !locked;
+    let name = format!("{label} {}", model.format_value());
+    response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Slider, enabled, &name));
     let hovered = response.hovered();
     let (mut changed, mut reset, mut context) = (false, false, false);
     if !locked {
