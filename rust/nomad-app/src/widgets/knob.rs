@@ -34,7 +34,7 @@ fn arc_points(c: Pos2, r: f32, from: f32, to: f32) -> Vec<Pos2> {
 }
 
 /// Wheel notches this frame (one per wheel event, its direction).
-fn wheel_notches(ui: &egui::Ui) -> i32 {
+pub fn wheel_notches(ui: &egui::Ui) -> i32 {
     ui.input(|i| {
         i.events
             .iter()

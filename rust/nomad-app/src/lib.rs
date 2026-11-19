@@ -62,6 +62,7 @@ pub mod bench;
 pub mod header;
 pub mod model;
 pub mod param_sync;
+pub mod seq_view;
 pub mod synth_layout;
 pub mod synth_panel;
 pub mod tap;
