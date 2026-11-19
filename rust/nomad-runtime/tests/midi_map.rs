@@ -194,6 +194,7 @@ fn save_creates_directory_and_leaves_no_tmp() {
 }
 
 #[test]
+#[cfg(unix)] // read-only directories via Unix permissions
 fn save_failure_keeps_old_file() {
     use std::os::unix::fs::PermissionsExt;
     let dir = temp_dir("ro");

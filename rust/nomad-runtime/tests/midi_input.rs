@@ -116,6 +116,7 @@ fn callback_panic_is_contained() {
 }
 
 #[test]
+#[cfg(unix)] // midir virtual ports are Unix-only
 #[ignore = "requires ALSA sequencer"]
 fn virtual_port_roundtrip() {
     use midir::os::unix::VirtualOutput;
@@ -141,6 +142,7 @@ fn virtual_port_roundtrip() {
 }
 
 #[test]
+#[cfg(unix)] // midir virtual ports are Unix-only
 #[ignore = "requires ALSA sequencer"]
 fn reset_releases_held_keys() {
     use midir::os::unix::VirtualOutput;
@@ -167,6 +169,7 @@ fn reset_releases_held_keys() {
 }
 
 #[test]
+#[cfg(unix)] // midir virtual ports are Unix-only
 #[ignore = "requires ALSA sequencer"]
 fn close_returns_sender_and_releases_keys() {
     use midir::os::unix::VirtualOutput;
