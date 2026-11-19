@@ -1,10 +1,13 @@
 use std::sync::atomic::Ordering::Relaxed;
 use std::sync::{Arc, Mutex};
+#[cfg(unix)]
 use std::time::Duration;
 
 use nomad_core::engine::{Engine, Kind};
 use nomad_core::params::{SYNTH_PARAMS, pid};
-use nomad_runtime::midi::input::{MidiHandler, MidiInput, contain, list_input_ports};
+#[cfg(unix)]
+use nomad_runtime::midi::input::MidiInput;
+use nomad_runtime::midi::input::{MidiHandler, contain, list_input_ports};
 use nomad_runtime::midi::map::MidiMap;
 use nomad_runtime::{AudioCore, Command, create};
 
