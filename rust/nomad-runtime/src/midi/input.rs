@@ -260,7 +260,7 @@ impl MidiInput {
     pub fn close(self) -> Option<MidiSender> {
         self.reset();
         let MidiInput { _conn, handler, .. } = self;
-        drop(_conn.close()); // drops the callback and its handler clone
+        let _ = _conn.close(); // drops the callback and its handler clone
         take_sender(handler)
     }
 
