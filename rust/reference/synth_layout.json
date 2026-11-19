@@ -1,0 +1,479 @@
+{
+ "sections": [
+  {
+   "key": "osc1",
+   "title": "OSC1",
+   "params": [
+    "osc1_wave",
+    "osc1_mode",
+    "osc1_coarse",
+    "osc1_hz",
+    "osc1_fine",
+    "osc1_pw"
+   ]
+  },
+  {
+   "key": "osc2",
+   "title": "OSC2",
+   "params": [
+    "osc2_wave",
+    "osc2_mode",
+    "osc2_sync",
+    "osc2_coarse",
+    "osc2_hz",
+    "osc2_fine",
+    "osc2_pw"
+   ]
+  },
+  {
+   "key": "mixer",
+   "title": "MIXER",
+   "params": [
+    "osc1_level",
+    "osc2_level"
+   ]
+  },
+  {
+   "key": "filter",
+   "title": "FILTER",
+   "params": [
+    "filt_cutoff",
+    "filt_reso",
+    "filt_env_amt"
+   ]
+  },
+  {
+   "key": "amp_env",
+   "title": "AMP ENV",
+   "params": [
+    "amp_attack",
+    "amp_decay",
+    "amp_sustain",
+    "amp_release"
+   ]
+  },
+  {
+   "key": "filt_env",
+   "title": "FILT ENV",
+   "params": [
+    "filt_attack",
+    "filt_decay",
+    "filt_sustain",
+    "filt_release"
+   ]
+  },
+  {
+   "key": "lfo1",
+   "title": "LFO1",
+   "params": [
+    "lfo1_wave",
+    "lfo1_rate",
+    "lfo1_depth",
+    "lfo1_phase"
+   ]
+  },
+  {
+   "key": "lfo2",
+   "title": "LFO2",
+   "params": [
+    "lfo2_wave",
+    "lfo2_rate",
+    "lfo2_depth",
+    "lfo2_phase"
+   ]
+  },
+  {
+   "key": "matrix",
+   "title": "MATRIX",
+   "params": [
+    "mod0_src",
+    "mod0_dst",
+    "mod0_amt",
+    "mod1_src",
+    "mod1_dst",
+    "mod1_amt",
+    "mod2_src",
+    "mod2_dst",
+    "mod2_amt",
+    "mod3_src",
+    "mod3_dst",
+    "mod3_amt",
+    "mod4_src",
+    "mod4_dst",
+    "mod4_amt",
+    "mod5_src",
+    "mod5_dst",
+    "mod5_amt",
+    "mod6_src",
+    "mod6_dst",
+    "mod6_amt",
+    "mod7_src",
+    "mod7_dst",
+    "mod7_amt"
+   ]
+  },
+  {
+   "key": "global",
+   "title": "VOICE",
+   "params": [
+    "polyphony",
+    "bend_range",
+    "glide"
+   ]
+  }
+ ],
+ "kinds": {
+  "polyphony": "selector",
+  "glide": "knob",
+  "master_volume": "knob",
+  "osc1_wave": "selector",
+  "osc1_mode": "selector",
+  "osc1_coarse": "knob",
+  "osc1_hz": "knob",
+  "osc1_fine": "knob",
+  "osc1_pw": "knob",
+  "osc1_level": "knob",
+  "osc1_sync": "selector",
+  "osc2_wave": "selector",
+  "osc2_mode": "selector",
+  "osc2_coarse": "knob",
+  "osc2_hz": "knob",
+  "osc2_fine": "knob",
+  "osc2_pw": "knob",
+  "osc2_level": "knob",
+  "osc2_sync": "selector",
+  "filt_cutoff": "knob",
+  "filt_reso": "knob",
+  "filt_env_amt": "knob",
+  "amp_attack": "knob",
+  "amp_decay": "knob",
+  "amp_sustain": "knob",
+  "amp_release": "knob",
+  "filt_attack": "knob",
+  "filt_decay": "knob",
+  "filt_sustain": "knob",
+  "filt_release": "knob",
+  "lfo1_rate": "knob",
+  "lfo1_wave": "selector",
+  "lfo1_depth": "knob",
+  "lfo1_phase": "knob",
+  "lfo2_rate": "knob",
+  "lfo2_wave": "selector",
+  "lfo2_depth": "knob",
+  "lfo2_phase": "knob",
+  "mod0_src": "selector",
+  "mod0_dst": "selector",
+  "mod0_amt": "knob",
+  "mod1_src": "selector",
+  "mod1_dst": "selector",
+  "mod1_amt": "knob",
+  "mod2_src": "selector",
+  "mod2_dst": "selector",
+  "mod2_amt": "knob",
+  "mod3_src": "selector",
+  "mod3_dst": "selector",
+  "mod3_amt": "knob",
+  "mod4_src": "selector",
+  "mod4_dst": "selector",
+  "mod4_amt": "knob",
+  "mod5_src": "selector",
+  "mod5_dst": "selector",
+  "mod5_amt": "knob",
+  "mod6_src": "selector",
+  "mod6_dst": "selector",
+  "mod6_amt": "knob",
+  "mod7_src": "selector",
+  "mod7_dst": "selector",
+  "mod7_amt": "knob",
+  "bend_range": "knob"
+ },
+ "labels": {
+  "polyphony": [
+   "1",
+   "2",
+   "3",
+   "4",
+   "5",
+   "6",
+   "7",
+   "8"
+  ],
+  "osc1_wave": [
+   "SIN",
+   "TRI",
+   "SAW",
+   "SQR"
+  ],
+  "osc1_mode": [
+   "KEY",
+   "FREE"
+  ],
+  "osc1_sync": [
+   "OFF",
+   "SYNC"
+  ],
+  "osc2_wave": [
+   "SIN",
+   "TRI",
+   "SAW",
+   "SQR"
+  ],
+  "osc2_mode": [
+   "KEY",
+   "FREE"
+  ],
+  "osc2_sync": [
+   "OFF",
+   "SYNC"
+  ],
+  "lfo1_wave": [
+   "SIN",
+   "TRI",
+   "SAW",
+   "SQR",
+   "S&H"
+  ],
+  "lfo2_wave": [
+   "SIN",
+   "TRI",
+   "SAW",
+   "SQR",
+   "S&H"
+  ],
+  "mod0_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod0_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod1_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod1_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod2_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod2_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod3_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod3_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod4_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod4_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod5_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod5_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod6_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod6_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ],
+  "mod7_src": [
+   "-",
+   "LFO1",
+   "LFO2",
+   "MW",
+   "VEL",
+   "ENV2"
+  ],
+  "mod7_dst": [
+   "-",
+   "PIT",
+   "P1",
+   "P2",
+   "AMP",
+   "CUT",
+   "PW1",
+   "PW2"
+  ]
+ },
+ "offsets": {
+  "polyphony": 1,
+  "osc1_wave": 0,
+  "osc1_mode": 0,
+  "osc1_sync": 0,
+  "osc2_wave": 0,
+  "osc2_mode": 0,
+  "osc2_sync": 0,
+  "lfo1_wave": 0,
+  "lfo2_wave": 0,
+  "mod0_src": 0,
+  "mod0_dst": 0,
+  "mod1_src": 0,
+  "mod1_dst": 0,
+  "mod2_src": 0,
+  "mod2_dst": 0,
+  "mod3_src": 0,
+  "mod3_dst": 0,
+  "mod4_src": 0,
+  "mod4_dst": 0,
+  "mod5_src": 0,
+  "mod5_dst": 0,
+  "mod6_src": 0,
+  "mod6_dst": 0,
+  "mod7_src": 0,
+  "mod7_dst": 0
+ },
+ "short": {
+  "osc1_wave": "wave",
+  "osc1_mode": "mode",
+  "osc1_coarse": "coarse",
+  "osc1_hz": "hz",
+  "osc1_fine": "fine",
+  "osc1_pw": "pw",
+  "osc2_wave": "wave",
+  "osc2_mode": "mode",
+  "osc2_sync": "sync",
+  "osc2_coarse": "coarse",
+  "osc2_hz": "hz",
+  "osc2_fine": "fine",
+  "osc2_pw": "pw",
+  "osc1_level": "osc1",
+  "osc2_level": "osc2",
+  "filt_cutoff": "cutoff",
+  "filt_reso": "reso",
+  "filt_env_amt": "env_amt",
+  "amp_attack": "attack",
+  "amp_decay": "decay",
+  "amp_sustain": "sustain",
+  "amp_release": "release",
+  "filt_attack": "attack",
+  "filt_decay": "decay",
+  "filt_sustain": "sustain",
+  "filt_release": "release",
+  "lfo1_wave": "wave",
+  "lfo1_rate": "rate",
+  "lfo1_depth": "depth",
+  "lfo1_phase": "phase",
+  "lfo2_wave": "wave",
+  "lfo2_rate": "rate",
+  "lfo2_depth": "depth",
+  "lfo2_phase": "phase",
+  "mod0_src": "amt 1",
+  "mod0_dst": "amt 1",
+  "mod0_amt": "amt 1",
+  "mod1_src": "amt 2",
+  "mod1_dst": "amt 2",
+  "mod1_amt": "amt 2",
+  "mod2_src": "amt 3",
+  "mod2_dst": "amt 3",
+  "mod2_amt": "amt 3",
+  "mod3_src": "amt 4",
+  "mod3_dst": "amt 4",
+  "mod3_amt": "amt 4",
+  "mod4_src": "amt 5",
+  "mod4_dst": "amt 5",
+  "mod4_amt": "amt 5",
+  "mod5_src": "amt 6",
+  "mod5_dst": "amt 6",
+  "mod5_amt": "amt 6",
+  "mod6_src": "amt 7",
+  "mod6_dst": "amt 7",
+  "mod6_amt": "amt 7",
+  "mod7_src": "amt 8",
+  "mod7_dst": "amt 8",
+  "mod7_amt": "amt 8",
+  "polyphony": "polyphony",
+  "bend_range": "bend",
+  "glide": "glide",
+  "master_volume": "volume"
+ }
+}

@@ -61,6 +61,8 @@ impl Args {
 pub mod bench;
 pub mod header;
 pub mod model;
+pub mod param_sync;
+pub mod synth_layout;
 pub mod tap;
 pub mod theme;
 pub mod transport;
