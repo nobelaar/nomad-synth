@@ -98,7 +98,11 @@ fn factory_matches_python() {
     for k in ["synth", "drums"] {
         let want = r["factory"][k].as_array().unwrap();
         let got = factory(kind(k));
-        assert_eq!(got.len(), want.len(), "{k}");
+        assert_eq!(
+            got.len(),
+            want.len() + 1,
+            "{k}: one Rust-only \"Dark techno\" at the end"
+        );
         for (g, w) in got.iter().zip(want) {
             assert!(same(g, w), "{k} {}", w["name"]);
         }
@@ -151,10 +155,14 @@ fn store_lists_factory_then_valid_user_files() {
                 (e[0].as_str().unwrap().to_string(), o)
             })
             .collect();
+        // the Rust-only factory "Dark techno" follows Python's factory presets
+        let mut want = want;
+        let at = want.iter().take_while(|e| e.1 == Origin::Factory).count();
+        want.insert(at, ("Dark techno".into(), Origin::Factory));
         assert_eq!(store.list(kind(k)), want, "{k}");
     }
     assert!(!PresetStore::new(None).can_save());
-    assert_eq!(PresetStore::new(None).list(PresetKind::Drums).len(), 3);
+    assert_eq!(PresetStore::new(None).list(PresetKind::Drums).len(), 4);
 }
 
 #[test]
@@ -315,4 +323,13 @@ fn apply_rejects_invalid_and_sends_nothing() {
             .as_deref(),
         Some("not a synth preset")
     );
+}
+
+#[test]
+fn every_factory_preset_is_valid() {
+    for k in [PresetKind::Synth, PresetKind::Drums] {
+        for p in factory(k) {
+            assert_eq!(check(k, &p), Ok(()), "{}", p["name"]);
+        }
+    }
 }

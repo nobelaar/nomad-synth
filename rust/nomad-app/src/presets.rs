@@ -331,7 +331,7 @@ fn drums(name: &str, tracks: &[(&str, &[(usize, u8)])], over: &[(&str, f64)]) ->
     })
 }
 
-/// The factory presets of `FACTORY` (4 synth, 3 drums), in Python's order.
+/// The factory presets of `FACTORY` (5 synth, 4 drums): Python's, in its order, then the Rust-only ones.
 // wave: 0 sin 1 tri 2 saw 3 sqr; modN_src: 1 lfo1 2 lfo2 3 mw 4 vel 5 env2; modN_dst: 1 pitch .. 5 cut
 pub fn factory(kind: PresetKind) -> Vec<Value> {
     match kind {
@@ -472,6 +472,50 @@ pub fn factory(kind: PresetKind) -> Vec<Value> {
                     ..SeqSpec::default()
                 },
             ),
+            synth(
+                "Dark techno",
+                &[
+                    ("osc1_wave", 2.0),
+                    ("osc2_wave", 3.0),
+                    ("osc2_coarse", -12.0),
+                    ("osc2_fine", 6.0),
+                    ("osc1_level", 0.6),
+                    ("osc2_level", 0.45),
+                    ("filt_cutoff", 320.0),
+                    ("filt_reso", 0.6),
+                    ("filt_env_amt", 0.55),
+                    ("amp_attack", 1.0),
+                    ("amp_decay", 120.0),
+                    ("amp_sustain", 0.0),
+                    ("amp_release", 60.0),
+                    ("filt_attack", 1.0),
+                    ("filt_decay", 90.0),
+                    ("filt_sustain", 0.0),
+                    ("filt_release", 60.0),
+                    ("lfo1_wave", 1.0),
+                    ("lfo1_rate", 0.07),
+                    ("lfo1_depth", 1.0),
+                    ("mod0_src", 1.0),
+                    ("mod0_dst", 5.0),
+                    ("mod0_amt", 0.3),
+                    ("mod1_src", 4.0),
+                    ("mod1_dst", 5.0),
+                    ("mod1_amt", 0.25),
+                    ("polyphony", 1.0),
+                ],
+                // rolling psy bass: silent on the kick, E phrygian (E F G, D at the turn)
+                SeqSpec {
+                    notes: &[
+                        40, 40, 40, 40, 40, 40, 41, 40, 40, 40, 40, 43, 40, 40, 38, 41,
+                    ],
+                    on: Some(&[0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1]),
+                    vel: Some(&[
+                        100, 90, 115, 90, 100, 90, 120, 90, 100, 90, 115, 90, 100, 90, 120, 110,
+                    ]),
+                    gate: 0.35,
+                    ..SeqSpec::default()
+                },
+            ),
         ],
         PresetKind::Drums => {
             let every_other: Vec<(usize, u8)> = (0..STEPS).step_by(2).map(|i| (i, 1)).collect();
@@ -504,6 +548,43 @@ pub fn factory(kind: PresetKind) -> Vec<Value> {
                         ("chat", &[(2, 1), (6, 1), (10, 1), (14, 1)]),
                     ],
                     &[("swing", 0.3), ("kick_decay", 0.6)],
+                ),
+                drums(
+                    "Dark techno",
+                    &[
+                        ("kick", &[(0, 2), (4, 2), (8, 2), (12, 2)]),
+                        ("clap", &[(4, 1), (12, 1)]),
+                        ("tom", &[(11, 1), (15, 1)]),
+                        (
+                            "chat",
+                            &[
+                                (1, 1),
+                                (3, 1),
+                                (5, 1),
+                                (7, 1),
+                                (9, 1),
+                                (11, 1),
+                                (13, 1),
+                                (15, 2),
+                            ],
+                        ),
+                        ("ohat", &[(2, 1), (6, 1), (10, 1), (14, 1)]),
+                    ],
+                    &[
+                        ("kick_tune", -0.4),
+                        ("kick_decay", 0.75),
+                        ("kick_level", 0.9),
+                        ("clap_tune", -0.35),
+                        ("clap_decay", 0.6),
+                        ("clap_level", 0.35),
+                        ("tom_tune", -0.6),
+                        ("tom_decay", 0.3),
+                        ("tom_level", 0.35),
+                        ("chat_tune", 0.3),
+                        ("chat_decay", 0.2),
+                        ("ohat_decay", 0.3),
+                        ("ohat_level", 0.25),
+                    ],
                 ),
             ]
         }
