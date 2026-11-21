@@ -31,6 +31,7 @@ pub struct AudioCore {
     pending: Vec<Garbage>,
     mono: Vec<f64>,
     mono32: Vec<f32>,
+    tap: Vec<f64>,
     telemetry: Arc<Telemetry>,
 }
 
@@ -55,6 +56,7 @@ pub fn create(engine: Engine, sample_rate: f64) -> (AudioCore, ControlHandle) {
         pending: Vec::with_capacity(PENDING),
         mono: vec![0.0; BATCH],
         mono32: vec![0.0; BATCH],
+        tap: vec![0.0; BATCH],
         telemetry: Arc::clone(&telemetry),
     };
     let ctl = ControlHandle {
@@ -189,7 +191,13 @@ impl AudioCore {
         let mut f0 = 0;
         while f0 < frames {
             let n = (frames - f0).min(BATCH);
-            self.engine.render(&mut self.mono[..n]);
+            let tapping = self.engine.tap().is_some();
+            if tapping {
+                self.engine
+                    .render_with_tap(&mut self.mono[..n], &mut self.tap[..n]);
+            } else {
+                self.engine.render(&mut self.mono[..n]);
+            }
             for (j, frame) in out[f0 * channels..(f0 + n) * channels]
                 .chunks_exact_mut(channels)
                 .enumerate()
@@ -203,6 +211,12 @@ impl AudioCore {
                 }
             }
             self.telemetry.scope.write(&self.mono32[..n]);
+            if tapping {
+                for (o, &x) in self.mono32[..n].iter_mut().zip(&self.tap[..n]) {
+                    *o = x as f32;
+                }
+                self.telemetry.tap.write(&self.mono32[..n]);
+            }
             f0 += n;
         }
         self.telemetry
@@ -229,6 +243,7 @@ impl AudioCore {
             }
             Command::SetControl { ctl, value } => e.set_control(ctl, value),
             Command::SetMaster(v) => e.set_master_volume(v),
+            Command::SetTap(id) => e.set_tap(id),
             Command::SetTargetSynth(id) => {
                 e.set_target_synth(id);
                 self.telemetry

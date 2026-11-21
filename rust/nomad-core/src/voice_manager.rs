@@ -147,6 +147,11 @@ impl VoiceManager {
             .fold(0u128, |m, n| m | (1u128 << n))
     }
 
+    /// The voice pool (read only).
+    pub fn voices(&self) -> &[Voice] {
+        &self.voices
+    }
+
     /// Voices currently sounding (held, releasing or fading).
     pub fn active_voices(&self) -> usize {
         self.voices.iter().filter(|v| v.is_active()).count()

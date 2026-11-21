@@ -182,3 +182,41 @@ fn add_and_remove_instance_lifecycle() {
     m.drum_snapshot(&mut d);
     assert_eq!(d.steps[0][7], 1);
 }
+
+#[test]
+fn voice_mirror_reports_real_pitch_and_the_tap_fills() {
+    let e = Engine::new(SR, 8);
+    let m = e.shared(SYNTH).unwrap();
+    let (mut core, mut ctl) = create(e, SR);
+    let t = ctl.telemetry();
+    ctl.send(Command::SetParam {
+        id: SYNTH,
+        param: pid::OSC1_COARSE as u16,
+        value: 12.0,
+    });
+    ctl.send(Command::SetTap(Some(SYNTH)));
+    ctl.send(Command::NoteOn {
+        note: 69,
+        velocity: 1.0,
+    });
+    render(&mut core, 4800);
+    let live: Vec<_> = m
+        .voice_views()
+        .into_iter()
+        .filter(|v| v.amp > 0.0)
+        .collect();
+    assert_eq!(live.len(), 1);
+    // Coarse is smoothed: the mirror shows the pitch still arriving, as it sounds.
+    assert!((live[0].hz[0] - 880.0).abs() < 1.0, "{:?}", live[0]);
+    assert!((live[0].hz[1] - 440.0).abs() < 1e-6, "{:?}", live[0]);
+    assert!((20.0..=18000.0).contains(&live[0].cutoff));
+    let mut w = vec![0.0f32; 2048];
+    assert_eq!(t.tap.window(2048, &mut w), 2048);
+    assert!(w.iter().any(|x| x.abs() > 1e-3));
+    ctl.send(Command::Panic);
+    render(&mut core, 48000);
+    assert!(
+        m.voice_views().iter().all(|v| v.amp == 0.0),
+        "silent after release"
+    );
+}

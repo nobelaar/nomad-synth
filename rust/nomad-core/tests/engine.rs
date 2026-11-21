@@ -119,3 +119,24 @@ fn each_root_clock_advances_once_per_chunk() {
         assert!((a - total as f64 * 120.0 / (60.0 * SR)).abs() < 1e-9);
     }
 }
+
+#[test]
+fn tap_copies_one_instance_and_leaves_the_mix_alone() {
+    let (mut a, mut b) = (Engine::new(SR, 8), Engine::new(SR, 8));
+    for e in [&mut a, &mut b] {
+        e.note_on(57, 1.0);
+    }
+    a.set_tap(Some(SYNTH));
+    let (mut out_a, mut tap) = (vec![0.0; 4096], vec![1.0; 4096]);
+    let mut out_b = vec![0.0; 4096];
+    a.render_with_tap(&mut out_a, &mut tap);
+    b.render(&mut out_b);
+    assert_eq!(out_a, out_b, "tapping does not change the sound");
+    assert!(
+        tap.iter().any(|&x| x.abs() > 1e-3),
+        "the synth is in the tap"
+    );
+    a.set_tap(Some(DRUMS));
+    a.render_with_tap(&mut out_a, &mut tap);
+    assert!(tap.iter().all(|&x| x == 0.0), "idle drums: silent tap");
+}

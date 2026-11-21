@@ -23,6 +23,8 @@ pub struct Telemetry {
     /// Voices sounding over all synths.
     pub voices_total: AtomicU32,
     pub scope: ScopeRing,
+    /// Output of the instance tapped with `Command::SetTap` (the spiral view).
+    pub tap: ScopeRing,
 }
 
 impl Telemetry {
@@ -46,6 +48,7 @@ impl Telemetry {
             peak: AtomicU32::new(0),
             voices_total: AtomicU32::new(0),
             scope: ScopeRing::new((2.0 * sample_rate) as usize),
+            tap: ScopeRing::new(sample_rate as usize),
         }
     }
 

@@ -152,6 +152,8 @@ pub struct Engine {
     master_p: f64,
     master: f64,
     buf: Vec<f64>,
+    /// Instance whose own output `render_with_tap` copies out (the spiral view).
+    tap: Option<InstrumentId>,
 }
 
 impl Engine {
@@ -185,6 +187,7 @@ impl Engine {
             master_p: spec.default,
             master: spec.default,
             buf: vec![0.0; CONTROL_BLOCK],
+            tap: None,
         }
     }
 
@@ -598,6 +601,18 @@ impl Engine {
                     let held = s.held_mask();
                     m.active_notes[0].store(held as u64, Relaxed);
                     m.active_notes[1].store((held >> 64) as u64, Relaxed);
+                    for (i, slot) in m.voice_state.iter().enumerate() {
+                        let [hz1, hz2, cut, amp] = slot;
+                        match s.voices().get(i).filter(|v| v.is_active()) {
+                            Some(v) => {
+                                hz1.set(v.last_hz[0]);
+                                hz2.set(v.last_hz[1]);
+                                cut.set(v.last_cutoff);
+                                amp.set(v.last_amp);
+                            }
+                            None => amp.set(0.0),
+                        }
+                    }
                     let v = s.active_voices();
                     m.voices.store(v as u8, Relaxed);
                     voices += v;
@@ -645,9 +660,29 @@ impl Engine {
         }
     }
 
+    /// Instance copied out by `render_with_tap` (`None` = nothing).
+    pub fn set_tap(&mut self, id: Option<InstrumentId>) {
+        self.tap = id;
+    }
+
+    pub fn tap(&self) -> Option<InstrumentId> {
+        self.tap
+    }
+
     /// Render `out` (written, not added): events are scheduled exactly, each chunk
     /// is mixed in CONTROL_BLOCK slices and every root clock advances once per chunk.
     pub fn render(&mut self, out: &mut [f64]) {
+        self.render_inner(out, None);
+    }
+
+    /// `render`, also writing the tapped instance's own output (after its level,
+    /// before the master) into `tap` (same length as `out`; silence if none).
+    pub fn render_with_tap(&mut self, out: &mut [f64], tap: &mut [f64]) {
+        tap.fill(0.0);
+        self.render_inner(out, Some(tap));
+    }
+
+    fn render_inner(&mut self, out: &mut [f64], mut tap: Option<&mut [f64]>) {
         let total = out.len();
         let mut i = 0;
         while i < total {
@@ -658,7 +693,8 @@ impl Engine {
                 limit = limit.min(self.insts[k].frames_to_event(&clock));
             }
             let chunk = (total - i).min(limit as usize);
-            self.span(&mut out[i..i + chunk]);
+            let t = tap.as_deref_mut().map(|t| &mut t[i..i + chunk]);
+            self.span(&mut out[i..i + chunk], t);
             for inst in self.insts.iter_mut().filter(|x| x.source.is_none()) {
                 inst.clock.advance(chunk as i64);
             }
@@ -669,9 +705,10 @@ impl Engine {
     }
 
     /// One event-free chunk, in control-block slices.
-    fn span(&mut self, out: &mut [f64]) {
+    fn span(&mut self, out: &mut [f64], mut tap: Option<&mut [f64]>) {
         let chunk = out.len();
-        for block in out.chunks_mut(CONTROL_BLOCK) {
+        let tapped = self.tap;
+        for (bi, block) in out.chunks_mut(CONTROL_BLOCK).enumerate() {
             let n = block.len();
             let b = &mut self.buf[..n];
             b.fill(0.0);
@@ -690,6 +727,10 @@ impl Engine {
                     }
                 }
                 inst.igain = g1;
+                if let Some(t) = tap.as_deref_mut().filter(|_| tapped == Some(inst.id)) {
+                    let off = bi * CONTROL_BLOCK;
+                    t[off..off + n].copy_from_slice(ib);
+                }
                 for (o, x) in b.iter_mut().zip(ib.iter()) {
                     *o += x;
                 }
