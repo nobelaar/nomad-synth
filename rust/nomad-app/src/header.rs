@@ -31,7 +31,7 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
             if let Some(src) = v.source.and_then(|s| app.model.view(s)) {
                 text.push_str(&format!(" {} {}", sym::FOLLOWS, src.name));
             }
-            let active = app.model.selected() == Some(id);
+            let active = !app.spiral_shown && app.model.selected() == Some(id);
             let fill = if active { GREEN } else { TROUGH };
             let fg = if active { BG } else { GREY };
             let tab = ui.add(Button::new(RichText::new(text).color(fg)).fill(fill));
@@ -43,11 +43,28 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
                 close = Some(id);
             }
         }
+        let (mut spiral_select, mut spiral_close) = (false, false);
+        if app.spiral.is_some() {
+            let active = app.spiral_shown;
+            let fill = if active { GREEN } else { TROUGH };
+            let fg = if active { BG } else { GREY };
+            let tab = ui.add(Button::new(RichText::new("Espiral").color(fg)).fill(fill));
+            spiral_select = reg(tab, "tab_spiral").clicked();
+            let x = ui.add(Button::new(RichText::new(sym::CLOSE).color(GREY)).fill(TROUGH));
+            spiral_close = reg(x, "tab_spiral").clicked();
+        }
         if let Some(id) = select {
             app.model.select(id);
+            app.spiral_shown = false;
         }
         if let Some(id) = close {
             app.model.close_instrument(id);
+        }
+        if spiral_select {
+            app.spiral_shown = true;
+        }
+        if spiral_close {
+            app.close_spiral();
         }
         let new = ui.menu_button("+", |ui| {
             for (label, kind) in [("Synth", Kind::Synth), ("Machine Drum", Kind::Drums)] {
@@ -55,8 +72,17 @@ pub fn header(ui: &mut egui::Ui, app: &mut NomadApp) {
                     if app.model.add_instrument(kind).is_none() {
                         app.status = "No hay lugar para más instrumentos".into();
                     }
+                    app.spiral_shown = false;
                     ui.close();
                 }
+            }
+            // One spiral per session.
+            if ui
+                .add_enabled(app.spiral.is_none(), Button::new("Espiral"))
+                .clicked()
+            {
+                app.open_spiral();
+                ui.close();
             }
         });
         ui.separator();

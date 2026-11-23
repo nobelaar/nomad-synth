@@ -196,6 +196,10 @@ impl Synth {
     }
 
     /// Parameter targets as last set (not the smoothed values).
+    pub fn voices(&self) -> &[crate::voice::Voice] {
+        self.vm.voices()
+    }
+
     pub fn values(&self) -> &ParamValues {
         &self.values
     }

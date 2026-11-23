@@ -32,6 +32,8 @@ pub enum Command {
     },
     SetMaster(f64),
     SetTargetSynth(InstrumentId),
+    /// Instance the spiral view listens to (`None` = stop copying).
+    SetTap(Option<InstrumentId>),
     Start(InstrumentId),
     Stop(InstrumentId),
     SetBpm {

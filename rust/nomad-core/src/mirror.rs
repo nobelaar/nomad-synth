@@ -14,6 +14,16 @@ use crate::params::pid;
 use crate::sequencer::EXTRA;
 
 const TRACKS: usize = 6;
+/// Voice slots in the mirror (the polyphony maximum).
+pub const VOICE_SLOTS: usize = 8;
+
+/// What one voice played in the last block; `amp == 0` = silent.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct VoiceView {
+    pub hz: [f64; 2],
+    pub cutoff: f64,
+    pub amp: f64,
+}
 
 /// `f64` stored as its bits.
 #[derive(Default)]
@@ -72,6 +82,8 @@ pub struct InstrumentShared {
     /// Held keys, a 128-bit mask in two words.
     pub active_notes: [AtomicU64; 2],
     pub voices: AtomicU8,
+    /// Per voice: osc1 Hz, osc2 Hz, cutoff Hz, amp (see `VoiceView`).
+    pub voice_state: [[AtomicF64; 4]; VOICE_SLOTS],
     // Drums
     pub values: [AtomicF64; 20],
     pub steps: [[AtomicU8; STEPS]; TRACKS],
@@ -132,6 +144,7 @@ impl InstrumentShared {
             seq_rec_step: AtomicU8::new(0),
             active_notes: [AtomicU64::new(0), AtomicU64::new(0)],
             voices: AtomicU8::new(0),
+            voice_state: std::array::from_fn(|_| f64s()),
             values: f64s(),
             steps: std::array::from_fn(|_| u8s()),
             playing: AtomicBool::new(false),
@@ -144,6 +157,17 @@ impl InstrumentShared {
 
     pub fn active_note(&self, n: u8) -> bool {
         n < 128 && (self.active_notes[usize::from(n / 64)].load(Relaxed) >> (n % 64)) & 1 == 1
+    }
+
+    pub fn voice_views(&self) -> [VoiceView; VOICE_SLOTS] {
+        std::array::from_fn(|i| {
+            let v = &self.voice_state[i];
+            VoiceView {
+                hz: [v[0].get(), v[1].get()],
+                cutoff: v[2].get(),
+                amp: v[3].get(),
+            }
+        })
     }
 
     pub fn seq_snapshot(&self, out: &mut SeqSnapshot) {

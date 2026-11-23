@@ -23,6 +23,7 @@ use crate::learn::{LearnState, bound_params};
 use crate::model::AppModel;
 use crate::presets::{Origin, PresetStore};
 use crate::seq_view::seq_view_ui;
+use crate::spiral::{SpiralState, resolve_source, spiral_ui, sync_tap};
 use crate::synth_panel::{SynthPanelState, synth_sections_ui, voice_ui};
 use crate::widgets::knob::knob;
 use crate::widgets::knob_model::KnobModel;
@@ -54,6 +55,10 @@ pub struct NomadApp {
     pub save_dialog: Option<(InstrumentId, String)>,
     pub learn: LearnState,
     pub help: HelpState,
+    /// The spiral tab, when open (one at most).
+    pub spiral: Option<SpiralState>,
+    /// The spiral tab is the one on screen.
+    pub spiral_shown: bool,
     scope_ms: f64,
     master: KnobModel,
     closed: bool,
@@ -101,6 +106,8 @@ impl NomadApp {
             save_dialog: None,
             learn: LearnState::default(),
             help: HelpState::default(),
+            spiral: None,
+            spiral_shown: false,
             scope_ms: 10.0,
             master: KnobModel::new(spec, spec.default),
             closed: false,
@@ -181,7 +188,20 @@ impl NomadApp {
             .selected()
             .and_then(|id| self.model.view(id))
             .cloned();
-        let synth = selected.as_ref().filter(|v| v.kind == Kind::Synth).cloned();
+        if !self.spiral_shown
+            && let Some(sp) = &mut self.spiral
+        {
+            sync_tap(sp, &mut self.model, None);
+        }
+        let spiral_on = self.spiral_shown && self.spiral.is_some();
+        let synth = if spiral_on {
+            let sp = self.spiral.as_ref().expect("spiral open");
+            resolve_source(sp, &self.model)
+                .and_then(|id| self.model.view(id))
+                .cloned()
+        } else {
+            selected.as_ref().filter(|v| v.kind == Kind::Synth).cloned()
+        };
         if let Some(inst) = &synth {
             Panel::bottom("keyboard").show(ui, |ui| {
                 let kb = self.keyboards.entry(inst.id).or_default();
@@ -202,21 +222,26 @@ impl NomadApp {
             egui::ScrollArea::vertical()
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
-                    match &synth {
-                        Some(inst) => {
-                            let panel = ui.scope(|ui| {
-                                let rec = self.rec_intent.entry(inst.id).or_insert(false);
-                                seq_view_ui(ui, inst, &mut self.model, rec);
-                                ui.separator();
-                                let st = self.synth_panels.entry(inst.id).or_default();
-                                synth_sections_ui(ui, st, inst, &mut self.model, now);
-                            });
-                            reg_rect(ui.ctx(), panel.response.rect, "synth_view");
-                        }
-                        None => {
-                            if let Some(inst) = selected.as_ref() {
-                                let st = self.drum_panels.entry(inst.id).or_default();
-                                drums_view_ui(ui, st, inst, &mut self.model, now);
+                    if spiral_on && let Some(sp) = &mut self.spiral {
+                        let t = Arc::clone(&self.telemetry);
+                        spiral_ui(ui, sp, &mut self.model, &t.tap, self.sample_rate);
+                    } else {
+                        match &synth {
+                            Some(inst) => {
+                                let panel = ui.scope(|ui| {
+                                    let rec = self.rec_intent.entry(inst.id).or_insert(false);
+                                    seq_view_ui(ui, inst, &mut self.model, rec);
+                                    ui.separator();
+                                    let st = self.synth_panels.entry(inst.id).or_default();
+                                    synth_sections_ui(ui, st, inst, &mut self.model, now);
+                                });
+                                reg_rect(ui.ctx(), panel.response.rect, "synth_view");
+                            }
+                            None => {
+                                if let Some(inst) = selected.as_ref() {
+                                    let st = self.drum_panels.entry(inst.id).or_default();
+                                    drums_view_ui(ui, st, inst, &mut self.model, now);
+                                }
                             }
                         }
                     }
@@ -242,6 +267,22 @@ impl NomadApp {
         }
         ui.ctx()
             .request_repaint_after(std::time::Duration::from_millis(33));
+    }
+
+    /// Open the spiral tab (if not open yet) and show it.
+    pub fn open_spiral(&mut self) {
+        if self.spiral.is_none() {
+            self.spiral = Some(SpiralState::new(self.sample_rate));
+        }
+        self.spiral_shown = true;
+    }
+
+    /// Close the spiral tab and stop the engine's tap.
+    pub fn close_spiral(&mut self) {
+        if let Some(mut s) = self.spiral.take() {
+            sync_tap(&mut s, &mut self.model, None);
+        }
+        self.spiral_shown = false;
     }
 
     /// Help mode on/off (`?`, F1; Esc only turns it off).

@@ -33,9 +33,33 @@ fn texts() -> &'static HashMap<String, (String, String)> {
                 let s = |i: usize| v[i].as_str().unwrap_or_default().to_string();
                 (k.clone(), (s(0), s(1)))
             })
+            .chain(
+                EXTRA
+                    .iter()
+                    .map(|&(k, t, b)| (k.into(), (t.into(), b.into()))),
+            )
             .collect()
     })
 }
+
+/// Texts of controls that only the Rust app has (not in `nomad/gui/help.py`).
+const EXTRA: [(&str, &str, &str); 3] = [
+    (
+        "tab_spiral",
+        "Pestaña Espiral",
+        "Muestra lo que toca un synth sobre una espiral: una vuelta por octava, cada nota en su ángulo. La × la cierra.",
+    ),
+    (
+        "spiral_source",
+        "Synth escuchado",
+        "Qué synth muestra la espiral. También pasa a ser el destino del teclado y del MIDI.",
+    ),
+    (
+        "spiral_view",
+        "Espiral",
+        "Verde: el espectro de lo que suena el synth. Punto blanco: cada nota que tocan las voces, con su frecuencia real (glide, bend y detune incluidos). Anillos: los armónicos que la onda debería tener, atenuados por el filtro. La marca muestra dónde corta el filtro.",
+    ),
+];
 
 /// `(title, body)` for a parameter name or panel element.
 pub fn help_for(key: &str) -> Option<(&'static str, &'static str)> {

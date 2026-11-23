@@ -175,10 +175,18 @@ impl AppModel {
         let Some(v) = self.view(id) else {
             return;
         };
-        if v.kind == Kind::Synth && self.target != Some(id) {
-            self.retarget(Some(id));
+        if v.kind == Kind::Synth {
+            self.set_target(id);
         }
         self.selected = Some(id);
+    }
+
+    /// Make synth `id` the keyboard/MIDI target without selecting its tab.
+    pub fn set_target(&mut self, id: InstrumentId) {
+        let synth = self.view(id).is_some_and(|v| v.kind == Kind::Synth);
+        if synth && self.target != Some(id) {
+            self.retarget(Some(id));
+        }
     }
 
     pub fn close_instrument(&mut self, id: InstrumentId) {

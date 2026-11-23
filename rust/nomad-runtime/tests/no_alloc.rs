@@ -306,3 +306,20 @@ fn mirror_updates_do_not_allocate() {
     });
     assert!(shared.active_note(64));
 }
+
+#[test]
+fn tapped_render_is_allocation_free() {
+    let (mut core, mut ctl) = create(Engine::new(SR, 8), SR);
+    let mut out = vec![0.0f32; 1024];
+    core.render_stereo(&mut out, 2);
+    ctl.send(Command::SetTap(Some(SYNTH)));
+    ctl.send(Command::NoteOn {
+        note: 60,
+        velocity: 1.0,
+    });
+    assert_no_alloc("tapped render", || {
+        for _ in 0..20 {
+            core.render_stereo(&mut out, 2);
+        }
+    });
+}

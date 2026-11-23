@@ -29,6 +29,11 @@ pub struct Voice {
     pub age: u64,
     pub velocity: f64,
     pub env2_level: f64,
+    /// What the last block played, for the UI (Hz of osc1/osc2, filter cutoff in
+    /// Hz, amp envelope x gain); not part of the sound.
+    pub last_hz: [f64; 2],
+    pub last_cutoff: f64,
+    pub last_amp: f64,
     sr: f64,
     osc1: Oscillator,
     osc2: Oscillator,
@@ -57,6 +62,9 @@ impl Voice {
             age: 0,
             velocity: 0.0,
             env2_level: 0.0,
+            last_hz: [0.0; 2],
+            last_cutoff: 0.0,
+            last_amp: 0.0,
             sr: sample_rate,
             osc1: Oscillator::new(sample_rate),
             osc2: Oscillator::new(sample_rate),
@@ -273,9 +281,12 @@ impl Voice {
             self.filter.process(&mut mix[s..e]);
         }
         self.lc = lc;
+        self.last_hz = [f1, f2];
+        self.last_cutoff = lc.map_or(0.0, f64::exp2);
 
         // Amp: envelope, velocity, mod, steal fade.
         let gain = self.velocity * (1.0 + f(mods.amp, 0.0)).max(0.0);
+        self.last_amp = self.aenv[n - 1] * gain;
         for (m, a) in mix.iter_mut().zip(&self.aenv[..n]) {
             *m *= a;
             *m *= gain;
