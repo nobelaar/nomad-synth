@@ -15,6 +15,28 @@ use http::HttpServer;
 use rpc::ToolHost;
 use tools::PendingOff;
 
+pub const DEFAULT_PORT: u16 = 7777;
+
+/// The port asked for by `gui` args: `None` without `--mcp`, `DEFAULT_PORT` for a bare one.
+/// Port 0 is rejected: the user must know the port to register it.
+pub fn mcp_port(argv: &[String]) -> Result<Option<u16>, String> {
+    let mut it = argv.iter().peekable();
+    let mut port = None;
+    while let Some(a) = it.next() {
+        if a != "--mcp" {
+            return Err(format!("unknown argument: {a}"));
+        }
+        port = Some(match it.next_if(|n| !n.starts_with("--")) {
+            None => DEFAULT_PORT,
+            Some(n) => match n.parse::<u16>() {
+                Ok(p) if p != 0 => p,
+                _ => return Err(format!("--mcp: invalid port {n} (1-65535)")),
+            },
+        });
+    }
+    Ok(port)
+}
+
 const UI_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// A tool call queued for the UI thread.
@@ -117,6 +139,21 @@ pub fn flush_offs(offs: &mut Vec<PendingOff>, app: &mut NomadApp, now: Instant) 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn argv(a: &[&str]) -> Vec<String> {
+        a.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn mcp_port_parses_the_flag() {
+        assert_eq!(mcp_port(&argv(&[])), Ok(None));
+        assert_eq!(mcp_port(&argv(&["--mcp"])), Ok(Some(7777)));
+        assert_eq!(mcp_port(&argv(&["--mcp", "9000"])), Ok(Some(9000)));
+        assert!(mcp_port(&argv(&["--mcp", "abc"])).is_err());
+        assert!(mcp_port(&argv(&["--mcp", "0"])).is_err());
+        assert!(mcp_port(&argv(&["--mcp", "70000"])).is_err());
+        assert!(mcp_port(&argv(&["--bogus"])).is_err());
+    }
     use crate::model::{AppModel, initial_views};
     use nomad_core::engine::Engine;
     use nomad_runtime::midi::map::MidiMap;

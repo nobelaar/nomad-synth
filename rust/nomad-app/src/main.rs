@@ -12,7 +12,7 @@ use nomad_runtime::midi::map::{MidiMap, default_config_dir};
 use nomad_runtime::output::{AudioOutput, list_output_devices, negotiate};
 use nomad_runtime::{ControlHandle, Telemetry, create};
 
-const USAGE: &str = "usage: nomad [gui]
+const USAGE: &str = "usage: nomad [gui] [--mcp [PORT]]
        nomad --version
        nomad devices
        nomad midi  [--port TEXT] [--seconds 20]
@@ -23,7 +23,8 @@ const USAGE: &str = "usage: nomad [gui]
 fn main() -> ExitCode {
     let argv: Vec<String> = std::env::args().skip(1).collect();
     let result = match argv.first().map(String::as_str) {
-        None | Some("gui") => gui(),
+        None | Some("gui") => gui(argv.get(1..).unwrap_or(&[])),
+        Some("--mcp") => gui(&argv),
         Some("--version" | "-V") => {
             println!("nomad {}", env!("CARGO_PKG_VERSION"));
             Ok(ExitCode::SUCCESS)
@@ -269,11 +270,12 @@ fn soak(a: &Args) -> Result<ExitCode, String> {
 
 /// The window: engine + audio + MIDI (read-only map), as `demo --midi`; if audio
 /// or MIDI fail the window still opens and says so in its status line.
-fn gui() -> Result<ExitCode, String> {
+fn gui(args: &[String]) -> Result<ExitCode, String> {
     use nomad_app::model::{AppModel, initial_views};
     use nomad_app::ui::NomadApp;
     use nomad_core::engine::Engine;
 
+    let mcp_port = nomad_app::mcp::mcp_port(args)?;
     let mut status = Vec::new();
     let negotiated = negotiate(None, 48000);
     let rate = negotiated.as_ref().map_or(48000, |&(_, r)| r);
@@ -340,6 +342,16 @@ fn gui() -> Result<ExitCode, String> {
         options,
         Box::new(move |cc| {
             nomad_app::theme::apply(&cc.egui_ctx);
+            if let Some(port) = mcp_port {
+                match nomad_app::mcp::Mcp::start(port, cc.egui_ctx.clone()) {
+                    Ok(m) => {
+                        app.status =
+                            format!("MCP: http://127.0.0.1:{}/mcp  {}", m.port(), app.status);
+                        app.mcp = Some(m);
+                    }
+                    Err(e) => app.status = format!("MCP: {e}  {}", app.status),
+                }
+            }
             Ok(Box::new(app))
         }),
     )
