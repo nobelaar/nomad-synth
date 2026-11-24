@@ -59,6 +59,8 @@ pub struct NomadApp {
     pub spiral: Option<SpiralState>,
     /// The spiral tab is the one on screen.
     pub spiral_shown: bool,
+    /// The MCP server bridge, when started.
+    pub mcp: Option<crate::mcp::Mcp>,
     scope_ms: f64,
     master: KnobModel,
     closed: bool,
@@ -108,6 +110,7 @@ impl NomadApp {
             help: HelpState::default(),
             spiral: None,
             spiral_shown: false,
+            mcp: None,
             scope_ms: 10.0,
             master: KnobModel::new(spec, spec.default),
             closed: false,
@@ -264,6 +267,10 @@ impl NomadApp {
         }
         if self.help.on && crate::help::help_ui(ui.ctx(), &mut self.help, now) {
             self.toggle_help();
+        }
+        if let Some(mut m) = self.mcp.take() {
+            m.drain(self);
+            self.mcp = Some(m);
         }
         ui.ctx()
             .request_repaint_after(std::time::Duration::from_millis(33));
