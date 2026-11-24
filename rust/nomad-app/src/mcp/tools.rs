@@ -1,6 +1,6 @@
 //! MCP tools: descriptors and the UI-thread dispatcher (grows task by task).
 
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use nomad_core::engine::InstrumentId;
 use std::sync::atomic::Ordering::Relaxed;
@@ -129,12 +129,75 @@ pub fn descriptors() -> Vec<Value> {
             json!({ "id": id }),
             &["id"],
         ),
+        tool(
+            "note_on",
+            "Play a note on the target synth; it is released after duration_ms.",
+            json!({
+                "note": { "type": "integer", "minimum": 0, "maximum": 127 },
+                "velocity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.8 },
+                "duration_ms": { "type": "integer", "minimum": 1, "maximum": 10000, "default": 500 },
+            }),
+            &["note"],
+        ),
+        tool("panic", "Silence every voice.", json!({}), &[]),
+        tool(
+            "drum_trigger",
+            "Hit one drum track now.",
+            json!({
+                "id": id, "track": { "type": "integer", "minimum": 0, "maximum": 5 },
+                "velocity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.8 },
+            }),
+            &["id", "track"],
+        ),
+        tool(
+            "seq_set_step",
+            "Set a synth sequencer step on or off, optionally with its note and velocity.",
+            json!({
+                "id": id, "step": { "type": "integer", "minimum": 0, "maximum": 15 },
+                "on": { "type": "boolean" },
+                "note": { "type": "integer", "minimum": 0, "maximum": 127 },
+                "vel": { "type": "integer", "minimum": 1, "maximum": 127 },
+            }),
+            &["id", "step", "on"],
+        ),
+        tool(
+            "seq_clear",
+            "Clear a synth sequencer.",
+            json!({ "id": id }),
+            &["id"],
+        ),
+        tool(
+            "seq_set",
+            "Synth sequencer settings; give at least one of length, gate, division, swing.",
+            json!({
+                "id": id, "length": { "type": "integer", "minimum": 1, "maximum": 16 },
+                "gate": { "type": "number" }, "division": { "type": "number" },
+                "swing": { "type": "number" },
+            }),
+            &["id"],
+        ),
+        tool(
+            "drum_set_step",
+            "Set a drum step level: 0 off, 1 normal, 2 accent.",
+            json!({
+                "id": id, "track": { "type": "integer", "minimum": 0, "maximum": 5 },
+                "step": { "type": "integer", "minimum": 0, "maximum": 15 },
+                "level": { "type": "integer", "minimum": 0, "maximum": 2 },
+            }),
+            &["id", "track", "step", "level"],
+        ),
+        tool(
+            "drum_clear",
+            "Clear a drum pattern.",
+            json!({ "id": id }),
+            &["id"],
+        ),
     ]
 }
 
 pub fn call(
     app: &mut NomadApp,
-    _offs: &mut Vec<PendingOff>,
+    offs: &mut Vec<PendingOff>,
     name: &str,
     args: &Value,
 ) -> Result<Value, String> {
@@ -187,6 +250,65 @@ pub fn call(
                     .is_some_and(|v| v.shared.clock_running.load(Relaxed));
                 running == want || m.toggle_play(id)
             })
+        }
+        "note_on" => note_on(app, offs, args),
+        "panic" => {
+            app.model.send(Command::Panic);
+            offs.clear();
+            Ok(json!({}))
+        }
+        "drum_trigger" => {
+            let id = drums_id(app, args)?;
+            let track = arg_int(args, "track", 0, 5)?;
+            let velocity = opt_f64(args, "velocity", 0.8, 0.0, 1.0)?;
+            app.model.send(Command::DrumTrigger {
+                id,
+                track,
+                velocity,
+            });
+            Ok(json!({}))
+        }
+        "seq_set_step" => {
+            let id = synth_id(app, args)?;
+            let step = arg_int(args, "step", 0, 15)?;
+            let on = args
+                .get("on")
+                .and_then(Value::as_bool)
+                .ok_or("missing or invalid \"on\": must be true or false")?;
+            let note = opt_int(args, "note", 0, 127)?;
+            let vel = opt_int(args, "vel", 1, 127)?;
+            app.model.send(Command::SeqSetStep {
+                id,
+                step,
+                on,
+                note,
+                vel,
+            });
+            Ok(json!({}))
+        }
+        "seq_clear" => {
+            let id = synth_id(app, args)?;
+            app.model.send(Command::SeqClear(id));
+            Ok(json!({}))
+        }
+        "seq_set" => seq_set(app, args),
+        "drum_set_step" => {
+            let id = drums_id(app, args)?;
+            let track = arg_int(args, "track", 0, 5)?;
+            let step = arg_int(args, "step", 0, 15)?;
+            let level = arg_int(args, "level", 0, 2)?;
+            app.model.send(Command::DrumSetStep {
+                id,
+                track,
+                step,
+                level,
+            });
+            Ok(json!({}))
+        }
+        "drum_clear" => {
+            let id = drums_id(app, args)?;
+            app.model.send(Command::DrumClear(id));
+            Ok(json!({}))
         }
         _ => Err(format!("unknown tool: {name}")),
     }
@@ -292,6 +414,95 @@ fn synth_id(app: &NomadApp, args: &Value) -> Result<u32, String> {
         Kind::Synth => Ok(v.id),
         Kind::Drums => Err(format!("instrument {} is drums, not a synth", v.id)),
     }
+}
+
+/// Id of a live drum machine; synths get a "not drums" error.
+fn drums_id(app: &NomadApp, args: &Value) -> Result<u32, String> {
+    let v = arg_id(app, args)?;
+    match v.kind {
+        Kind::Drums => Ok(v.id),
+        Kind::Synth => Err(format!("instrument {} is a synth, not drums", v.id)),
+    }
+}
+
+fn int_in(args: &Value, key: &str, lo: u8, hi: u8) -> Result<Option<u8>, String> {
+    let Some(v) = args.get(key).filter(|v| !v.is_null()) else {
+        return Ok(None);
+    };
+    v.as_u64()
+        .and_then(|n| u8::try_from(n).ok())
+        .filter(|n| (lo..=hi).contains(n))
+        .map(Some)
+        .ok_or_else(|| format!("invalid \"{key}\": must be an integer from {lo} to {hi}"))
+}
+
+fn arg_int(args: &Value, key: &str, lo: u8, hi: u8) -> Result<u8, String> {
+    int_in(args, key, lo, hi)?
+        .ok_or_else(|| format!("missing \"{key}\": an integer from {lo} to {hi}"))
+}
+
+fn opt_int(args: &Value, key: &str, lo: u8, hi: u8) -> Result<Option<u8>, String> {
+    int_in(args, key, lo, hi)
+}
+
+/// Optional number in `lo..=hi`, `default` when absent.
+fn opt_f64(args: &Value, key: &str, default: f64, lo: f64, hi: f64) -> Result<f64, String> {
+    match args.get(key).filter(|v| !v.is_null()) {
+        None => Ok(default),
+        Some(v) => v
+            .as_f64()
+            .filter(|n| (lo..=hi).contains(n))
+            .ok_or_else(|| format!("invalid \"{key}\": must be a number from {lo} to {hi}")),
+    }
+}
+
+fn note_on(app: &mut NomadApp, offs: &mut Vec<PendingOff>, args: &Value) -> Result<Value, String> {
+    let note = arg_int(args, "note", 0, 127)?;
+    let velocity = opt_f64(args, "velocity", 0.8, 0.0, 1.0)?;
+    let ms = opt_f64(args, "duration_ms", 500.0, 1.0, 10000.0)?;
+    let target = app
+        .model
+        .target_synth()
+        .ok_or("no synth to play: add a synth first")?;
+    app.model.send(Command::NoteOn {
+        note,
+        velocity: velocity as f32,
+    });
+    let due = Instant::now() + Duration::from_millis(ms as u64);
+    // A retrigger replaces the pending off so the earlier one cannot cut it short.
+    offs.retain(|o| o.note != note);
+    offs.push(PendingOff {
+        due,
+        note,
+        target: Some(target),
+    });
+    Ok(json!({}))
+}
+
+fn seq_set(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let id = synth_id(app, args)?;
+    let length = opt_int(args, "length", 1, 16)?;
+    let num = |k: &str| match args.get(k).filter(|v| !v.is_null()) {
+        None => Ok(None),
+        Some(_) => arg_f64(args, k).map(Some),
+    };
+    let (gate, division, swing) = (num("gate")?, num("division")?, num("swing")?);
+    if length.is_none() && gate.is_none() && division.is_none() && swing.is_none() {
+        return Err("give at least one of length, gate, division, swing".into());
+    }
+    if let Some(length) = length {
+        app.model.send(Command::SeqLength { id, length });
+    }
+    if let Some(gate) = gate {
+        app.model.send(Command::SeqGate { id, gate });
+    }
+    if let Some(division) = division {
+        app.model.send(Command::SeqDivision { id, division });
+    }
+    if let Some(swing) = swing {
+        app.model.send(Command::SeqSwing { id, swing });
+    }
+    Ok(json!({}))
 }
 
 fn add_instrument(app: &mut NomadApp, args: &Value) -> Result<Value, String> {

@@ -102,7 +102,13 @@ pub fn flush_offs(offs: &mut Vec<PendingOff>, app: &mut NomadApp, now: Instant) 
     offs.retain(|o| {
         let due = o.due <= now;
         if due {
-            app.model.send(Command::NoteOff { note: o.note });
+            if o.target == app.model.target_synth() {
+                app.model.send(Command::NoteOff { note: o.note });
+            } else {
+                // shortcut: NoteOff has no instrument id, so a retargeted note is silenced by
+                // panicking every voice, upgrade if Command::NoteOff ever carries an id.
+                app.model.send(Command::Panic);
+            }
         }
         !due
     });

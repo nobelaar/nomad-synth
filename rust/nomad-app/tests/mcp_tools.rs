@@ -236,7 +236,10 @@ fn add_and_close_instrument() {
 fn set_param_stores_clamped_values() {
     let mut h = harness(&temp_dir("param"));
     let id = first_id(&h, Kind::Synth);
-    let cut = SYNTH_PARAMS.iter().find(|s| s.name == "filt_cutoff").unwrap();
+    let cut = SYNTH_PARAMS
+        .iter()
+        .find(|s| s.name == "filt_cutoff")
+        .unwrap();
     let mid = (cut.lo * cut.hi).sqrt();
     call(
         &mut h,
@@ -393,4 +396,283 @@ fn transport_is_idempotent_and_followers_error() {
     );
     call(&mut h, "set_source", json!({ "id": other, "source": null })).unwrap();
     call(&mut h, "play", json!({ "id": other })).unwrap();
+}
+
+fn id_of(h: &mut Harness<'static, S>, kind: &str) -> u64 {
+    let st = call(h, "get_state", json!({})).unwrap();
+    st["instruments"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["kind"] == kind)
+        .unwrap()["id"]
+        .as_u64()
+        .unwrap()
+}
+
+fn voices(h: &Harness<'static, S>) -> u32 {
+    h.state()
+        .app
+        .telemetry
+        .voices_total
+        .load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// `note_on` through the tool, keeping the pending offs for `flush_offs`.
+fn note_on(
+    h: &mut Harness<'static, S>,
+    offs: &mut Vec<tools::PendingOff>,
+    args: Value,
+) -> Result<Value, String> {
+    let r = tools::call(&mut h.state_mut().app, offs, "note_on", &args);
+    step(h);
+    r
+}
+
+fn flush(h: &mut Harness<'static, S>, offs: &mut Vec<tools::PendingOff>, now: std::time::Instant) {
+    nomad_app::mcp::flush_offs(offs, &mut h.state_mut().app, now);
+    step(h);
+}
+
+#[test]
+fn note_on_sounds_then_off_when_due() {
+    let mut h = harness(&temp_dir("noteon"));
+    let mut offs = Vec::new();
+    note_on(&mut h, &mut offs, json!({ "note": 60 })).unwrap();
+    assert!(voices(&h) >= 1);
+    let now = std::time::Instant::now();
+    flush(&mut h, &mut offs, now);
+    assert_eq!(offs.len(), 1, "not due yet");
+    flush(&mut h, &mut offs, now + std::time::Duration::from_secs(11));
+    assert!(offs.is_empty());
+    // release tail: render until the voice dies
+    for _ in 0..200 {
+        step(&mut h);
+    }
+    assert_eq!(voices(&h), 0);
+}
+
+#[test]
+fn note_on_validates() {
+    let mut h = harness(&temp_dir("noteonbad"));
+    let mut offs = Vec::new();
+    let e = note_on(&mut h, &mut offs, json!({ "note": 200 })).unwrap_err();
+    assert!(e.contains("0 to 127"), "{e}");
+    assert!(note_on(&mut h, &mut offs, json!({ "note": 60, "velocity": 2 })).is_err());
+    assert!(note_on(&mut h, &mut offs, json!({ "note": 60, "duration_ms": 0 })).is_err());
+    assert!(
+        note_on(
+            &mut h,
+            &mut offs,
+            json!({ "note": 60, "duration_ms": 1000000000u64 })
+        )
+        .is_err()
+    );
+    assert!(offs.is_empty() && voices(&h) == 0);
+}
+
+#[test]
+fn note_on_without_a_synth_errors() {
+    let mut h = harness(&temp_dir("nosynth"));
+    let synth = id_of(&mut h, "synth");
+    call(&mut h, "close_instrument", json!({ "id": synth })).unwrap();
+    let mut offs = Vec::new();
+    assert_eq!(
+        note_on(&mut h, &mut offs, json!({ "note": 60 })),
+        Err("no synth to play: add a synth first".to_string())
+    );
+}
+
+#[test]
+fn retargeted_note_is_panicked_when_due() {
+    let mut h = harness(&temp_dir("retarget"));
+    let mut offs = Vec::new();
+    note_on(&mut h, &mut offs, json!({ "note": 60 })).unwrap();
+    assert!(voices(&h) >= 1);
+    let other = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap()["id"].clone();
+    call(&mut h, "set_target", json!({ "id": other })).unwrap();
+    flush(
+        &mut h,
+        &mut offs,
+        std::time::Instant::now() + std::time::Duration::from_secs(11),
+    );
+    assert!(offs.is_empty());
+    assert_eq!(voices(&h), 0, "panic silences the old note immediately");
+}
+
+#[test]
+fn closed_target_is_panicked_when_due() {
+    let mut h = harness(&temp_dir("closedtarget"));
+    let mut offs = Vec::new();
+    let other = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap()["id"].clone();
+    call(&mut h, "set_target", json!({ "id": other })).unwrap();
+    note_on(&mut h, &mut offs, json!({ "note": 64 })).unwrap();
+    assert!(voices(&h) >= 1);
+    call(&mut h, "close_instrument", json!({ "id": other })).unwrap();
+    flush(
+        &mut h,
+        &mut offs,
+        std::time::Instant::now() + std::time::Duration::from_secs(11),
+    );
+    assert_eq!(voices(&h), 0);
+}
+
+#[test]
+fn retriggered_note_keeps_one_later_off() {
+    let mut h = harness(&temp_dir("retrigger"));
+    let mut offs = Vec::new();
+    note_on(&mut h, &mut offs, json!({ "note": 60, "duration_ms": 100 })).unwrap();
+    let first = offs[0].due;
+    note_on(
+        &mut h,
+        &mut offs,
+        json!({ "note": 60, "duration_ms": 5000 }),
+    )
+    .unwrap();
+    assert_eq!(offs.len(), 1);
+    assert!(offs[0].due > first + std::time::Duration::from_secs(1));
+    flush(
+        &mut h,
+        &mut offs,
+        first + std::time::Duration::from_millis(200),
+    );
+    assert_eq!(offs.len(), 1, "the first off must not fire");
+}
+
+#[test]
+fn panic_silences_and_clears_offs() {
+    let mut h = harness(&temp_dir("panic"));
+    let mut offs = Vec::new();
+    note_on(&mut h, &mut offs, json!({ "note": 60 })).unwrap();
+    let r = tools::call(&mut h.state_mut().app, &mut offs, "panic", &json!({}));
+    step(&mut h);
+    r.unwrap();
+    assert!(offs.is_empty());
+    assert_eq!(voices(&h), 0);
+}
+
+#[test]
+fn seq_tools_edit_the_pattern() {
+    let mut h = harness(&temp_dir("seq"));
+    let id = id_of(&mut h, "synth");
+    call(
+        &mut h,
+        "seq_set_step",
+        json!({ "id": id, "step": 3, "on": true, "note": 67, "vel": 100 }),
+    )
+    .unwrap();
+    let j = call(&mut h, "get_instrument", json!({ "id": id })).unwrap();
+    assert_eq!(j["seq"]["on"][3], 1);
+    assert_eq!(j["seq"]["note"][3], 67);
+    assert_eq!(j["seq"]["vel"][3], 100);
+    call(
+        &mut h,
+        "seq_set",
+        json!({ "id": id, "length": 8, "swing": 0.2 }),
+    )
+    .unwrap();
+    let j = call(&mut h, "get_instrument", json!({ "id": id })).unwrap();
+    assert_eq!(j["seq"]["length"], 8);
+    call(&mut h, "seq_clear", json!({ "id": id })).unwrap();
+    let j = call(&mut h, "get_instrument", json!({ "id": id })).unwrap();
+    assert_eq!(j["seq"]["on"][3], 0);
+    for bad in [
+        json!({ "id": id, "step": 16, "on": true }),
+        json!({ "id": id, "step": 1, "on": true, "note": 128 }),
+        json!({ "id": id, "step": 1, "on": true, "vel": 0 }),
+        json!({ "id": id, "step": 1 }),
+    ] {
+        assert!(call(&mut h, "seq_set_step", bad).is_err());
+    }
+    assert!(call(&mut h, "seq_set", json!({ "id": id })).is_err());
+    assert!(call(&mut h, "seq_set", json!({ "id": id, "length": 17 })).is_err());
+    assert!(call(&mut h, "seq_set", json!({ "id": id, "gate": "x" })).is_err());
+}
+
+#[test]
+fn drum_tools_edit_and_trigger() {
+    let mut h = harness(&temp_dir("drums"));
+    let id = id_of(&mut h, "drums");
+    call(
+        &mut h,
+        "drum_set_step",
+        json!({ "id": id, "track": 2, "step": 5, "level": 2 }),
+    )
+    .unwrap();
+    let j = call(&mut h, "get_instrument", json!({ "id": id })).unwrap();
+    assert_eq!(j["seq"]["steps"][2][5], 2);
+    call(&mut h, "drum_clear", json!({ "id": id })).unwrap();
+    let j = call(&mut h, "get_instrument", json!({ "id": id })).unwrap();
+    assert_eq!(j["seq"]["steps"][2][5], 0);
+    call(&mut h, "drum_trigger", json!({ "id": id, "track": 0 })).unwrap();
+    assert!(call(&mut h, "drum_trigger", json!({ "id": id, "track": 6 })).is_err());
+    assert!(
+        call(
+            &mut h,
+            "drum_set_step",
+            json!({ "id": id, "track": 0, "step": 16, "level": 1 })
+        )
+        .is_err()
+    );
+    assert!(
+        call(
+            &mut h,
+            "drum_set_step",
+            json!({ "id": id, "track": 0, "step": 0, "level": 3 })
+        )
+        .is_err()
+    );
+}
+
+#[test]
+fn seq_and_drum_tools_reject_the_wrong_kind() {
+    let mut h = harness(&temp_dir("kinds"));
+    let (s, d) = (id_of(&mut h, "synth"), id_of(&mut h, "drums"));
+    for (t, a) in [
+        (
+            "drum_set_step",
+            json!({ "track": 0, "step": 0, "level": 1 }),
+        ),
+        ("drum_clear", json!({})),
+        ("drum_trigger", json!({ "track": 0 })),
+    ] {
+        let mut a = a;
+        a["id"] = json!(s);
+        assert_eq!(
+            call(&mut h, t, a),
+            Err(format!("instrument {s} is a synth, not drums")),
+            "{t}"
+        );
+    }
+    for (t, a) in [
+        ("seq_set_step", json!({ "step": 0, "on": true })),
+        ("seq_clear", json!({})),
+        ("seq_set", json!({ "length": 4 })),
+    ] {
+        let mut a = a;
+        a["id"] = json!(d);
+        assert_eq!(
+            call(&mut h, t, a),
+            Err(format!("instrument {d} is drums, not a synth")),
+            "{t}"
+        );
+    }
+    assert_eq!(
+        call(&mut h, "seq_clear", json!({ "id": 999 })),
+        Err("no instrument with id 999".to_string())
+    );
+}
+
+#[test]
+fn every_descriptor_is_dispatched() {
+    let mut h = harness(&temp_dir("drift"));
+    for d in tools::descriptors() {
+        let name = d["name"].as_str().unwrap();
+        if let Err(e) = call(&mut h, name, json!({})) {
+            assert!(
+                !e.starts_with("unknown tool"),
+                "{name} has a descriptor but no handler"
+            );
+        }
+    }
 }
