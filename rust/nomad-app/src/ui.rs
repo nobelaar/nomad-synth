@@ -59,6 +59,8 @@ pub struct NomadApp {
     pub spiral: Option<SpiralState>,
     /// The spiral tab is the one on screen.
     pub spiral_shown: bool,
+    /// The MCP server bridge, when started.
+    pub mcp: Option<crate::mcp::Mcp>,
     scope_ms: f64,
     master: KnobModel,
     closed: bool,
@@ -108,6 +110,7 @@ impl NomadApp {
             help: HelpState::default(),
             spiral: None,
             spiral_shown: false,
+            mcp: None,
             scope_ms: 10.0,
             master: KnobModel::new(spec, spec.default),
             closed: false,
@@ -115,6 +118,18 @@ impl NomadApp {
             drum_panels: HashMap::new(),
             keyboards: HashMap::new(),
             rec_intent: HashMap::new(),
+        }
+    }
+
+    /// The MASTER knob's value (the master volume lives only in the UI).
+    pub fn master_value(&self) -> f64 {
+        self.master.value()
+    }
+
+    /// Set the MASTER knob (clamped; non-finite is ignored) and send it to the engine.
+    pub fn set_master(&mut self, v: f64) {
+        if self.master.set_value(v).is_ok() {
+            self.model.set_master(self.master.value());
         }
     }
 
@@ -264,6 +279,10 @@ impl NomadApp {
         }
         if self.help.on && crate::help::help_ui(ui.ctx(), &mut self.help, now) {
             self.toggle_help();
+        }
+        if let Some(mut m) = self.mcp.take() {
+            m.drain(self);
+            self.mcp = Some(m);
         }
         ui.ctx()
             .request_repaint_after(std::time::Duration::from_millis(33));
