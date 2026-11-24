@@ -17,6 +17,7 @@ nomad-core = { path = "../nomad-core" }
 nomad-runtime = { path = "../nomad-runtime" }
 # Key order and exact float parsing: presets are written byte for byte like Python's json.
 serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+tiny_http = "0.12"
 
 [dev-dependencies]
 egui_kittest = "0.37"
