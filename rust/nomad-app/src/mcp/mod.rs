@@ -204,6 +204,7 @@ mod tests {
     fn flush_sends_due_offs_only() {
         let (mut a, mut core) = app();
         let now = Instant::now();
+        let target = a.model.target_synth();
         a.model.send(Command::NoteOn {
             note: 60,
             velocity: 0.8,
@@ -218,12 +219,12 @@ mod tests {
             PendingOff {
                 due: now,
                 note: 60,
-                target: None,
+                target,
             },
             PendingOff {
                 due: now + Duration::from_secs(60),
                 note: 64,
-                target: None,
+                target,
             },
         ];
         flush_offs(&mut offs, &mut a, now);
