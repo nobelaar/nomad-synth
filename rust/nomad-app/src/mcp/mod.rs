@@ -37,6 +37,14 @@ pub fn mcp_port(argv: &[String]) -> Result<Option<u16>, String> {
     Ok(port)
 }
 
+/// Append `msg` to a status line, two spaces after existing text.
+pub fn append_status(status: &mut String, msg: &str) {
+    if !status.is_empty() {
+        status.push_str("  ");
+    }
+    status.push_str(msg);
+}
+
 const UI_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// A tool call queued for the UI thread.
@@ -142,6 +150,15 @@ mod tests {
 
     fn argv(a: &[&str]) -> Vec<String> {
         a.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn append_status_separates_only_when_not_empty() {
+        let mut s = String::new();
+        append_status(&mut s, "MCP en x");
+        assert_eq!(s, "MCP en x");
+        append_status(&mut s, "y");
+        assert_eq!(s, "MCP en x  y");
     }
 
     #[test]

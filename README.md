@@ -104,7 +104,8 @@ NOMAD guarda sus archivos en `~/.config/nomad-synth/` (o en `$XDG_CONFIG_HOME/no
 
 ```
 nomad                 abre la ventana
-nomad --mcp [PUERTO]  abre la ventana con el servidor MCP (por defecto 7777)
+nomad gui [--mcp [PUERTO]]  abre la ventana; con --mcp, también el servidor MCP (por defecto 7777)
+nomad --mcp [PUERTO]  igual que la línea anterior
 nomad --version       muestra la versión
 nomad devices         lista las salidas de audio
 nomad demo            toca una escena de demo sin ventana (--device N, --seconds S, --midi)
@@ -121,11 +122,19 @@ nomad soak            prueba larga con audio real y cuenta xruns (--minutes 10)
 claude mcp add --transport http nomad http://127.0.0.1:7777/mcp
 ```
 
+Seguridad:
+
+- Solo escucha en localhost (127.0.0.1).
+- Revisa los encabezados Host y Origin: cualquier otro valor recibe 403.
+- Está apagado por defecto: solo se abre con `--mcp`.
+- `note_on` suelta la nota solo, como máximo a los 10 s (`duration_ms` hasta 10000).
+- `panic` silencia todo.
+
 Herramientas:
 
 - Lectura: `get_state`, `get_instrument`, `list_params`, `list_presets`
 - Instrumentos, sonido y transporte: `add_instrument`, `close_instrument`, `select_instrument`, `set_target`, `set_source`, `set_param`, `set_master`, `set_level`, `set_mute`, `set_bpm`, `play`, `stop`
-- Notas, secuenciador y baterias: `note_on`, `panic`, `drum_trigger`, `seq_set_step`, `seq_set`, `seq_clear`, `drum_set_step`, `drum_clear`
+- Notas, secuenciador y baterías: `note_on`, `panic`, `drum_trigger`, `seq_set_step`, `seq_set`, `seq_clear`, `drum_set_step`, `drum_clear`
 - Presets y pestañas: `load_preset`, `save_preset`, `open_spiral`, `close_spiral`
 
 ## Compilar desde el código

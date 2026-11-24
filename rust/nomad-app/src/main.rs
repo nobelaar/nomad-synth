@@ -345,11 +345,11 @@ fn gui(args: &[String]) -> Result<ExitCode, String> {
             if let Some(port) = mcp_port {
                 match nomad_app::mcp::Mcp::start(port, cc.egui_ctx.clone()) {
                     Ok(m) => {
-                        app.status =
-                            format!("MCP: http://127.0.0.1:{}/mcp  {}", m.port(), app.status);
+                        let msg = format!("MCP en http://127.0.0.1:{}/mcp", m.port());
+                        nomad_app::mcp::append_status(&mut app.status, &msg);
                         app.mcp = Some(m);
                     }
-                    Err(e) => app.status = format!("MCP: {e}  {}", app.status),
+                    Err(e) => nomad_app::mcp::append_status(&mut app.status, &format!("MCP: {e}")),
                 }
             }
             Ok(Box::new(app))
