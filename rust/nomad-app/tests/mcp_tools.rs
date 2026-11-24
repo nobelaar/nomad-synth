@@ -676,3 +676,26 @@ fn every_descriptor_is_dispatched() {
         }
     }
 }
+
+#[test]
+fn cross_target_retrigger_keeps_both_offs() {
+    let mut h = harness(&temp_dir("crossretrigger"));
+    let mut offs = Vec::new();
+    let a = id_of(&mut h, "synth");
+    let b = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap()["id"].clone();
+    call(&mut h, "set_target", json!({ "id": a })).unwrap();
+    note_on(&mut h, &mut offs, json!({ "note": 60 })).unwrap();
+    call(&mut h, "set_target", json!({ "id": b })).unwrap();
+    note_on(&mut h, &mut offs, json!({ "note": 60 })).unwrap();
+    assert_eq!(offs.len(), 2, "A's off must survive the retrigger on B");
+    flush(
+        &mut h,
+        &mut offs,
+        std::time::Instant::now() + std::time::Duration::from_secs(11),
+    );
+    assert!(offs.is_empty());
+    for _ in 0..200 {
+        step(&mut h);
+    }
+    assert_eq!(voices(&h), 0, "A's note must not stay stuck");
+}

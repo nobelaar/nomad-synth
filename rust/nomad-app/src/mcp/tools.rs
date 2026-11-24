@@ -470,7 +470,7 @@ fn note_on(app: &mut NomadApp, offs: &mut Vec<PendingOff>, args: &Value) -> Resu
     });
     let due = Instant::now() + Duration::from_millis(ms as u64);
     // A retrigger replaces the pending off so the earlier one cannot cut it short.
-    offs.retain(|o| o.note != note);
+    offs.retain(|o| !(o.note == note && o.target == Some(target)));
     offs.push(PendingOff {
         due,
         note,
