@@ -699,3 +699,157 @@ fn cross_target_retrigger_keeps_both_offs() {
     }
     assert_eq!(voices(&h), 0, "A's note must not stay stuck");
 }
+
+fn params_of(h: &mut Harness<'static, S>, id: u64) -> Value {
+    call(h, "get_instrument", json!({ "id": id })).unwrap()["params"].clone()
+}
+
+#[test]
+fn load_preset_applies_factory_and_reports_unknown() {
+    let mut h = harness(&temp_dir("loadpreset"));
+    let id = id_of(&mut h, "synth");
+    let before = params_of(&mut h, id);
+    let list = call(&mut h, "list_presets", json!({ "kind": "synth" })).unwrap();
+    let name = list.as_array().unwrap().iter().find_map(|e| {
+        let n = e["name"].as_str().unwrap();
+        n.contains("Dark techno").then(|| n.to_string())
+    });
+    let name = name.unwrap();
+    call(&mut h, "load_preset", json!({ "id": id, "name": name })).unwrap();
+    assert_ne!(params_of(&mut h, id), before);
+    assert_eq!(h.state().app.preset_names[&(id as u32)], name);
+    let e = call(
+        &mut h,
+        "load_preset",
+        json!({ "id": id, "name": "Nope123" }),
+    )
+    .unwrap_err();
+    assert!(e.contains("Nope123"), "{e}");
+    assert!(call(&mut h, "load_preset", json!({ "id": id })).is_err());
+    assert!(
+        call(&mut h, "load_preset", json!({ "id": 999, "name": "x" }))
+            .unwrap_err()
+            .contains("no instrument with id 999")
+    );
+}
+
+#[test]
+fn save_preset_round_trips_and_validates() {
+    let dir = temp_dir("savepreset");
+    let mut h = harness(&dir);
+    let id = id_of(&mut h, "synth");
+    call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "cutoff", "value": 0.123 }),
+    )
+    .ok();
+    let saved_params = params_of(&mut h, id);
+    let r = call(
+        &mut h,
+        "save_preset",
+        json!({ "id": id, "name": "My Patch" }),
+    )
+    .unwrap();
+    assert_eq!(r["saved"], "My Patch");
+    assert!(h.state().app.status.contains("PRESET guardado"));
+    let list = call(&mut h, "list_presets", json!({ "kind": "synth" })).unwrap();
+    assert!(
+        list.as_array()
+            .unwrap()
+            .iter()
+            .any(|e| e["name"] == "My Patch" && e["origin"] == "user")
+    );
+    call(
+        &mut h,
+        "load_preset",
+        json!({ "id": id, "name": "Dark techno" }),
+    )
+    .ok();
+    call(
+        &mut h,
+        "load_preset",
+        json!({ "id": id, "name": "My Patch" }),
+    )
+    .unwrap();
+    assert_eq!(params_of(&mut h, id), saved_params);
+    for bad in ["", "   ", ".."] {
+        assert!(
+            call(&mut h, "save_preset", json!({ "id": id, "name": bad })).is_err(),
+            "{bad:?}"
+        );
+    }
+    assert!(call(&mut h, "save_preset", json!({ "id": id })).is_err());
+    let fname = list
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["origin"] == "factory")
+        .unwrap()["name"]
+        .clone();
+    assert!(call(&mut h, "save_preset", json!({ "id": id, "name": fname })).is_err());
+}
+
+#[test]
+fn save_preset_without_folder_errors() {
+    let mut h = harness(&temp_dir("nofolder"));
+    h.state_mut().app.presets = PresetStore::new(None);
+    let id = id_of(&mut h, "synth");
+    let e = call(&mut h, "save_preset", json!({ "id": id, "name": "x" })).unwrap_err();
+    assert!(e.contains("no preset folder"), "{e}");
+}
+
+fn all_files(dir: &Path, out: &mut Vec<PathBuf>) {
+    for e in std::fs::read_dir(dir).unwrap().flatten() {
+        let p = e.path();
+        if p.is_dir() {
+            all_files(&p, out)
+        } else {
+            out.push(p)
+        }
+    }
+}
+
+#[test]
+fn save_preset_names_cannot_escape_the_folder() {
+    let root = temp_dir("traversal");
+    let dir = root.join("presets");
+    std::fs::create_dir_all(&dir).unwrap();
+    let mut h = harness(&dir);
+    let id = id_of(&mut h, "synth");
+    let long = "a".repeat(5000);
+    for name in [
+        "../../escape",
+        "a/b",
+        "..",
+        "/etc/passwd",
+        "",
+        &long,
+        "..\\..\\x",
+        "a\0b",
+    ] {
+        let _ = call(&mut h, "save_preset", json!({ "id": id, "name": name }));
+    }
+    let mut files = Vec::new();
+    all_files(&root, &mut files);
+    assert!(!files.is_empty());
+    for f in files {
+        assert!(f.starts_with(&dir), "{f:?} escaped");
+        assert!(f.file_name().unwrap().len() < 60);
+    }
+}
+
+#[test]
+fn spiral_tools_toggle_and_are_idempotent() {
+    let mut h = harness(&temp_dir("spiral"));
+    for (tool, want) in [
+        ("open_spiral", true),
+        ("open_spiral", true),
+        ("close_spiral", false),
+        ("close_spiral", false),
+    ] {
+        call(&mut h, tool, json!({})).unwrap();
+        let st = call(&mut h, "get_state", json!({})).unwrap();
+        assert_eq!(st["spiral_open"], want, "{tool}");
+    }
+}

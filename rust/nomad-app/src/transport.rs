@@ -25,7 +25,7 @@ fn button_text(name: &str) -> String {
 }
 
 /// `load_preset`: apply the named preset to `v` and show its name on the button.
-fn load_preset(app: &mut NomadApp, v: &InstrumentView, name: &str) {
+pub(crate) fn load_preset(app: &mut NomadApp, v: &InstrumentView, name: &str) {
     let kind = PresetKind::of(v.kind);
     let cmds = app
         .presets

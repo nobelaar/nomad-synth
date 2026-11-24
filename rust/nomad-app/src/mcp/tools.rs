@@ -58,6 +58,20 @@ pub fn descriptors() -> Vec<Value> {
             &["kind"],
         ),
         tool(
+            "load_preset",
+            "Load a preset (sound and pattern) by name into an instrument; names from list_presets.",
+            json!({ "id": id, "name": { "type": "string" } }),
+            &["id", "name"],
+        ),
+        tool(
+            "save_preset",
+            "Save an instrument as a user preset; the name is cleaned (letters, digits, space, _ and -; 40 chars). Returns the stored name.",
+            json!({ "id": id, "name": { "type": "string" } }),
+            &["id", "name"],
+        ),
+        tool("open_spiral", "Open the spiral tab.", json!({}), &[]),
+        tool("close_spiral", "Close the spiral tab.", json!({}), &[]),
+        tool(
             "add_instrument",
             "Add an instrument; it becomes the selection. Returns its id.",
             json!({ "kind": kind }),
@@ -209,6 +223,16 @@ pub fn call(
         "list_params" => list_params(args),
         "list_presets" => list_presets(app, args),
         "add_instrument" => add_instrument(app, args),
+        "load_preset" => load_preset(app, args),
+        "save_preset" => save_preset(app, args),
+        "open_spiral" => {
+            app.open_spiral();
+            Ok(json!({}))
+        }
+        "close_spiral" => {
+            app.close_spiral();
+            Ok(json!({}))
+        }
         "close_instrument" => {
             let id = arg_id(app, args)?.id;
             app.model.close_instrument(id);
@@ -398,6 +422,53 @@ fn list_presets(app: &NomadApp, args: &Value) -> Result<Value, String> {
             json!({ "name": name, "origin": if o == Origin::Factory { "factory" } else { "user" } })
         })
         .collect())
+}
+
+fn arg_name(args: &Value) -> Result<&str, String> {
+    args.get("name")
+        .and_then(Value::as_str)
+        .filter(|n| !n.trim().is_empty())
+        .ok_or_else(|| "missing or invalid \"name\": expected a non-empty string".into())
+}
+
+fn load_preset(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let v = arg_id(app, args)?.clone();
+    let name = arg_name(args)?;
+    let kind = PresetKind::of(v.kind);
+    if app.presets.get(kind, name).is_err() {
+        let names: Vec<String> = app.presets.list(kind).into_iter().map(|(n, _)| n).collect();
+        return Err(format!(
+            "no {} preset named {name:?}; valid names: {}",
+            kind.as_str(),
+            names.join(", ")
+        ));
+    }
+    // load_preset reports failure only through the status bar.
+    let prev = std::mem::take(&mut app.status);
+    crate::transport::load_preset(app, &v, name);
+    let failed = std::mem::replace(&mut app.status, prev);
+    if failed.is_empty() {
+        Ok(json!({}))
+    } else {
+        Err(failed)
+    }
+}
+
+fn save_preset(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let v = arg_id(app, args)?.clone();
+    if !app.presets.can_save() {
+        return Err("no preset folder".into());
+    }
+    let name = arg_name(args)?;
+    if presets::slug(name).is_empty() {
+        return Err("invalid \"name\": needs at least one letter, digit, space, _ or -".into());
+    }
+    let kind = PresetKind::of(v.kind);
+    // The store cleans the name to a file-safe slug and refuses factory names.
+    let stored = app.presets.save(kind, name, &presets::capture(&v, ""))?;
+    app.status = format!("PRESET guardado: {stored}");
+    app.preset_names.insert(v.id, stored.clone());
+    Ok(json!({ "saved": stored }))
 }
 
 fn arg_f64(args: &Value, key: &str) -> Result<f64, String> {
