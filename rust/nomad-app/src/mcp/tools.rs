@@ -464,8 +464,19 @@ fn save_preset(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
         return Err("invalid \"name\": needs at least one letter, digit, space, _ or -".into());
     }
     let kind = PresetKind::of(v.kind);
-    // The store cleans the name to a file-safe slug and refuses factory names.
-    let stored = app.presets.save(kind, name, &presets::capture(&v, ""))?;
+    let clean = presets::slug(name).to_lowercase();
+    if presets::factory(kind).iter().any(|p| {
+        p["name"]
+            .as_str()
+            .is_some_and(|n| n.to_lowercase() == clean)
+    }) {
+        return Err("factory preset names are reserved; pick another name".into());
+    }
+    // The store cleans the name to a file-safe slug.
+    let stored = app
+        .presets
+        .save(kind, name, &presets::capture(&v, ""))
+        .map_err(|e| format!("could not save preset: {e}"))?;
     app.status = format!("PRESET guardado: {stored}");
     app.preset_names.insert(v.id, stored.clone());
     Ok(json!({ "saved": stored }))

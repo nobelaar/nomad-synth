@@ -7,7 +7,7 @@ use egui::Vec2;
 use egui_kittest::Harness;
 use nomad_app::mcp::tools;
 use nomad_app::model::{AppModel, initial_views};
-use nomad_app::presets::PresetStore;
+use nomad_app::presets::{self, PresetKind, PresetStore};
 use nomad_app::theme;
 use nomad_app::ui::NomadApp;
 use nomad_core::engine::{Engine, Kind};
@@ -738,12 +738,16 @@ fn save_preset_round_trips_and_validates() {
     let dir = temp_dir("savepreset");
     let mut h = harness(&dir);
     let id = id_of(&mut h, "synth");
+    let factory_name = presets::factory(PresetKind::Synth)[0]["name"]
+        .as_str()
+        .unwrap()
+        .to_string();
     call(
         &mut h,
         "set_param",
-        json!({ "id": id, "name": "cutoff", "value": 0.123 }),
+        json!({ "id": id, "name": "filt_cutoff", "value": 777.0 }),
     )
-    .ok();
+    .unwrap();
     let saved_params = params_of(&mut h, id);
     let r = call(
         &mut h,
@@ -763,9 +767,10 @@ fn save_preset_round_trips_and_validates() {
     call(
         &mut h,
         "load_preset",
-        json!({ "id": id, "name": "Dark techno" }),
+        json!({ "id": id, "name": &factory_name }),
     )
-    .ok();
+    .unwrap();
+    assert_ne!(params_of(&mut h, id), saved_params);
     call(
         &mut h,
         "load_preset",
@@ -780,14 +785,13 @@ fn save_preset_round_trips_and_validates() {
         );
     }
     assert!(call(&mut h, "save_preset", json!({ "id": id })).is_err());
-    let fname = list
-        .as_array()
-        .unwrap()
-        .iter()
-        .find(|e| e["origin"] == "factory")
-        .unwrap()["name"]
-        .clone();
-    assert!(call(&mut h, "save_preset", json!({ "id": id, "name": fname })).is_err());
+    let e = call(
+        &mut h,
+        "save_preset",
+        json!({ "id": id, "name": factory_name.to_uppercase() }),
+    )
+    .unwrap_err();
+    assert!(e.contains("factory preset names are reserved"), "{e}");
 }
 
 #[test]
