@@ -3,13 +3,36 @@
 use super::rpc::{self, ToolHost};
 use serde_json::{Value, json};
 use std::io::Read;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex, PoisonError};
 use std::thread::JoinHandle;
 use std::time::Duration;
 use tiny_http::{Header, Method, Request, Response, Server};
 
 const MAX_BODY: u64 = 1024 * 1024;
+const MAX_IN_FLIGHT: usize = 16;
+
+type SharedHost = Arc<Mutex<Box<dyn ToolHost + Send>>>;
+
+/// Counts a live request thread; decrements on drop, even when the thread panics.
+struct InFlight(Arc<AtomicUsize>);
+impl Drop for InFlight {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::SeqCst);
+    }
+}
+
+/// Stands in when `make_host` panicked: every tool call then answers 500.
+struct Dead;
+impl ToolHost for Dead {
+    fn list(&self) -> Vec<Value> {
+        panic!("host failed to start")
+    }
+    fn call(&mut self, _: &str, _: &Value) -> Result<Value, String> {
+        panic!("host failed to start")
+    }
+}
 
 /// `host` is `127.0.0.1` or `localhost`, optionally followed by `:port`.
 fn host_ok(h: &str) -> bool {
@@ -43,7 +66,7 @@ fn reply(req: Request, status: u16, body: Option<Value>) {
     let _ = req.respond(r);
 }
 
-fn serve(mut req: Request, host: &mut dyn ToolHost) {
+fn serve(mut req: Request, host: &SharedHost) {
     if !local_origin_ok(header(&req, "Host"), header(&req, "Origin")) {
         return reply(req, 403, None);
     }
@@ -73,9 +96,19 @@ fn serve(mut req: Request, host: &mut dyn ToolHost) {
     if is_response {
         return reply(req, 202, None);
     }
-    match rpc::handle(&msg, host) {
-        Some(resp) => reply(req, 200, Some(resp)),
-        None => reply(req, 202, None),
+    // Requests run one at a time through the mutex; a panicking host answers 500.
+    let handled = catch_unwind(AssertUnwindSafe(|| {
+        let mut h = host.lock().unwrap_or_else(PoisonError::into_inner);
+        rpc::handle(&msg, h.as_mut())
+    }));
+    match handled {
+        Ok(Some(resp)) => reply(req, 200, Some(resp)),
+        Ok(None) => reply(req, 202, None),
+        Err(_) => {
+            let err = json!({"jsonrpc": "2.0", "id": msg.get("id"),
+                "error": {"code": -32603, "message": "internal error"}});
+            reply(req, 500, Some(err));
+        }
     }
 }
 
@@ -87,10 +120,10 @@ pub struct HttpServer {
 }
 
 impl HttpServer {
-    /// Binds 127.0.0.1:port (0 = ephemeral). `make_host` runs once on the server thread.
+    /// Binds 127.0.0.1:port (0 = ephemeral). `make_host` runs once on the accept thread; each request gets its own short-lived thread.
     pub fn start(
         port: u16,
-        make_host: impl FnOnce() -> Box<dyn ToolHost> + Send + 'static,
+        make_host: impl FnOnce() -> Box<dyn ToolHost + Send> + Send + 'static,
     ) -> Result<HttpServer, String> {
         let server = Arc::new(Server::http(("127.0.0.1", port)).map_err(|e| e.to_string())?);
         let port = server
@@ -101,10 +134,26 @@ impl HttpServer {
         let stop = Arc::new(AtomicBool::new(false));
         let (s, st) = (server.clone(), stop.clone());
         let thread = std::thread::spawn(move || {
-            let mut host = make_host();
+            let host: SharedHost = Arc::new(Mutex::new(
+                catch_unwind(AssertUnwindSafe(make_host)).unwrap_or_else(|_| Box::new(Dead)),
+            ));
+            let in_flight = Arc::new(AtomicUsize::new(0));
             while !st.load(Ordering::SeqCst) {
                 match s.recv_timeout(Duration::from_millis(200)) {
-                    Ok(Some(req)) => serve(req, host.as_mut()),
+                    Ok(Some(req)) => {
+                        if in_flight.fetch_add(1, Ordering::SeqCst) >= MAX_IN_FLIGHT {
+                            in_flight.fetch_sub(1, Ordering::SeqCst);
+                            reply(req, 503, None);
+                            continue;
+                        }
+                        let guard = InFlight(in_flight.clone());
+                        let h = host.clone();
+                        // A failed spawn drops the request (client sees a closed connection).
+                        let _ = std::thread::Builder::new().spawn(move || {
+                            let _guard = guard;
+                            serve(req, &h);
+                        });
+                    }
                     Ok(None) => {}
                     Err(_) => break,
                 }

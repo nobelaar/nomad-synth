@@ -12,7 +12,8 @@ impl ToolHost for Fake {
         self.0.fetch_add(1, Ordering::SeqCst);
         vec![]
     }
-    fn call(&mut self, _: &str, _: &Value) -> Result<Value, String> {
+    fn call(&mut self, name: &str, _: &Value) -> Result<Value, String> {
+        assert_ne!(name, "boom", "fake host panic");
         self.0.fetch_add(1, Ordering::SeqCst);
         Ok(json!({}))
     }
@@ -146,4 +147,41 @@ fn drop_frees_the_port() {
     let port = s.port();
     drop(s);
     TcpListener::bind(("127.0.0.1", port)).expect("port freed after drop");
+}
+
+#[test]
+fn stalled_client_does_not_block_others_or_drop() {
+    let (s, _) = server();
+    let port = s.port();
+    let mut stalled = TcpStream::connect(("127.0.0.1", port)).unwrap();
+    stalled
+        .write_all(
+            format!(
+                "POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Length: 100\r\n\r\nabcde"
+            )
+            .as_bytes(),
+        )
+        .unwrap();
+    std::thread::sleep(std::time::Duration::from_millis(100));
+    assert_eq!(post(port, &[], INIT).0, 200);
+    let (tx, rx) = std::sync::mpsc::channel();
+    std::thread::spawn(move || {
+        drop(s);
+        let _ = tx.send(());
+    });
+    rx.recv_timeout(std::time::Duration::from_secs(5))
+        .expect("drop must not wait for the stalled request");
+    drop(stalled);
+}
+
+#[test]
+fn panicking_host_is_500_and_server_survives() {
+    let (s, _) = server();
+    let boom = r#"{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"boom"}}"#;
+    let (st, _, body) = post(s.port(), &[], boom);
+    assert_eq!(st, 500);
+    let v: Value = serde_json::from_str(&body).unwrap();
+    assert_eq!(v["error"]["code"], -32603);
+    assert_eq!(post(s.port(), &[], boom).0, 500); // mutex was poisoned: still recovers
+    assert_eq!(post(s.port(), &[], LIST).0, 200);
 }
