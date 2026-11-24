@@ -135,7 +135,7 @@ Herramientas:
 
 - Lectura: `get_state`, `get_instrument`, `list_params`, `list_presets`
 - Instrumentos, sonido y transporte: `add_instrument`, `close_instrument`, `select_instrument`, `set_target`, `set_source`, `set_param`, `set_master`, `set_level`, `set_mute`, `set_bpm`, `play`, `stop`
-- Notas, secuenciador y baterías: `note_on`, `panic`, `drum_trigger`, `seq_set_step`, `seq_set`, `seq_clear`, `drum_set_step`, `drum_clear`
+- Notas, secuenciador y baterías: `note_on`, `panic`, `drum_trigger`, `seq_set_step`, `seq_set`, `seq_enable`, `seq_clear`, `drum_set_step`, `drum_clear`
 - Presets y pestañas: `load_preset`, `save_preset`, `open_spiral`, `close_spiral`
 
 ## Compilar desde el código

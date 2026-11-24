@@ -187,6 +187,12 @@ pub fn descriptors() -> Vec<Value> {
             &["id"],
         ),
         tool(
+            "seq_enable",
+            "Turn a synth's sequencer on or off (the SEQ button). Steps only play while it is on; get_state shows seq_enabled.",
+            json!({ "id": id, "enabled": { "type": "boolean" } }),
+            &["id", "enabled"],
+        ),
+        tool(
             "seq_set",
             "Synth sequencer settings; give at least one of length, gate, division, swing.",
             json!({
@@ -321,6 +327,15 @@ pub fn call(
             app.model.send(Command::SeqClear(id));
             Ok(json!({}))
         }
+        "seq_enable" => {
+            let id = synth_id(app, args)?;
+            let enabled = args
+                .get("enabled")
+                .and_then(Value::as_bool)
+                .ok_or("missing or invalid \"enabled\": must be true or false")?;
+            app.model.send(Command::SeqEnabled { id, enabled });
+            Ok(json!({}))
+        }
         "seq_set" => seq_set(app, args),
         "drum_set_step" => {
             let id = drums_id(app, args)?;
@@ -382,6 +397,7 @@ fn get_state(app: &NomadApp) -> Result<Value, String> {
                 "bpm": v.shared.clock_bpm.get(), "running": v.shared.eff_running.load(Relaxed),
                 "muted": m.muted(v.id), "level": v.shared.level.get(),
                 "step": v.shared.step.load(Relaxed),
+                "seq_enabled": (v.kind == Kind::Synth).then(|| v.shared.seq_enabled.load(Relaxed)),
             })
         })
         .collect();

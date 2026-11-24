@@ -686,6 +686,29 @@ fn seq_and_drum_tools_reject_the_wrong_kind() {
 }
 
 #[test]
+fn seq_enable_toggles_and_get_state_reports_it() {
+    let mut h = harness(&temp_dir("seqen"));
+    let id = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap()["id"].clone();
+    let enabled = |h: &mut _| {
+        let st = call(h, "get_state", json!({})).unwrap();
+        st["instruments"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|i| i["id"] == id)
+            .unwrap()["seq_enabled"]
+            .clone()
+    };
+    call(&mut h, "seq_enable", json!({ "id": id, "enabled": true })).unwrap();
+    step(&mut h);
+    assert_eq!(enabled(&mut h), json!(true));
+    call(&mut h, "seq_enable", json!({ "id": id, "enabled": false })).unwrap();
+    step(&mut h);
+    assert_eq!(enabled(&mut h), json!(false));
+    assert!(call(&mut h, "seq_enable", json!({ "id": id })).is_err());
+}
+
+#[test]
 fn every_descriptor_is_dispatched() {
     let mut h = harness(&temp_dir("drift"));
     for d in tools::descriptors() {
