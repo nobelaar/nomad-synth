@@ -1,5 +1,6 @@
 //! Console front end of the Rust NOMAD: the demo scene and argument parsing.
 
+pub mod mcp;
 pub mod scene;
 
 /// `--name value` flags after the subcommand (no CLI dependency).
