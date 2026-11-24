@@ -7,6 +7,7 @@ use std::sync::atomic::Ordering::Relaxed;
 
 use nomad_core::engine::Kind;
 use nomad_core::params::{DRUM_PARAMS, ParamSpec, SYNTH_PARAMS};
+use nomad_runtime::Command;
 use serde_json::{Value, json};
 
 use crate::model::InstrumentView;
@@ -29,6 +30,7 @@ fn tool(name: &str, description: &str, properties: Value, required: &[&str]) -> 
 }
 
 pub fn descriptors() -> Vec<Value> {
+    let id = json!({ "type": "integer", "description": "instrument id from get_state" });
     let kind = json!({ "type": "string", "enum": ["synth", "drums"] });
     vec![
         tool(
@@ -55,6 +57,78 @@ pub fn descriptors() -> Vec<Value> {
             json!({ "kind": kind }),
             &["kind"],
         ),
+        tool(
+            "add_instrument",
+            "Add an instrument; it becomes the selection. Returns its id.",
+            json!({ "kind": kind }),
+            &["kind"],
+        ),
+        tool(
+            "close_instrument",
+            "Close an instrument.",
+            json!({ "id": id }),
+            &["id"],
+        ),
+        tool(
+            "select_instrument",
+            "Select an instrument.",
+            json!({ "id": id }),
+            &["id"],
+        ),
+        tool(
+            "set_target",
+            "Make a synth the target of the keyboard/MIDI notes.",
+            json!({ "id": id }),
+            &["id"],
+        ),
+        tool(
+            "set_source",
+            "Clock source of an instrument: another instrument's id, or null for its own clock.",
+            json!({ "id": id, "source": { "type": ["integer", "null"] } }),
+            &["id", "source"],
+        ),
+        tool(
+            "set_param",
+            "Set a synth parameter (see list_params); the value is clamped to its range.",
+            json!({ "id": id, "name": { "type": "string" }, "value": { "type": "number" } }),
+            &["id", "name", "value"],
+        ),
+        tool(
+            "set_master",
+            "Master volume.",
+            json!({ "value": { "type": "number" } }),
+            &["value"],
+        ),
+        tool(
+            "set_level",
+            "Mix level of an instrument (0..1).",
+            json!({ "id": id, "value": { "type": "number" } }),
+            &["id", "value"],
+        ),
+        tool(
+            "set_mute",
+            "Mute or unmute an instrument.",
+            json!({ "id": id, "muted": { "type": "boolean" } }),
+            &["id", "muted"],
+        ),
+        tool(
+            "set_bpm",
+            "Tempo of an instrument with its own clock.",
+            json!({ "id": id, "bpm": { "type": "number" } }),
+            &["id", "bpm"],
+        ),
+        tool(
+            "play",
+            "Start the clock (no-op if running).",
+            json!({ "id": id }),
+            &["id"],
+        ),
+        tool(
+            "stop",
+            "Stop the clock (no-op if stopped).",
+            json!({ "id": id }),
+            &["id"],
+        ),
     ]
 }
 
@@ -71,6 +145,49 @@ pub fn call(
         "get_instrument" => get_instrument(app, args),
         "list_params" => list_params(args),
         "list_presets" => list_presets(app, args),
+        "add_instrument" => add_instrument(app, args),
+        "close_instrument" => {
+            let id = arg_id(app, args)?.id;
+            app.model.close_instrument(id);
+            Ok(json!({}))
+        }
+        "select_instrument" => {
+            let id = arg_id(app, args)?.id;
+            app.model.select(id);
+            Ok(json!({}))
+        }
+        "set_target" => {
+            let id = synth_id(app, args)?;
+            app.model.set_target(id);
+            Ok(json!({}))
+        }
+        "set_source" => set_source(app, args),
+        "set_param" => set_param(app, args),
+        "set_master" => {
+            app.set_master(arg_f64(args, "value")?);
+            Ok(json!({}))
+        }
+        "set_level" => {
+            let id = arg_id(app, args)?.id;
+            app.model.set_level(id, arg_f64(args, "value")?);
+            Ok(json!({}))
+        }
+        "set_mute" => set_mute(app, args),
+        "set_bpm" => {
+            let id = arg_id(app, args)?.id;
+            let bpm = arg_f64(args, "bpm")?;
+            transport(app, id, |m| m.set_bpm(id, bpm))
+        }
+        "play" | "stop" => {
+            let id = arg_id(app, args)?.id;
+            let want = name == "play";
+            transport(app, id, |m| {
+                let running = m
+                    .view(id)
+                    .is_some_and(|v| v.shared.clock_running.load(Relaxed));
+                running == want || m.toggle_play(id)
+            })
+        }
         _ => Err(format!("unknown tool: {name}")),
     }
 }
@@ -159,4 +276,109 @@ fn list_presets(app: &NomadApp, args: &Value) -> Result<Value, String> {
             json!({ "name": name, "origin": if o == Origin::Factory { "factory" } else { "user" } })
         })
         .collect())
+}
+
+fn arg_f64(args: &Value, key: &str) -> Result<f64, String> {
+    args.get(key)
+        .and_then(Value::as_f64)
+        .filter(|v| v.is_finite())
+        .ok_or_else(|| format!("missing or invalid \"{key}\": {key} must be a finite number"))
+}
+
+/// Id of a live synth; drums get a "not a synth" error.
+fn synth_id(app: &NomadApp, args: &Value) -> Result<u32, String> {
+    let v = arg_id(app, args)?;
+    match v.kind {
+        Kind::Synth => Ok(v.id),
+        Kind::Drums => Err(format!("instrument {} is drums, not a synth", v.id)),
+    }
+}
+
+fn add_instrument(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let kind = arg_kind(args)?;
+    let id = app
+        .model
+        .add_instrument(kind)
+        .ok_or("instance limit reached")?;
+    Ok(json!({ "id": id }))
+}
+
+fn set_source(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let id = arg_id(app, args)?.id;
+    let src = match args.get("source") {
+        Some(Value::Null) => None,
+        Some(s) => Some(
+            s.as_u64()
+                .and_then(|s| u32::try_from(s).ok())
+                .ok_or("invalid \"source\": expected an instrument id (integer) or null")?,
+        ),
+        None => return Err("missing \"source\": an instrument id (integer) or null".into()),
+    };
+    if app.model.set_source(id, src) {
+        Ok(json!({}))
+    } else {
+        Err(format!(
+            "invalid clock source for instrument {id}: the source must be another live instrument with its own clock, and an instrument that others follow cannot follow"
+        ))
+    }
+}
+
+fn set_param(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let id = synth_id(app, args)?;
+    let name = args
+        .get("name")
+        .and_then(Value::as_str)
+        .ok_or("missing or invalid \"name\": expected a parameter name (see list_params)")?;
+    if name == "master_volume" {
+        return Err("master_volume is not an instrument parameter: use set_master".into());
+    }
+    let Some((p, spec)) = SYNTH_PARAMS
+        .iter()
+        .enumerate()
+        .find(|(_, s)| s.name == name)
+    else {
+        let valid: Vec<_> = SYNTH_PARAMS
+            .iter()
+            .map(|s| s.name)
+            .filter(|n| *n != "master_volume")
+            .collect();
+        return Err(format!(
+            "unknown parameter \"{name}\"; valid names: {}",
+            valid.join(", ")
+        ));
+    };
+    let value = spec.clamp(arg_f64(args, "value")?);
+    app.model.send(Command::SetParam {
+        id,
+        param: p as u16,
+        value,
+    });
+    Ok(json!({ "value": value }))
+}
+
+fn set_mute(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
+    let id = arg_id(app, args)?.id;
+    let want = args
+        .get("muted")
+        .and_then(Value::as_bool)
+        .ok_or("missing or invalid \"muted\": must be true or false")?;
+    if app.model.muted(id) != want {
+        app.model.toggle_mute(id);
+    }
+    Ok(json!({}))
+}
+
+/// Run a transport action; `false` means the instance follows another clock.
+fn transport(
+    app: &mut NomadApp,
+    id: u32,
+    f: impl FnOnce(&mut crate::model::AppModel) -> bool,
+) -> Result<Value, String> {
+    if let Some(m) = app.model.source_of(id) {
+        return Err(format!(
+            "instrument {id} follows instrument {m}'s clock; control {m} instead"
+        ));
+    }
+    f(&mut app.model);
+    Ok(json!({}))
 }

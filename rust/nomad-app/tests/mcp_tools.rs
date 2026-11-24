@@ -173,3 +173,224 @@ fn descriptors_cover_the_read_tools() {
         );
     }
 }
+
+fn first_id(h: &Harness<'static, S>, kind: Kind) -> u32 {
+    h.state()
+        .app
+        .model
+        .instruments()
+        .iter()
+        .find(|i| i.kind == kind)
+        .unwrap()
+        .id
+}
+
+fn param(h: &mut Harness<'static, S>, id: u32, name: &str) -> f64 {
+    call(h, "get_instrument", json!({ "id": id })).unwrap()["params"][name]
+        .as_f64()
+        .unwrap()
+}
+
+#[test]
+fn add_and_close_instrument() {
+    let mut h = harness(&temp_dir("add"));
+    let n = h.state().app.model.instruments().len();
+    let r = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap();
+    let id = r["id"].as_u64().unwrap();
+    let s = call(&mut h, "get_state", json!({})).unwrap();
+    assert_eq!(s["instruments"].as_array().unwrap().len(), n + 1);
+    assert!(
+        s["instruments"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["id"] == id)
+    );
+    call(&mut h, "select_instrument", json!({ "id": id })).unwrap();
+    call(&mut h, "set_target", json!({ "id": id })).unwrap();
+    let s = call(&mut h, "get_state", json!({})).unwrap();
+    assert_eq!(
+        (s["selected"].clone(), s["target"].clone()),
+        (json!(id), json!(id))
+    );
+    call(&mut h, "close_instrument", json!({ "id": id })).unwrap();
+    assert_eq!(
+        call(&mut h, "select_instrument", json!({ "id": id })),
+        Err(format!("no instrument with id {id}"))
+    );
+    assert!(call(&mut h, "add_instrument", json!({ "kind": "x" })).is_err());
+    let d = first_id(&h, Kind::Drums);
+    let e = call(&mut h, "set_target", json!({ "id": d })).unwrap_err();
+    assert!(e.contains("drums"), "{e}");
+    let mut last = Ok(json!(null));
+    for _ in 0..40 {
+        last = call(&mut h, "add_instrument", json!({ "kind": "drums" }));
+        if last.is_err() {
+            break;
+        }
+    }
+    assert_eq!(last, Err("instance limit reached".to_string()));
+}
+
+#[test]
+fn set_param_stores_clamped_values() {
+    let mut h = harness(&temp_dir("param"));
+    let id = first_id(&h, Kind::Synth);
+    let cut = SYNTH_PARAMS.iter().find(|s| s.name == "filt_cutoff").unwrap();
+    let mid = (cut.lo * cut.hi).sqrt();
+    call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": mid }),
+    )
+    .unwrap();
+    assert!((param(&mut h, id, "filt_cutoff") - mid).abs() < 1e-3 * mid);
+    call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": 1e9 }),
+    )
+    .unwrap();
+    assert_eq!(param(&mut h, id, "filt_cutoff"), cut.hi);
+    call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": -1e9 }),
+    )
+    .unwrap();
+    assert_eq!(param(&mut h, id, "filt_cutoff"), cut.lo);
+}
+
+#[test]
+fn set_param_errors() {
+    let mut h = harness(&temp_dir("paramerr"));
+    let id = first_id(&h, Kind::Synth);
+    let e = call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "nope", "value": 1 }),
+    )
+    .unwrap_err();
+    for s in SYNTH_PARAMS.iter().filter(|s| s.name != "master_volume") {
+        assert!(e.contains(s.name), "{e} lacks {}", s.name);
+    }
+    let e = call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "master_volume", "value": 1 }),
+    )
+    .unwrap_err();
+    assert!(e.contains("use set_master"), "{e}");
+    let e = call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": null }),
+    )
+    .unwrap_err();
+    assert!(e.contains("value"), "{e}");
+    let e = call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": "x" }),
+    )
+    .unwrap_err();
+    assert!(e.contains("value"), "{e}");
+    assert!(call(&mut h, "set_param", Value::Null).is_err());
+    let d = first_id(&h, Kind::Drums);
+    assert_eq!(
+        call(
+            &mut h,
+            "set_param",
+            json!({ "id": d, "name": "filt_cutoff", "value": 1 })
+        ),
+        Err(format!("instrument {d} is drums, not a synth"))
+    );
+    assert_eq!(
+        call(
+            &mut h,
+            "set_param",
+            json!({ "id": 999, "name": "filt_cutoff", "value": 1 })
+        ),
+        Err("no instrument with id 999".to_string())
+    );
+}
+
+#[test]
+fn master_level_mute() {
+    let mut h = harness(&temp_dir("mix"));
+    call(&mut h, "set_master", json!({ "value": 0.3 })).unwrap();
+    let s = call(&mut h, "get_state", json!({})).unwrap();
+    assert!((s["master"].as_f64().unwrap() - 0.3).abs() < 1e-6);
+    assert!(call(&mut h, "set_master", json!({ "value": null })).is_err());
+    assert!(call(&mut h, "set_master", json!({})).is_err());
+    let id = first_id(&h, Kind::Synth);
+    call(&mut h, "set_level", json!({ "id": id, "value": 0.25 })).unwrap();
+    let s = call(&mut h, "get_state", json!({})).unwrap();
+    let i = s["instruments"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|i| i["id"] == id)
+        .unwrap();
+    assert!((i["level"].as_f64().unwrap() - 0.25).abs() < 1e-6);
+    assert!(call(&mut h, "set_level", json!({ "id": id })).is_err());
+    for _ in 0..2 {
+        call(&mut h, "set_mute", json!({ "id": id, "muted": true })).unwrap();
+        assert!(h.state().app.model.muted(id));
+    }
+    call(&mut h, "set_mute", json!({ "id": id, "muted": false })).unwrap();
+    assert!(!h.state().app.model.muted(id));
+    assert!(call(&mut h, "set_mute", json!({ "id": id })).is_err());
+}
+
+#[test]
+fn transport_is_idempotent_and_followers_error() {
+    let mut h = harness(&temp_dir("transport"));
+    let id = h.state().app.model.instruments()[0].id;
+    let running = |h: &Harness<'static, S>| {
+        h.state()
+            .app
+            .model
+            .view(id)
+            .unwrap()
+            .shared
+            .clock_running
+            .load(std::sync::atomic::Ordering::Relaxed)
+    };
+    call(&mut h, "stop", json!({ "id": id })).unwrap();
+    assert!(!running(&h));
+    call(&mut h, "play", json!({ "id": id })).unwrap();
+    call(&mut h, "play", json!({ "id": id })).unwrap();
+    assert!(running(&h));
+    call(&mut h, "set_bpm", json!({ "id": id, "bpm": 140 })).unwrap();
+    call(&mut h, "stop", json!({ "id": id })).unwrap();
+    call(&mut h, "stop", json!({ "id": id })).unwrap();
+    assert!(!running(&h));
+    assert!(call(&mut h, "set_bpm", json!({ "id": id })).is_err());
+
+    let other = h.state().app.model.instruments()[1].id;
+    assert_eq!(
+        call(&mut h, "set_source", json!({ "id": other, "source": id })),
+        Ok(json!({}))
+    );
+    let msg = format!("instrument {other} follows instrument {id}'s clock; control {id} instead");
+    for (t, a) in [
+        ("play", json!({})),
+        ("stop", json!({})),
+        ("set_bpm", json!({ "bpm": 120 })),
+    ] {
+        let mut a = a;
+        a["id"] = json!(other);
+        assert_eq!(call(&mut h, t, a), Err(msg.clone()), "{t}");
+    }
+    assert!(
+        call(
+            &mut h,
+            "set_source",
+            json!({ "id": other, "source": other })
+        )
+        .is_err()
+    );
+    call(&mut h, "set_source", json!({ "id": other, "source": null })).unwrap();
+    call(&mut h, "play", json!({ "id": other })).unwrap();
+}
