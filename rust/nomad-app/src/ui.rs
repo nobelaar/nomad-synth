@@ -122,6 +122,11 @@ impl NomadApp {
     }
 
     /// Instances that currently have per-panel UI state (tests).
+    /// The MASTER knob's value (the master volume lives only in the UI).
+    pub fn master_value(&self) -> f64 {
+        self.master.value()
+    }
+
     pub fn panel_state_ids(&self) -> Vec<InstrumentId> {
         let mut v: Vec<_> = self.synth_panels.keys().copied().collect();
         v.sort_unstable();
