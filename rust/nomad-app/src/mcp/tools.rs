@@ -12,6 +12,7 @@ use serde_json::{Value, json};
 
 use crate::model::InstrumentView;
 use crate::presets::{self, Origin, PresetKind};
+use crate::synth_layout::{WidgetKind, widget_kind};
 use crate::ui::NomadApp;
 
 /// A note-off owed to `target` (the synth that got the note-on) at `due`.
@@ -47,7 +48,7 @@ pub fn descriptors() -> Vec<Value> {
         ),
         tool(
             "list_params",
-            "Parameter names with range, default and unit for a kind of instrument.",
+            "Parameter names with range, default and unit for a kind of instrument. Synths include master_volume (change it with set_master). Drum params are listed for reference only: set_param cannot change them, use load_preset.",
             json!({ "kind": kind }),
             &["kind"],
         ),
@@ -65,8 +66,8 @@ pub fn descriptors() -> Vec<Value> {
         ),
         tool(
             "save_preset",
-            "Save an instrument as a user preset; the name is cleaned (letters, digits, space, _ and -; 40 chars). Returns the stored name.",
-            json!({ "id": id, "name": { "type": "string" } }),
+            "Save an instrument as a user preset; the name is cleaned (letters, digits, space, _ and -; 40 chars). Returns the stored name. Without overwrite: true an existing user preset of that name is never replaced.",
+            json!({ "id": id, "name": { "type": "string" }, "overwrite": { "type": "boolean", "default": false } }),
             &["id", "name"],
         ),
         tool("open_spiral", "Open the spiral tab.", json!({}), &[]),
@@ -145,7 +146,7 @@ pub fn descriptors() -> Vec<Value> {
         ),
         tool(
             "note_on",
-            "Play a note on the target synth; it is released after duration_ms.",
+            "Play a note on the target synth; it is released after duration_ms. The release is a plain note-off for that MIDI note on that synth, so it can also release the same key if the user is holding it there.",
             json!({
                 "note": { "type": "integer", "minimum": 0, "maximum": 127 },
                 "velocity": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.8 },
@@ -153,7 +154,12 @@ pub fn descriptors() -> Vec<Value> {
             }),
             &["note"],
         ),
-        tool("panic", "Silence every voice.", json!({}), &[]),
+        tool(
+            "panic",
+            "Full stop: silences every voice, stops every instrument's clock and disarms REC. To release just one note, wait for note_on's duration_ms.",
+            json!({}),
+            &[],
+        ),
         tool(
             "drum_trigger",
             "Hit one drum track now.",
@@ -463,6 +469,11 @@ fn save_preset(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
     if presets::slug(name).is_empty() {
         return Err("invalid \"name\": needs at least one letter, digit, space, _ or -".into());
     }
+    let overwrite = match args.get("overwrite") {
+        None => false,
+        Some(Value::Bool(b)) => *b,
+        Some(_) => return Err("invalid \"overwrite\": must be true or false".into()),
+    };
     let kind = PresetKind::of(v.kind);
     let clean = presets::slug(name).to_lowercase();
     if presets::factory(kind).iter().any(|p| {
@@ -471,6 +482,18 @@ fn save_preset(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
             .is_some_and(|n| n.to_lowercase() == clean)
     }) {
         return Err("factory preset names are reserved; pick another name".into());
+    }
+    let slug = presets::slug(name);
+    if !overwrite
+        && app
+            .presets
+            .list(kind)
+            .iter()
+            .any(|(n, o)| *o == Origin::User && *n == slug)
+    {
+        return Err(format!(
+            "a user preset named '{slug}' already exists; pass overwrite: true to replace it"
+        ));
     }
     // The store cleans the name to a file-safe slug.
     let stored = app
@@ -640,7 +663,11 @@ fn set_param(app: &mut NomadApp, args: &Value) -> Result<Value, String> {
             valid.join(", ")
         ));
     };
-    let value = spec.clamp(arg_f64(args, "value")?);
+    let mut value = spec.clamp(arg_f64(args, "value")?);
+    // Same rule as the GUI selector, so what it highlights is what plays.
+    if widget_kind(p) == WidgetKind::Selector {
+        value = value.round();
+    }
     app.model.send(Command::SetParam {
         id,
         param: p as u16,

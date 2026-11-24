@@ -132,12 +132,22 @@ pub fn flush_offs(offs: &mut Vec<PendingOff>, app: &mut NomadApp, now: Instant) 
     offs.retain(|o| {
         let due = o.due <= now;
         if due {
-            if o.target == app.model.target_synth() {
-                app.model.send(Command::NoteOff { note: o.note });
-            } else {
-                // shortcut: NoteOff has no instrument id, so a retargeted note is silenced by
-                // panicking every voice, upgrade if Command::NoteOff ever carries an id.
-                app.model.send(Command::Panic);
+            let cur = app.model.target_synth();
+            match o.target {
+                t if t == cur => {
+                    app.model.send(Command::NoteOff { note: o.note });
+                }
+                // Closed or absent: remove_instrument already silenced it.
+                Some(old) if app.model.view(old).is_some() => {
+                    // shortcut: NoteOff has no owner, so a due off can also release the same
+                    // MIDI note the user holds on that synth, upgrade if NoteOff carries an id.
+                    app.model.send(Command::SetTargetSynth(old));
+                    app.model.send(Command::NoteOff { note: o.note });
+                    if let Some(c) = cur {
+                        app.model.send(Command::SetTargetSynth(c));
+                    }
+                }
+                _ => {}
             }
         }
         !due

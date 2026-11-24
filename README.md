@@ -128,7 +128,8 @@ Seguridad:
 - Revisa los encabezados Host y Origin: cualquier otro valor recibe 403.
 - Está apagado por defecto: solo se abre con `--mcp`.
 - `note_on` suelta la nota solo, como máximo a los 10 s (`duration_ms` hasta 10000).
-- `panic` silencia todo.
+- `panic` silencia todo y también detiene los relojes de todos los instrumentos.
+- Acepta pedidos de cualquier página servida desde localhost o 127.0.0.1 (cualquier puerto): activá `--mcp` solo mientras confíes en los programas y páginas que corren en tu máquina.
 
 Herramientas:
 

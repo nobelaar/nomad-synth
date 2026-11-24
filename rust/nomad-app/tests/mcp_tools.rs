@@ -483,38 +483,60 @@ fn note_on_without_a_synth_errors() {
     );
 }
 
+fn running(h: &Harness<'static, S>, id: u64) -> bool {
+    h.state()
+        .app
+        .model
+        .view(id as u32)
+        .unwrap()
+        .shared
+        .clock_running
+        .load(std::sync::atomic::Ordering::Relaxed)
+}
+
+fn due() -> std::time::Instant {
+    std::time::Instant::now() + std::time::Duration::from_secs(11)
+}
+
 #[test]
-fn retargeted_note_is_panicked_when_due() {
+fn retargeted_note_is_released_without_stopping_other_clocks() {
     let mut h = harness(&temp_dir("retarget"));
+    let drums = id_of(&mut h, "drums");
+    call(&mut h, "play", json!({ "id": drums })).unwrap();
+    step(&mut h);
+    assert!(running(&h, drums));
     let mut offs = Vec::new();
     note_on(&mut h, &mut offs, json!({ "note": 60 })).unwrap();
     assert!(voices(&h) >= 1);
     let other = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap()["id"].clone();
     call(&mut h, "set_target", json!({ "id": other })).unwrap();
-    flush(
-        &mut h,
-        &mut offs,
-        std::time::Instant::now() + std::time::Duration::from_secs(11),
-    );
+    flush(&mut h, &mut offs, due());
     assert!(offs.is_empty());
-    assert_eq!(voices(&h), 0, "panic silences the old note immediately");
+    for _ in 0..200 {
+        step(&mut h);
+    }
+    assert_eq!(voices(&h), 0, "the old synth's note was released");
+    assert!(running(&h, drums), "other clocks keep running");
+    assert_eq!(
+        h.state().app.model.target_synth(),
+        other.as_u64().map(|i| i as u32)
+    );
 }
 
 #[test]
-fn closed_target_is_panicked_when_due() {
+fn closed_target_off_is_dropped_without_stopping_other_clocks() {
     let mut h = harness(&temp_dir("closedtarget"));
+    let drums = id_of(&mut h, "drums");
+    call(&mut h, "play", json!({ "id": drums })).unwrap();
+    step(&mut h);
     let mut offs = Vec::new();
     let other = call(&mut h, "add_instrument", json!({ "kind": "synth" })).unwrap()["id"].clone();
     call(&mut h, "set_target", json!({ "id": other })).unwrap();
     note_on(&mut h, &mut offs, json!({ "note": 64 })).unwrap();
-    assert!(voices(&h) >= 1);
     call(&mut h, "close_instrument", json!({ "id": other })).unwrap();
-    flush(
-        &mut h,
-        &mut offs,
-        std::time::Instant::now() + std::time::Duration::from_secs(11),
-    );
-    assert_eq!(voices(&h), 0);
+    flush(&mut h, &mut offs, due());
+    assert!(offs.is_empty());
+    assert!(running(&h, drums), "other clocks keep running");
 }
 
 #[test]
@@ -856,4 +878,74 @@ fn spiral_tools_toggle_and_are_idempotent() {
         let st = call(&mut h, "get_state", json!({})).unwrap();
         assert_eq!(st["spiral_open"], want, "{tool}");
     }
+}
+
+#[test]
+fn set_param_rounds_selectors_only() {
+    let mut h = harness(&temp_dir("selround"));
+    let id = first_id(&h, Kind::Synth);
+    let sel = SYNTH_PARAMS
+        .iter()
+        .enumerate()
+        .find(|(p, _)| {
+            nomad_app::synth_layout::widget_kind(*p)
+                == nomad_app::synth_layout::WidgetKind::Selector
+        })
+        .unwrap()
+        .1
+        .name;
+    let r = call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": sel, "value": 2.7 }),
+    )
+    .unwrap();
+    assert_eq!(r["value"], 3.0);
+    step(&mut h);
+    assert_eq!(param(&mut h, id, sel), 3.0);
+    let r = call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": 1234.5 }),
+    )
+    .unwrap();
+    assert_eq!(r["value"], 1234.5);
+}
+
+#[test]
+fn save_preset_does_not_overwrite_without_flag() {
+    let dir = temp_dir("overwrite");
+    let mut h = harness(&dir);
+    let id = id_of(&mut h, "synth");
+    call(&mut h, "save_preset", json!({ "id": id, "name": "Dup" })).unwrap();
+    let file = dir.join("synth").join("Dup.json");
+    let before = std::fs::read_to_string(&file).unwrap();
+    call(
+        &mut h,
+        "set_param",
+        json!({ "id": id, "name": "filt_cutoff", "value": 555.0 }),
+    )
+    .unwrap();
+    step(&mut h);
+    let e = call(&mut h, "save_preset", json!({ "id": id, "name": "Dup" })).unwrap_err();
+    assert_eq!(
+        e,
+        "a user preset named 'Dup' already exists; pass overwrite: true to replace it"
+    );
+    assert_eq!(std::fs::read_to_string(&file).unwrap(), before);
+    call(
+        &mut h,
+        "save_preset",
+        json!({ "id": id, "name": "Dup", "overwrite": true }),
+    )
+    .unwrap();
+    assert_ne!(std::fs::read_to_string(&file).unwrap(), before);
+    call(&mut h, "save_preset", json!({ "id": id, "name": "Other" })).unwrap();
+    let e = call(
+        &mut h,
+        "save_preset",
+        json!({ "id": id, "name": "Dup", "overwrite": "yes" }),
+    )
+    .unwrap_err();
+    assert!(e.contains("overwrite"), "{e}");
 }
